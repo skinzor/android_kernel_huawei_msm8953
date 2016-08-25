@@ -3733,7 +3733,8 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 		} else {
 			mdwc->dcd_retries = 0;
 			mdwc->typec_current_max = 0;
-			dwc3_msm_gadget_vbus_draw(mdwc, 0);
+			if (mdwc->chg_type != DWC3_INVALID_CHARGER)
+				dwc3_msm_gadget_vbus_draw(mdwc, 0);
 			dev_dbg(mdwc->dev, "No device, allowing suspend\n");
 		}
 		break;
