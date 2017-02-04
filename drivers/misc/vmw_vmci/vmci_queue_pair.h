@@ -55,32 +55,7 @@ struct vmci_qp_set_va_info {
 	s32 result;
 };
 
-/*
- * For backwards compatibility, here is a version of the
- * VMCIqueue_pairPageFileInfo before host support end-points was added.
- * Note that the current version of that structure requires VMX to
- * pass down the VA of the mapped file.  Before host support was added
- * there was nothing of the sort.  So, when the driver sees the ioctl
- * with a parameter that is the sizeof
- * VMCIqueue_pairPageFileInfo_NoHostQP then it can infer that the version
- * of VMX running can't attach to host end points because it doesn't
- * provide the VA of the mapped files.
- *
- * The Linux driver doesn't get an indication of the size of the
- * structure passed down from user space.  So, to fix a long standing
- * but unfiled bug, the _pad field has been renamed to version.
- * Existing versions of VMX always initialize the PageFileInfo
- * structure so that _pad, er, version is set to 0.
- *
- * A version value of 1 indicates that the size of the structure has
- * been increased to include two UVA's: produce_uva and consume_uva.
- * These UVA's are of the mmap()'d queue contents backing files.
- *
- * In addition, if when VMX is sending down the
- * VMCIqueue_pairPageFileInfo structure it gets an error then it will
- * try again with the _NoHostQP version of the file to see if an older
- * VMCI kernel module is running.
- */
+
 
 /* VMCIqueue_pairPageFileInfo */
 struct vmci_qp_page_file_info {

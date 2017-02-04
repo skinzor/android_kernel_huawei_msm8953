@@ -184,7 +184,7 @@ static const unsigned long dwAL7230InitTable[CB_AL7230_INIT_SEQ] = {
 	// RoberYu:20050113, Rev0.47 Regsiter Setting Guide
 	0x802B5500+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW, // Need modify for 11a: 8D1B55
 	0x56AF3600+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW,
-	0xCE020700+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW, // Need modify for 11a: 860207
+	0xCE020700+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW,
 	0x6EBC0800+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW,
 	0x221BB900+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW,
 	0xE0000A00+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW, // Need modify for 11a: E0600A
@@ -202,7 +202,7 @@ static const unsigned long dwAL7230InitTableAMode[CB_AL7230_INIT_SEQ] = {
 	0x451FE200+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW, // Need modify for 11b/g
 	0x5FDFA300+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW, // Need modify for 11b/g
 	0x67F78400+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW, // 11a    // Need modify for 11b/g
-	0x853F5500+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW, // Need modify for 11b/g, RoberYu:20050113
+	0x853F5500+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW,
 	0x56AF3600+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW,
 	0xCE020700+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW, // Need modify for 11b/g
 	0x6EBC0800+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW,
@@ -638,18 +638,15 @@ static bool RFbAL2230Init(void __iomem *dwIoBase)
 
 	MACvWordRegBitsOn(dwIoBase, MAC_REG_SOFTPWRCTL, (SOFTPWRCTL_SWPECTI  |
 							 SOFTPWRCTL_TXPEINV));
-//2008-8-21 chester <add>
 	// PLL  Off
 
 	MACvWordRegBitsOff(dwIoBase, MAC_REG_SOFTPWRCTL, SOFTPWRCTL_SWPE3);
 
 	//patch abnormal AL2230 frequency output
-//2008-8-21 chester <add>
 	IFRFbWriteEmbedded(dwIoBase, (0x07168700+(BY_AL2230_REG_LEN<<3)+IFREGCTL_REGW));
 
 	for (ii = 0; ii < CB_AL2230_INIT_SEQ; ii++)
 		bResult &= IFRFbWriteEmbedded(dwIoBase, dwAL2230InitTable[ii]);
-//2008-8-21 chester <add>
 	MACvTimer0MicroSDelay(dwIoBase, 30); //delay 30 us
 
 	// PLL On

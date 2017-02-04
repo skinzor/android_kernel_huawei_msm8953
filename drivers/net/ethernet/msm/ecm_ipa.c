@@ -1039,22 +1039,7 @@ static void ecm_ipa_deregister_properties(void)
 	return;
 }
 
-/**
- * ecm_ipa_configure() - make IPA core end-point specific configuration
- * @usb_to_ipa_hdl: handle of usb_to_ipa end-point for IPA driver
- * @ipa_to_usb_hdl: handle of ipa_to_usb end-point for IPA driver
- * @host_ethaddr: host Ethernet address in network order
- * @device_ethaddr: device Ethernet address in network order
- *
- * Configure the usb_to_ipa and ipa_to_usb end-point registers
- * - USB->IPA end-point: disable de-aggregation, enable link layer
- *   header removal (Ethernet removal), source NATing and default routing.
- * - IPA->USB end-point: disable aggregation, add link layer header (Ethernet)
- * - allocate Ethernet device
- * - register to Linux network stack
- *
- * Returns negative errno, or zero on success
- */
+
 
 
 static void ecm_ipa_rm_notify(void *user_data, enum ipa_rm_event event,

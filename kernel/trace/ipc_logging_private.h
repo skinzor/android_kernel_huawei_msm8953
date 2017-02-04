@@ -1,15 +1,4 @@
-/* Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- */
+
 #ifndef _IPC_LOGGING_PRIVATE_H
 #define _IPC_LOGGING_PRIVATE_H
 
@@ -18,28 +7,7 @@
 #define IPC_LOG_VERSION 0x0003
 #define IPC_LOG_MAX_CONTEXT_NAME_LEN 32
 
-/**
- * struct ipc_log_page_header - Individual log page header
- *
- * @magic: Magic number (used for log extraction)
- * @nmagic: Inverse of magic number (used for log extraction)
- * @page_num: Index of page (0.. N - 1) (note top bit is always set)
- * @read_offset:  Read offset in page
- * @write_offset: Write offset in page (or 0xFFFF if full)
- * @log_id: ID of logging context that owns this page
- * @start_time:  Scheduler clock for first write time in page
- * @end_time:  Scheduler clock for last write time in page
- * @ctx_offset:  Signed offset from page to the logging context.  Used to
- *               optimize ram-dump extraction.
- *
- * @list:  Linked list of pages that make up a log
- * @nd_read_offset:  Non-destructive read offset used for debugfs
- *
- * The first part of the structure defines data that is used to extract the
- * logs from a memory dump and elements in this section should not be changed
- * or re-ordered.  New local data structures can be added to the end of the
- * structure since they will be ignored by the extraction tool.
- */
+
 struct ipc_log_page_header {
 	uint32_t magic;
 	uint32_t nmagic;

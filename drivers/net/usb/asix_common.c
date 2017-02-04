@@ -1,23 +1,4 @@
-/*
- * ASIX AX8817X based USB 2.0 Ethernet Devices
- * Copyright (C) 2003-2006 David Hollis <dhollis@davehollis.com>
- * Copyright (C) 2005 Phil Chang <pchang23@sbcglobal.net>
- * Copyright (C) 2006 James Painter <jamie.painter@iname.com>
- * Copyright (c) 2002-2003 TiVo Inc.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
- */
+
 
 #include "asix.h"
 
@@ -147,18 +128,7 @@ struct sk_buff *asix_tx_fixup(struct usbnet *dev, struct sk_buff *skb,
 
 	padlen = ((skb->len + 4) & (dev->maxpacket - 1)) ? 0 : 4;
 
-	/* We need to push 4 bytes in front of frame (packet_len)
-	 * and maybe add 4 bytes after the end (if padlen is 4)
-	 *
-	 * Avoid skb_copy_expand() expensive call, using following rules :
-	 * - We are allowed to push 4 bytes in headroom if skb_header_cloned()
-	 *   is false (and if we have 4 bytes of headroom)
-	 * - We are allowed to put 4 bytes at tail if skb_cloned()
-	 *   is false (and if we have 4 bytes of tailroom)
-	 *
-	 * TCP packets for example are cloned, but skb_header_release()
-	 * was called in tcp stack, allowing us to use headroom for our needs.
-	 */
+	
 	if (!skb_header_cloned(skb) &&
 	    !(padlen && skb_cloned(skb)) &&
 	    headroom + tailroom >= 4 + padlen) {

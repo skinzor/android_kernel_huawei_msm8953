@@ -102,17 +102,7 @@
  
 */
 
-/* Changes:
 
-	1.01	GRG 1997.01.24	Restored pd_reset()
-				Added eject ioctl
-	1.02    GRG 1998.05.06  SMP spinlock changes, 
-				Added slave support
-	1.03    GRG 1998.06.16  Eliminate an Ugh.
-	1.04	GRG 1998.08.15  Extra debugging, use HZ in loop timing
-	1.05    GRG 1998.09.24  Added jumbo support
-
-*/
 
 #define PD_VERSION      "1.05"
 #define PD_MAJOR	45

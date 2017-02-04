@@ -1,15 +1,4 @@
-/* Copyright (c) 2012, 2014-2015, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- */
+
 
 #define pr_fmt(fmt) "%s: " fmt, __func__
 
@@ -359,34 +348,7 @@ static void irq_affinity_change_notifier(struct irq_affinity_notify *notify,
 
 	spin_unlock_irqrestore(&event_timer_lock, flags);
 
-	/*
-	 * Migrating event timer to a new CPU is automatically
-	 * taken care. Since we have already modify the event->cpu
-	 * with new CPU.
-	 *
-	 * Typical cases are
-	 *
-	 * 1)
-	 *		C0			C1
-	 *		|			^
-	 *	-----------------		|
-	 *	|	|	|		|
-	 *	E1	E2	E3		|
-	 *		|(migrating)		|
-	 *		-------------------------
-	 *
-	 * 2)
-	 *		C0			C1
-	 *		|			^
-	 *	----------------		|
-	 *	|	|	|		|
-	 *	E1	E2	E3		|
-	 *	|(migrating)			|
-	 *	---------------------------------
-	 *
-	 * Here after moving the E1 to C1. Need to start
-	 * E2 on C0.
-	 */
+	
 	spin_lock(&event_setup_lock);
 	/* Setup event timer on new cpu*/
 	setup_event_hrtimer(event);
@@ -424,7 +386,6 @@ void activate_event_timer(struct event_timer_info *event, ktime_t event_time)
 
 	spin_lock(&event_setup_lock);
 	event->node.expires = event_time;
-	/* Start hrtimer and add event to rb tree */
 	setup_event_hrtimer(event);
 	spin_unlock(&event_setup_lock);
 }

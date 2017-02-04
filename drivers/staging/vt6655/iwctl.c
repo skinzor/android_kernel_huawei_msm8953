@@ -46,11 +46,10 @@
 #endif
 
 #include <net/iw_handler.h>
-extern unsigned short TxRate_iwconfig;//2008-5-8 <add> by chester
+extern unsigned short TxRate_iwconfig;
 
 /*---------------------  Static Definitions -------------------------*/
 
-//2008-0409-07, <Add> by Einsn Liu
 #ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
 #define SUPPORTED_WIRELESS_EXT                  18
 #else
@@ -251,7 +250,6 @@ static int iwctl_giwscan(struct net_device *dev,
 			iwe.u.freq.e = 0;
 			iwe.u.freq.i = 0;
 			current_ev = iwe_stream_add_event(info, current_ev, end_buf, &iwe, IW_EV_FREQ_LEN);
-			//2008-0409-04, <Add> by Einsn Liu
 			{
 				int f = (int)pBSS->uChannel - 1;
 
@@ -266,7 +264,6 @@ static int iwctl_giwscan(struct net_device *dev,
 			RFvRSSITodBm(pDevice, (unsigned char)(pBSS->uRSSI), &ldBm);
 			iwe.u.qual.level = ldBm;
 			iwe.u.qual.noise = 0;
-//2008-0409-01, <Add> by Einsn Liu
 			if (-ldBm < 50)
 				iwe.u.qual.qual = 100;
 			else if (-ldBm > 90)
@@ -378,7 +375,6 @@ int iwctl_siwfreq(struct net_device *dev,
 			// Yes ! We can set it !!!
 			pr_debug(" Set to channel = %d\n", channel);
 			pDevice->uChannel = channel;
-			//2007-0207-04,<Add> by EinsnLiu
 			//Make change effect at once
 			pDevice->bCommit = true;
 		}
@@ -647,7 +643,6 @@ int iwctl_siwap(struct net_device *dev,
 		rc = -EINVAL;
 	else {
 		memcpy(pMgmt->abyDesireBSSID, wrq->sa_data, 6);
-		//2008-0409-05, <Add> by Einsn Liu
 		if ((pDevice->bLinkPass == true) &&
 		    (memcmp(pMgmt->abyDesireBSSID, pMgmt->abyCurrBSSID, 6) == 0)) {
 			return rc;
@@ -698,7 +693,6 @@ int iwctl_giwap(struct net_device *dev,
 	pr_debug(" SIOCGIWAP\n");
 
 	memcpy(wrq->sa_data, pMgmt->abyCurrBSSID, 6);
-	//2008-0410,<Modify> by Einsn Liu
 	if ((pDevice->bLinkPass == false) && (pMgmt->eCurrMode != WMAC_MODE_ESS_AP))
 		memset(wrq->sa_data, 0, 6);
 
@@ -795,7 +789,6 @@ int iwctl_siwessid(struct net_device *dev,
 	struct vnt_private *pDevice = netdev_priv(dev);
 	PSMgmtObject        pMgmt = &(pDevice->sMgmtObj);
 	PWLAN_IE_SSID       pItemSSID;
-	//2008-0409-05, <Add> by Einsn Liu
 	unsigned char len;
 
 	pr_debug(" SIOCSIWESSID\n");
@@ -826,7 +819,6 @@ int iwctl_siwessid(struct net_device *dev,
 		} else
 			pItemSSID->len = wrq->length;
 		pr_debug("set essid to %s\n", pItemSSID->abySSID);
-		//2008-0409-05, <Add> by Einsn Liu
 		len = (pItemSSID->len > ((PWLAN_IE_SSID)pMgmt->abyCurrSSID)->len) ? pItemSSID->len : ((PWLAN_IE_SSID)pMgmt->abyCurrSSID)->len;
 		if ((pDevice->bLinkPass == true) &&
 		    (memcmp(pItemSSID->abySSID, ((PWLAN_IE_SSID)pMgmt->abyCurrSSID)->abySSID, len) == 0))
@@ -915,7 +907,6 @@ int iwctl_giwessid(struct net_device *dev,
 	memcpy(extra, pItemSSID->abySSID , pItemSSID->len);
 	extra[pItemSSID->len] = '\0';
 	wrq->length = pItemSSID->len + 1;
-	//2008-0409-03, <Add> by Einsn Liu
 	wrq->length = pItemSSID->len;
 	wrq->flags = 1; // active
 
@@ -1022,7 +1013,6 @@ int iwctl_giwrate(struct net_device *dev,
 	{
 		unsigned char abySupportedRates[13] = {0x02, 0x04, 0x0B, 0x16, 0x0c, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6C, 0x90};
 		int brate = 0;
-//2008-5-8 <modify> by chester
 		if (pDevice->bLinkPass) {
 			if (pDevice->bFixRate == true) {
 				if (pDevice->uConnectionRate < 13) {
@@ -1222,7 +1212,6 @@ int iwctl_siwencode(struct net_device *dev,
 	int ii, uu, rc = 0;
 	int index = (wrq->flags & IW_ENCODE_INDEX);
 
-//2007-0207-07,<Modify> by EinsnLiu
 //There are some problems when using iwconfig encode/key command to set the WEP key.
 //I almost rewrite this function.
 //now it support:(assume the wireless interface's name is eth0)
@@ -1330,7 +1319,6 @@ int iwctl_siwencode(struct net_device *dev,
 			spin_unlock_irq(&pDevice->lock);
 		}
 	}
-//End Modify,Einsn
 
 	if (wrq->flags & IW_ENCODE_RESTRICTED) {
 		pr_debug("Enable WEP & ShareKey System\n");
@@ -1506,7 +1494,6 @@ int iwctl_giwsens(struct net_device *dev,
 	return 0;
 }
 
-//2008-0409-07, <Add> by Einsn Liu
 #ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
 
 int iwctl_siwauth(struct net_device *dev,
@@ -1765,8 +1752,8 @@ int iwctl_siwencodeext(struct net_device *dev,
 	param->u.wpa_key.seq = (u8 *)seq;
 	param->u.wpa_key.seq_len = seq_len;
 
-//****set if current action is Network Manager count??
-//****this method is so foolish,but there is no other way???
+// ****set if current action is Network Manager count??
+// ****this method is so foolish,but there is no other way???
 	if (param->u.wpa_key.alg_name == WPA_ALG_NONE) {
 		if (param->u.wpa_key.key_index == 0)
 			pDevice->bwextcount++;
@@ -1786,7 +1773,7 @@ int iwctl_siwencodeext(struct net_device *dev,
 		pDevice->bwextcount = 0;
 		pDevice->bWPASuppWextEnabled = true;
 	}
-//******
+// ******
 
 	spin_lock_irq(&pDevice->lock);
 	ret = wpa_set_keys(pDevice, param, true);
@@ -1901,7 +1888,6 @@ static const iw_handler		iwctl_handler[] =
 	(iw_handler) NULL,		// SIOCSIWPOWER
 	(iw_handler) NULL,		// SIOCGIWPOWER
 
-//2008-0409-07, <Add> by Einsn Liu
 	(iw_handler) NULL,		// -- hole --
 	(iw_handler) NULL,		// -- hole --
 	(iw_handler) NULL,		// SIOCSIWGENIE

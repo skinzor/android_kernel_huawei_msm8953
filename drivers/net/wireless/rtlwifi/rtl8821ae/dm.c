@@ -1,27 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2009-2010  Realtek Corporation.
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in the
- * file called LICENSE.
- *
- * Contact Information:
- * wlanfae <wlanfae@realtek.com>
- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
- * Hsinchu 300, Taiwan.
- *
- * Larry Finger <Larry.Finger@lwfinger.net>
- *
- *****************************************************************************/
+
 
 #include "../wifi.h"
 #include "../base.h"
@@ -1391,7 +1368,6 @@ void rtl8812ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
 
 	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
 		 "===>rtl8812ae_dm_txpwr_track_set_pwr\n");
-	/*20130429 Mimic Modify High Rate BBSwing Limit.*/
 	if (tx_rate != 0xFF) {
 		/*CCK*/
 		if ((tx_rate >= MGN_1M) && (tx_rate <= MGN_11M))
@@ -1918,16 +1894,7 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
 	if ((rtldm->power_index_offset[RF90_PATH_A] != 0 ||
 		rtldm->power_index_offset[RF90_PATH_B] != 0) &&
 		rtldm->txpower_track_control) {
-		/*7.2 Configure the Swing Table to adjust Tx Power.
-		 *Always TRUE after Tx Power is adjusted by power tracking.
-		 *
-		 *2012/04/23 MH According to Luke's suggestion,
-		 *we can not write BB digital
-		 *to increase TX power. Otherwise, EVM will be bad.
-		 *
-		 *2012/04/25 MH Add for tx power tracking to set
-		 *tx power in tx agc for 88E.
-		 */
+		
 		if (thermal_value > rtldm->thermalvalue) {
 			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
 				 "Temperature Increasing(A): delta_pi: %d , delta_t: %d, Now_t: %d,EFUSE_t: %d, Last_t: %d\n",
@@ -2466,14 +2433,7 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
 		rtldm->txpower_track_control) {
 		/*7.2 Configure the Swing Table to adjust Tx Power.*/
 		/*Always TRUE after Tx Power is adjusted by power tracking.*/
-		/*
-		 *  2012/04/23 MH According to Luke's suggestion,
-		 *  we can not write BB digital
-		 *  to increase TX power. Otherwise, EVM will be bad.
-		 *
-		 *  2012/04/25 MH Add for tx power tracking to
-		 *  set tx power in tx agc for 88E.
-		 */
+		
 		if (thermal_value > rtldm->thermalvalue) {
 			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
 				 "Temperature Increasing(A): delta_pi: %d , delta_t: %d,Now_t: %d, EFUSE_t: %d, Last_t: %d\n",

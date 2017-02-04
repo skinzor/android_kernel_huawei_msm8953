@@ -41,6 +41,7 @@
 			<0x9181000 0x1000>;
 		qcom,max-hw-load = <1044480>; /* 4096 x 2176 @ 30 fps */
 		qcom,slave-side-cp;
+		qcom,never-unload-fw;
 		qcom,sw-power-collapse;
 		qcom,firmware-name = "venus";
 		qcom,pm-qos-latency-us = <213>;

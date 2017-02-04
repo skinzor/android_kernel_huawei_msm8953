@@ -84,21 +84,7 @@
 
 */
 
-/* Changes:
 
-	1.01	GRG 1998.01.24	Added test unit ready support
-	1.02    GRG 1998.05.06  Changes to pcd_completion, ready_wait,
-				and loosen interpretation of ATAPI
-			        standard for clearing error status.
-				Use spinlocks. Eliminate sti().
-	1.03    GRG 1998.06.16  Eliminated an Ugh
-	1.04	GRG 1998.08.15  Added extra debugging, improvements to
-				pcd_completion, use HZ in loop timing
-	1.05	GRG 1998.08.16	Conformed to "Uniform CD-ROM" standard
-	1.06    GRG 1998.08.19  Added audio ioctl support
-	1.07    GRG 1998.09.24  Increased reset timeout, added jumbo support
-
-*/
 
 #define	PCD_VERSION	"1.07"
 #define PCD_MAJOR	46

@@ -331,7 +331,6 @@ struct hal_data_8188e {
 	u8	FwRsvdPageStartOffset; /* Reserve page start offset except
 					*  beacon in TxQ. */
 
-	/*  2010/08/09 MH Add CU power down mode. */
 	bool		pwrdown;
 
 	/*  Add for dual MAC  0--Mac0 1--Mac1 */
@@ -343,7 +342,6 @@ struct hal_data_8188e {
 	/*  Add for USB aggreation mode dynamic shceme. */
 	bool		UsbRxHighSpeedMode;
 
-	/*  2010/11/22 MH Add for slim combo debug mode selective. */
 	/*  This is used for fix the drawback of CU TSMC-A/UMC-A cut.
 	 * HW auto suspend ability. Close BT clock. */
 	bool		SlimComboDbg;

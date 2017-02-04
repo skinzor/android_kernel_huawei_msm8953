@@ -276,9 +276,7 @@ void PHY_SetRF8256OFDMTxPower(struct net_device *dev, u8 powerlevel)
 		}
 
 		if (priv->bDynamicTxHighPower == TRUE) {
-			/*Add by Jacken 2008/03/06
-			 *Emily, 20080613. Set low tx power for both MCS and legacy OFDM
-			 */
+			
 			writeVal = 0x03030303;
 		} else {
 			writeVal = (byte3<<24) | (byte2<<16) | (byte1<<8) | byte0;

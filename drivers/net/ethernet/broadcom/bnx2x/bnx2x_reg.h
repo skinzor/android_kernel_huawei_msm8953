@@ -1,23 +1,4 @@
-/* bnx2x_reg.h: Broadcom Everest network driver.
- *
- * Copyright (c) 2007-2013 Broadcom Corporation
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation.
- *
- * The registers description starts with the register Access type followed
- * by size in bits. For example [RW 32]. The access types are:
- * R  - Read only
- * RC - Clear on read
- * RW - Read/Write
- * ST - Statistics register (clear on read)
- * W  - Write only
- * WB - Wide bus register - the size is over 32 bits and it should be
- *      read/write in consecutive 32 bits accesses
- * WR - Write Clear (write 1 to clear the bit)
- *
- */
+
 #ifndef BNX2X_REG_H
 #define BNX2X_REG_H
 
@@ -1963,10 +1944,7 @@
 #define NIG_REG_DEBUG_PACKET_LB 				 0x10800
 /* [RW 1] Input enable for TX Debug packet */
 #define NIG_REG_EGRESS_DEBUG_IN_EN				 0x100dc
-/* [RW 1] If 1 - egress drain mode for port0 is active. In this mode all
-   packets from PBFare not forwarded to the MAC and just deleted from FIFO.
-   First packet may be deleted from the middle. And last packet will be
-   always deleted till the end. */
+
 #define NIG_REG_EGRESS_DRAIN0_MODE				 0x10060
 /* [RW 1] Output enable to EMAC0 */
 #define NIG_REG_EGRESS_EMAC0_OUT_EN				 0x10120

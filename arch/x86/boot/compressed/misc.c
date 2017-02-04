@@ -258,23 +258,7 @@ static void handle_relocations(void *output, unsigned long output_len)
 	 */
 	map = delta - __START_KERNEL_map;
 
-	/*
-	 * Process relocations: 32 bit relocations first then 64 bit after.
-	 * Two sets of binary relocations are added to the end of the kernel
-	 * before compression. Each relocation table entry is the kernel
-	 * address of the location which needs to be updated stored as a
-	 * 32-bit value which is sign extended to 64 bits.
-	 *
-	 * Format is:
-	 *
-	 * kernel bits...
-	 * 0 - zero terminator for 64 bit relocations
-	 * 64 bit relocation repeated
-	 * 0 - zero terminator for 32 bit relocations
-	 * 32 bit relocation repeated
-	 *
-	 * So we work backwards from the end of the decompressed image.
-	 */
+	
 	for (reloc = output + output_len - sizeof(*reloc); *reloc; reloc--) {
 		int extended = *reloc;
 		extended += map;

@@ -102,7 +102,6 @@ static int recvbuf2recvframe(struct adapter *adapt, struct sk_buff *pskb)
 			goto _exit_recvbuf2recvframe;
 		}
 
-		/*	Modified by Albert 20101213 */
 		/*	For 8 bytes IP header alignment. */
 		if (pattrib->qos)	/*	Qos data, wireless lan header length is 26 */
 			shift_sz = 6;
@@ -112,7 +111,6 @@ static int recvbuf2recvframe(struct adapter *adapt, struct sk_buff *pskb)
 		skb_len = pattrib->pkt_len;
 
 		/*  for first fragment packet, driver need allocate 1536+drvinfo_sz+RXDESC_SIZE to defrag packet. */
-		/*  modify alloc_sz for recvive crc error packet by thomas 2011-06-02 */
 		if ((pattrib->mfrag == 1) && (pattrib->frag_num == 0)) {
 			if (skb_len <= 1650)
 				alloc_sz = 1664;

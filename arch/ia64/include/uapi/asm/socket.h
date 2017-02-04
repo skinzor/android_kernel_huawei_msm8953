@@ -1,14 +1,7 @@
 #ifndef _ASM_IA64_SOCKET_H
 #define _ASM_IA64_SOCKET_H
 
-/*
- * Socket related defines.
- *
- * Based on <asm-i386/socket.h>.
- *
- * Modified 1998-2000
- *	David Mosberger-Tang <davidm@hpl.hp.com>, Hewlett-Packard Co
- */
+
 
 #include <asm/sockios.h>
 

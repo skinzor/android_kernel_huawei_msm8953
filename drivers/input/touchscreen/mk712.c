@@ -20,20 +20,7 @@
  *	http://www.idt.com/products/getDoc.cfm?docID=18713923
  */
 
-/*
- * 1999-12-18: original version, Daniel Quinlan
- * 1999-12-19: added anti-jitter code, report pen-up events, fixed mk712_poll
- *             to use queue_empty, Nathan Laredo
- * 1999-12-20: improved random point rejection, Nathan Laredo
- * 2000-01-05: checked in new anti-jitter code, changed mouse protocol, fixed
- *             queue code, added module options, other fixes, Daniel Quinlan
- * 2002-03-15: Clean up for kernel merge <alan@redhat.com>
- *             Fixed multi open race, fixed memory checks, fixed resource
- *             allocation, fixed close/powerdown bug, switched to new init
- * 2005-01-18: Ported to 2.6 from 2.4.28, Rick Koch
- * 2005-02-05: Rewritten for the input layer, Vojtech Pavlik
- *
- */
+
 
 #include <linux/module.h>
 #include <linux/kernel.h>

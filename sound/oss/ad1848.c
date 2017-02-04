@@ -1,45 +1,4 @@
-/*
- * sound/oss/ad1848.c
- *
- * The low level driver for the AD1848/CS4248 codec chip which
- * is used for example in the MS Sound System.
- *
- * The CS4231 which is used in the GUS MAX and some other cards is
- * upwards compatible with AD1848 and this driver is able to drive it.
- *
- * CS4231A and AD1845 are upward compatible with CS4231. However
- * the new features of these chips are different.
- *
- * CS4232 is a PnP audio chip which contains a CS4231A (and SB, MPU).
- * CS4232A is an improved version of CS4232.
- *
- *
- *
- * Copyright (C) by Hannu Savolainen 1993-1997
- *
- * OSS/Free for Linux is distributed under the GNU GENERAL PUBLIC LICENSE (GPL)
- * Version 2 (June 1991). See the "COPYING" file distributed with this software
- * for more info.
- *
- *
- * Thomas Sailer	: ioctl code reworked (vmalloc/vfree removed)
- *			  general sleep/wakeup clean up.
- * Alan Cox		: reformatted. Fixed SMP bugs. Moved to kernel alloc/free
- *		          of irqs. Use dev_id.
- * Christoph Hellwig	: adapted to module_init/module_exit
- * Aki Laukkanen	: added power management support
- * Arnaldo C. de Melo	: added missing restore_flags in ad1848_resume
- * Miguel Freitas       : added ISA PnP support
- * Alan Cox		: Added CS4236->4239 identification
- * Daniel T. Cobra	: Alernate config/mixer for later chips
- * Alan Cox		: Merged chip idents and config code
- *
- * TODO
- *		APM save restore assist code on IBM thinkpad
- *
- * Status:
- *		Tested. Believed fully functional.
- */
+
 
 #include <linux/init.h>
 #include <linux/interrupt.h>
@@ -2829,7 +2788,6 @@ MODULE_PARM_DESC(reverse,	"When set to 1, will reverse ISAPnP search order");
 
 static struct pnp_dev	*ad1848_dev  = NULL;
 
-/* Please add new entries at the end of the table */
 static struct {
 	char *name;
 	unsigned short	card_vendor, card_device,

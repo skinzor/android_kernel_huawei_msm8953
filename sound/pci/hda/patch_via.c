@@ -1,47 +1,10 @@
-/*
- * Universal Interface for Intel High Definition Audio Codec
- *
- * HD audio interface patch for VIA VT17xx/VT18xx/VT20xx codec
- *
- *  (C) 2006-2009 VIA Technology, Inc.
- *  (C) 2006-2008 Takashi Iwai <tiwai@suse.de>
- *
- *  This driver is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This driver is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- */
+
 
 /* * * * * * * * * * * * * * Release History * * * * * * * * * * * * * * * * */
 /*									     */
 /* 2006-03-03  Lydia Wang  Create the basic patch to support VT1708 codec    */
-/* 2006-03-14  Lydia Wang  Modify hard code for some pin widget nid	     */
-/* 2006-08-02  Lydia Wang  Add support to VT1709 codec			     */
 /* 2006-09-08  Lydia Wang  Fix internal loopback recording source select bug */
-/* 2007-09-12  Lydia Wang  Add EAPD enable during driver initialization	     */
-/* 2007-09-17  Lydia Wang  Add VT1708B codec support			    */
-/* 2007-11-14  Lydia Wang  Add VT1708A codec HP and CD pin connect config    */
 /* 2008-02-03  Lydia Wang  Fix Rear channels and Back channels inverse issue */
-/* 2008-03-06  Lydia Wang  Add VT1702 codec and VT1708S codec support	     */
-/* 2008-04-09  Lydia Wang  Add mute front speaker when HP plugin	     */
-/* 2008-04-09  Lydia Wang  Add Independent HP feature			     */
-/* 2008-05-28  Lydia Wang  Add second S/PDIF Out support for VT1702	     */
-/* 2008-09-15  Logan Li	   Add VT1708S Mic Boost workaround/backdoor	     */
-/* 2009-02-16  Logan Li	   Add support for VT1718S			     */
-/* 2009-03-13  Logan Li	   Add support for VT1716S			     */
-/* 2009-04-14  Lydai Wang  Add support for VT1828S and VT2020		     */
-/* 2009-07-08  Lydia Wang  Add support for VT2002P			     */
-/* 2009-07-21  Lydia Wang  Add support for VT1812			     */
-/* 2009-09-19  Lydia Wang  Add support for VT1818S			     */
 /*									     */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

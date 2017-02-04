@@ -358,20 +358,7 @@ static inline void __ptep_modify_prot_commit(struct mm_struct *mm,
 }
 
 #ifndef __HAVE_ARCH_PTEP_MODIFY_PROT_TRANSACTION
-/*
- * Start a pte protection read-modify-write transaction, which
- * protects against asynchronous hardware modifications to the pte.
- * The intention is not to prevent the hardware from making pte
- * updates, but to prevent any updates it may make from being lost.
- *
- * This does not protect against other software modifications of the
- * pte; the appropriate pte lock must be held over the transation.
- *
- * Note that this interface is intended to be batchable, meaning that
- * ptep_modify_prot_commit may not actually update the pte, but merely
- * queue the update to be done at some later time.  The update must be
- * actually committed before the pte lock is released, however.
- */
+
 static inline pte_t ptep_modify_prot_start(struct mm_struct *mm,
 					   unsigned long addr,
 					   pte_t *ptep)

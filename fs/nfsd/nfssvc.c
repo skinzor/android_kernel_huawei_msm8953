@@ -214,11 +214,7 @@ static int nfsd_startup_generic(int nrservs)
 	if (nfsd_users++)
 		return 0;
 
-	/*
-	 * Readahead param cache - will no-op if it already exists.
-	 * (Note therefore results will be suboptimal if number of
-	 * threads is modified after nfsd start.)
-	 */
+	
 	ret = nfsd_racache_init(2*nrservs);
 	if (ret)
 		goto dec_users;

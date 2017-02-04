@@ -1,21 +1,4 @@
-/*
- *  linux/drivers/video/acornfb.c
- *
- *  Copyright (C) 1998-2001 Russell King
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- * Frame buffer code for Acorn platforms
- *
- * NOTE: Most of the modes with X!=640 will disappear shortly.
- * NOTE: Startup setting of HS & VS polarity not supported.
- *       (do we need to support it if we're coming up in 640x480?)
- *
- * FIXME: (things broken by the "new improved" FBCON API)
- *  - Blanking 8bpp displays with VIDC
- */
+
 
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -247,24 +230,7 @@ static void acornfb_set_timing(struct fb_info *info)
 #endif
 }
 
-/*
- * We have to take note of the VIDC20's 16-bit palette here.
- * The VIDC20 looks up a 16 bit pixel as follows:
- *
- *   bits   111111
- *          5432109876543210
- *   red            ++++++++  (8 bits,  7 to 0)
- *  green       ++++++++      (8 bits, 11 to 4)
- *   blue   ++++++++          (8 bits, 15 to 8)
- *
- * We use a pixel which looks like:
- *
- *   bits   111111
- *          5432109876543210
- *   red               +++++  (5 bits,  4 to  0)
- *  green         +++++       (5 bits,  9 to  5)
- *   blue    +++++            (5 bits, 14 to 10)
- */
+
 static int
 acornfb_setcolreg(u_int regno, u_int red, u_int green, u_int blue,
 		  u_int trans, struct fb_info *info)

@@ -1,25 +1,4 @@
-/*
- * linux/fs/befs/btree.c
- *
- * Copyright (C) 2001-2002 Will Dyson <will_dyson@pobox.com>
- *
- * Licensed under the GNU GPL. See the file COPYING for details.
- *
- * 2002-02-05: Sergey S. Kostyliov added binary search within
- * 		btree nodes.
- *
- * Many thanks to:
- *
- * Dominic Giampaolo, author of "Practical File System
- * Design with the Be File System", for such a helpful book.
- * 
- * Marcus J. Ranum, author of the b+tree package in 
- * comp.sources.misc volume 10. This code is not copied from that
- * work, but it is partially based on it.
- *
- * Makoto Kato, author of the original BeFS for linux filesystem
- * driver.
- */
+
 
 #include <linux/kernel.h>
 #include <linux/string.h>
@@ -532,21 +511,7 @@ befs_btree_read(struct super_block *sb, befs_data_stream * ds,
 	return BEFS_ERR;
 }
 
-/**
- * befs_btree_seekleaf - Find the first leafnode in the btree
- * @sb: Filesystem superblock
- * @ds: Datastream containing btree
- * @bt_super: Pointer to the superblock of the btree
- * @this_node: Buffer to return the leafnode in
- * @node_off: Pointer to offset of current node within datastream. Modified
- * 		by the function.
- *
- *
- * Helper function for btree traverse. Moves the current position to the 
- * start of the first leaf node.
- *
- * Also checks for an empty tree. If there are no keys, returns BEFS_BT_EMPTY.
- */
+
 static int
 befs_btree_seekleaf(struct super_block *sb, befs_data_stream * ds,
 		    befs_btree_super *bt_super,
@@ -614,19 +579,7 @@ befs_leafnode(struct befs_btree_node *node)
 		return 0;
 }
 
-/**
- * befs_bt_keylen_index - Finds start of keylen index in a node
- * @node: Pointer to the node structure to find the keylen index within
- *
- * Returns a pointer to the start of the key length index array
- * of the B+tree node *@node
- *
- * "The length of all the keys in the node is added to the size of the
- * header and then rounded up to a multiple of four to get the beginning
- * of the key length index" (p.88, practical filesystem design).
- *
- * Except that rounding up to 8 works, and rounding up to 4 doesn't.
- */
+
 static fs16 *
 befs_bt_keylen_index(struct befs_btree_node *node)
 {
@@ -670,16 +623,7 @@ befs_bt_keydata(struct befs_btree_node *node)
 	return (char *) ((void *) node->od_node + sizeof (befs_btree_nodehead));
 }
 
-/**
- * befs_bt_get_key - returns a pointer to the start of a key
- * @sb: filesystem superblock
- * @node: node in which to look for the key
- * @index: the index of the key to get
- * @keylen: modified to be the length of the key at @index
- *
- * Returns a valid pointer into @node on success.
- * Returns NULL on failure (bad input) and sets *@keylen = 0
- */
+
 static char *
 befs_bt_get_key(struct super_block *sb, struct befs_btree_node *node,
 		int index, u16 * keylen)

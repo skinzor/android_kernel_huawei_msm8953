@@ -1,84 +1,4 @@
-/*
- * WUSB Wire Adapter
- * Data transfer and URB enqueing
- *
- * Copyright (C) 2005-2006 Intel Corporation
- * Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License version
- * 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- *
- * How transfers work: get a buffer, break it up in segments (segment
- * size is a multiple of the maxpacket size). For each segment issue a
- * segment request (struct wa_xfer_*), then send the data buffer if
- * out or nothing if in (all over the DTO endpoint).
- *
- * For each submitted segment request, a notification will come over
- * the NEP endpoint and a transfer result (struct xfer_result) will
- * arrive in the DTI URB. Read it, get the xfer ID, see if there is
- * data coming (inbound transfer), schedule a read and handle it.
- *
- * Sounds simple, it is a pain to implement.
- *
- *
- * ENTRY POINTS
- *
- *   FIXME
- *
- * LIFE CYCLE / STATE DIAGRAM
- *
- *   FIXME
- *
- * THIS CODE IS DISGUSTING
- *
- *   Warned you are; it's my second try and still not happy with it.
- *
- * NOTES:
- *
- *   - No iso
- *
- *   - Supports DMA xfers, control, bulk and maybe interrupt
- *
- *   - Does not recycle unused rpipes
- *
- *     An rpipe is assigned to an endpoint the first time it is used,
- *     and then it's there, assigned, until the endpoint is disabled
- *     (destroyed [{h,d}wahc_op_ep_disable()]. The assignment of the
- *     rpipe to the endpoint is done under the wa->rpipe_sem semaphore
- *     (should be a mutex).
- *
- *     Two methods it could be done:
- *
- *     (a) set up a timer every time an rpipe's use count drops to 1
- *         (which means unused) or when a transfer ends. Reset the
- *         timer when a xfer is queued. If the timer expires, release
- *         the rpipe [see rpipe_ep_disable()].
- *
- *     (b) when looking for free rpipes to attach [rpipe_get_by_ep()],
- *         when none are found go over the list, check their endpoint
- *         and their activity record (if no last-xfer-done-ts in the
- *         last x seconds) take it
- *
- *     However, due to the fact that we have a set of limited
- *     resources (max-segments-at-the-same-time per xfer,
- *     xfers-per-ripe, blocks-per-rpipe, rpipes-per-host), at the end
- *     we are going to have to rebuild all this based on an scheduler,
- *     to where we have a list of transactions to do and based on the
- *     availability of the different required components (blocks,
- *     rpipes, segment slots, etc), we go scheduling them. Painful.
- */
+
 #include <linux/spinlock.h>
 #include <linux/slab.h>
 #include <linux/hash.h>
@@ -252,7 +172,6 @@ static void wa_check_for_delayed_rpipes(struct wahc *wa)
 	spin_unlock_irqrestore(&wa->rpipe_lock, flags);
 }
 
-/* add this RPIPE to the end of the delayed RPIPE list. */
 static void wa_add_delayed_rpipe(struct wahc *wa, struct wa_rpipe *rpipe)
 {
 	unsigned long flags;
@@ -1530,14 +1449,7 @@ static void wa_xfer_delayed_run(struct wa_rpipe *rpipe)
 	int dto_waiting;
 	int dto_done = __wa_xfer_delayed_run(rpipe, &dto_waiting);
 
-	/*
-	 * If this RPIPE is waiting on the DTO resource, add it to the tail of
-	 * the waiting list.
-	 * Otherwise, if the WA DTO resource was acquired and released by
-	 *  __wa_xfer_delayed_run, another RPIPE may have attempted to acquire
-	 * DTO and failed during that time.  Check the delayed list and process
-	 * any waiters.  Start searching from the next RPIPE index.
-	 */
+	
 	if (dto_waiting)
 		wa_add_delayed_rpipe(rpipe->wa, rpipe);
 	else if (dto_done)

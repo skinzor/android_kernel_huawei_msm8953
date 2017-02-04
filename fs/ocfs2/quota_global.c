@@ -814,10 +814,7 @@ static int ocfs2_acquire_dquot(struct dquot *dquot)
 	OCFS2_DQUOT(dquot)->dq_originodes = dquot->dq_dqb.dqb_curinodes;
 	if (!dquot->dq_off) {	/* No real quota entry? */
 		ex = 1;
-		/*
-		 * Add blocks to quota file before we start a transaction since
-		 * locking allocators ranks above a transaction start
-		 */
+		
 		WARN_ON(journal_current_handle());
 		status = ocfs2_extend_no_holes(gqinode, NULL,
 			i_size_read(gqinode) + (need_alloc << sb->s_blocksize_bits),

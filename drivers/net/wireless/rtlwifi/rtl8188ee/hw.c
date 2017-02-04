@@ -1,27 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2009-2013  Realtek Corporation.
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in the
- * file called LICENSE.
- *
- * Contact Information:
- * wlanfae <wlanfae@realtek.com>
- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
- * Hsinchu 300, Taiwan.
- *
- * Larry Finger <Larry.Finger@lwfinger.net>
- *
- *****************************************************************************/
+
 
 #include "../wifi.h"
 #include "../efuse.h"
@@ -841,7 +818,6 @@ static bool _rtl88ee_init_mac(struct ieee80211_hw *hw)
 	u8 bytetmp;
 	u16 wordtmp;
 
-	/*Disable XTAL OUTPUT for power saving. YJ,add,111206. */
 	bytetmp = rtl_read_byte(rtlpriv, REG_XCK_OUT_CTRL) & (~BIT(0));
 	rtl_write_byte(rtlpriv, REG_XCK_OUT_CTRL, bytetmp);
 	/*Auto Power Down to CHIP-off State*/
@@ -1586,7 +1562,7 @@ static void read_power_value_fromprom(struct ieee80211_hw *hw,
 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
 		 "hal_ReadPowerValueFromPROM88E():PROMContent[0x%x]=0x%x\n",
 		 (eeaddr+1), hwinfo[eeaddr+1]);
-	if (0xFF == hwinfo[eeaddr+1])  /*YJ,add,120316*/
+	if (0xFF == hwinfo[eeaddr+1])
 		autoload_fail = true;
 
 	if (autoload_fail) {

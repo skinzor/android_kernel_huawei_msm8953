@@ -977,10 +977,7 @@ __tape_start_request(struct tape_device *device, struct tape_request *request)
 	return 0;
 }
 
-/*
- * Add the request to the request queue, try to start it if the
- * tape is idle. Return without waiting for end of i/o.
- */
+
 int
 tape_do_io_async(struct tape_device *device, struct tape_request *request)
 {
@@ -989,17 +986,12 @@ tape_do_io_async(struct tape_device *device, struct tape_request *request)
 	DBF_LH(6, "tape_do_io_async(%p, %p)\n", device, request);
 
 	spin_lock_irq(get_ccwdev_lock(device->cdev));
-	/* Add request to request queue and try to start it. */
 	rc = __tape_start_request(device, request);
 	spin_unlock_irq(get_ccwdev_lock(device->cdev));
 	return rc;
 }
 
-/*
- * tape_do_io/__tape_wake_up
- * Add the request to the request queue, try to start it if the
- * tape is idle and wait uninterruptible for its completion.
- */
+
 static void
 __tape_wake_up(struct tape_request *request, void *data)
 {
@@ -1016,7 +1008,6 @@ tape_do_io(struct tape_device *device, struct tape_request *request)
 	/* Setup callback */
 	request->callback = __tape_wake_up;
 	request->callback_data = &device->wait_queue;
-	/* Add request to request queue and try to start it. */
 	rc = __tape_start_request(device, request);
 	spin_unlock_irq(get_ccwdev_lock(device->cdev));
 	if (rc)
@@ -1027,11 +1018,7 @@ tape_do_io(struct tape_device *device, struct tape_request *request)
 	return request->rc;
 }
 
-/*
- * tape_do_io_interruptible/__tape_wake_up_interruptible
- * Add the request to the request queue, try to start it if the
- * tape is idle and wait uninterruptible for its completion.
- */
+
 static void
 __tape_wake_up_interruptible(struct tape_request *request, void *data)
 {

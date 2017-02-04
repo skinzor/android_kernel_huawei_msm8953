@@ -78,6 +78,7 @@
 #include <linux/context_tracking.h>
 #include <linux/random.h>
 #include <linux/list.h>
+#include <linux/hwboot_fail.h>
 
 #include <asm/io.h>
 #include <asm/bugs.h>
@@ -97,6 +98,7 @@ extern void radix_tree_init(void);
 #ifndef CONFIG_DEBUG_RODATA
 static inline void mark_rodata_ro(void) { }
 #endif
+#include <linux/hwboot_fail.h>
 
 /*
  * Debug helper: via this flag we know that we are in 'early bootup code'
@@ -561,6 +563,8 @@ asmlinkage __visible void __init start_kernel(void)
 	trap_init();
 	mm_init();
 
+	hwboot_fail_init_struct();
+
 	/*
 	 * Set up the scheduler prior starting any interrupts (such as the
 	 * timer interrupt). Full topology setup happens at smp_init()
@@ -845,6 +849,45 @@ static char *initcall_level_names[] __initdata = {
 static void __init do_initcall_level(int level)
 {
 	initcall_t *fn;
+
+	switch(level)
+	{
+		case 0:
+			set_boot_stage(KERNEL_EARLY_INITCALL);
+			pr_info("Boot_monitor set stage:KERNEL_EARLY_INITCALL\n");
+			break;
+		case 1:
+			set_boot_stage(KERNEL_CORE_INITCALL_SYNC);
+			pr_info("Boot_monitor set stage:KERNEL_CORE_INITCALL_SYNC\n");
+			break;
+		case 2:
+			set_boot_stage(KERNEL_POSTCORE_INITCALL);
+			pr_info("Boot_monitor set stage:KERNEL_POSTCORE_INITCALL\n");
+			break;
+		case 3:
+			set_boot_stage(KERNEL_ARCH_INITCALL);;
+			pr_info("Boot_monitor set stage:KERNEL_ARCH_INITCALL\n");
+			break;
+		case 4:
+			set_boot_stage(KERNEL_SUBSYS_INITCALL);
+			pr_info("Boot_monitor set stage:KERNEL_SUBSYS_INITCALL\n");
+			break;
+		case 5:
+			set_boot_stage(KERNEL_FS_INITCALL);
+			pr_info("Boot_monitor set stage:KERNEL_FS_INITCALL\n");
+			break;
+		case 6:
+			set_boot_stage(KERNEL_DEVICE_INITCALL);
+			pr_info("Boot_monitor set stage:KERNEL_DEVICE_INITCALL\n");
+			break;
+		case 7:
+			set_boot_stage(KERNEL_LATE_INITCALL);
+			pr_info("Boot_monitor set stage:KERNEL_LATE_INITCALL\n");
+			break;
+		default:
+			pr_info("level is out of range ,no need set boot stage.\n");
+			break;
+	}
 
 	strcpy(initcall_command_line, saved_command_line);
 	parse_args(initcall_level_names[level],

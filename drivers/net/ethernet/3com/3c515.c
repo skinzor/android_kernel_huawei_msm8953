@@ -1,26 +1,4 @@
-/*
-	Written 1997-1998 by Donald Becker.
 
-	This software may be used and distributed according to the terms
-	of the GNU General Public License, incorporated herein by reference.
-
-	This driver is for the 3Com ISA EtherLink XL "Corkscrew" 3c515 ethercard.
-
-	The author may be reached as becker@scyld.com, or C/O
-	Scyld Computing Corporation
-	410 Severn Ave., Suite 210
-	Annapolis MD 21403
-
-
-	2000/2/2- Added support for kernel-level ISAPnP
-		by Stephen Frost <sfrost@snowman.net> and Alessandro Zummo
-	Cleaned up for 2.3.x/softnet by Jeff Garzik and Alan Cox.
-
-	2001/11/17 - Added ethtool support (jgarzik)
-
-	2002/10/28 - Locking updates for 2.5 (alan@lxorguk.ukuu.org.uk)
-
-*/
 
 #define DRV_NAME		"3c515"
 #define DRV_VERSION		"0.99t-ac"

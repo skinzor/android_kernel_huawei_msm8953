@@ -35,12 +35,7 @@ static size_t buffer_pos;
 /* atomic_t because wait_event checks it outside of buffer_mutex */
 static atomic_t buffer_ready = ATOMIC_INIT(0);
 
-/*
- * Add an entry to the event buffer. When we get near to the end we
- * wake up the process sleeping on the read() of the file. To protect
- * the event_buffer this function may only be called when buffer_mutex
- * is set.
- */
+
 void add_event_entry(unsigned long value)
 {
 	/*

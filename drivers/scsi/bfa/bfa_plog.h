@@ -1,19 +1,4 @@
-/*
- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
- * All rights reserved
- * www.brocade.com
- *
- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License (GPL) Version 2 as
- * published by the Free Software Foundation
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- */
+
 #ifndef __BFA_PORTLOG_H__
 #define __BFA_PORTLOG_H__
 
@@ -55,15 +40,7 @@ struct bfa_plog_rec_s {
 
 };
 
-/*
- * the following #defines will be used by the logging entities to indicate
- * their module id. BFAL will convert the integer value to string format
- *
-* process to be used while changing the following #defines:
- *  - Always add new entries at the end
- *  - define corresponding string in BFAL
- *  - Do not remove any entry or rearrange the order.
- */
+
 enum bfa_plog_mid {
 	BFA_PL_MID_INVALID	= 0,
 	BFA_PL_MID_DEBUG	= 1,
@@ -81,15 +58,7 @@ struct bfa_plog_mid_strings_s {
 	char	    m_str[BFA_PL_MID_STRLEN];
 };
 
-/*
- * the following #defines will be used by the logging entities to indicate
- * their event type. BFAL will convert the integer value to string format
- *
-* process to be used while changing the following #defines:
- *  - Always add new entries at the end
- *  - define corresponding string in BFAL
- *  - Do not remove any entry or rearrange the order.
- */
+
 enum bfa_plog_eid {
 	BFA_PL_EID_INVALID		= 0,
 	BFA_PL_EID_IOC_DISABLE		= 1,

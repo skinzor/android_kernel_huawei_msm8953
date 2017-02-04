@@ -2430,7 +2430,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
 
 	pDevice->apCurrTD[TYPE_TXDMA0] = pFrstTD->next;
 
-	pDevice->nTxDataTimeCout = 0; //2008-8-21 chester <add> for send null packet
+	pDevice->nTxDataTimeCout = 0;
 
 	// Poll Transmit the adapter
 	MACvTransmit0(pDevice->PortOffset);

@@ -720,7 +720,6 @@ Default: 00b.
  /*  CCX test. By Bruce, 2009-02-25. */
 #define EEPROM_CID_CCX				0x10
 #define EEPROM_CID_QMI				0x0D
- /*  added by chiyoko for dtm, 20090108 */
 #define EEPROM_CID_WHQL				0xFE
 
 
@@ -803,7 +802,6 @@ enum {
 	/*  CCK Tx Power */
 #define EEPROM_TxPowerCCK		0x5A
 
-/*  2009/02/09 Cosa Add for SD3 requirement */
 	/*  HT20 Tx Power Index Difference */
 #define EEPROM_TX_PWR_HT20_DIFF		0x6e
 	/*  HT20<->40 default Tx Power Index Difference */
@@ -947,7 +945,6 @@ Current IOREG MAP
 
 /*  */
 /* 8192c USB specific Regsiter Offset and Content definition, */
-/* 2009.08.18, added by vivi. for merge 92c and 92C into one driver */
 /*  */
 /* define APS_FSMCO			0x0004  same with 92Ce */
 #define RSV_CTRL			0x001C

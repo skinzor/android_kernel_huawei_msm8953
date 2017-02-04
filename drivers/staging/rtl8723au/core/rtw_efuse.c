@@ -161,7 +161,6 @@ ReadEFuseByte23a(struct rtw_adapter *Adapter, u16 _offset, u8 *pbuf)
 		retry++;
 	}
 
-	/*  20100205 Joseph: Add delay suggested by SD1 Victor. */
 	/*  This fix the problem that Efuse read error in high temperature condition. */
 	/*  Designer says that there shall be some delay after ready bit is set, or the */
 	/*  result will always stay on last data we read. */

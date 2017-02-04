@@ -625,21 +625,7 @@ ath5k_rxbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf)
 		bf->skb = skb;
 	}
 
-	/*
-	 * Setup descriptors.  For receive we always terminate
-	 * the descriptor list with a self-linked entry so we'll
-	 * not get overrun under high load (as can happen with a
-	 * 5212 when ANI processing enables PHY error frames).
-	 *
-	 * To ensure the last descriptor is self-linked we create
-	 * each descriptor as self-linked and add it to the end.  As
-	 * each additional descriptor is added the previous self-linked
-	 * entry is "fixed" naturally.  This should be safe even
-	 * if DMA is happening.  When processing RX interrupts we
-	 * never remove/process the last, self-linked, entry on the
-	 * descriptor list.  This ensures the hardware always has
-	 * someplace to write a new frame.
-	 */
+	
 	ds = bf->desc;
 	ds->ds_link = bf->daddr;	/* link to self */
 	ds->ds_data = bf->skbaddr;

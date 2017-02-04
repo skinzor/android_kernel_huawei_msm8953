@@ -1053,9 +1053,7 @@ int __init early_platform_driver_register(struct early_platform_driver *epdrv,
 	char *tmp;
 	int n;
 
-	/* Simply add the driver to the end of the global list.
-	 * Drivers will by default be put on the list in compiled-in order.
-	 */
+	
 	if (!epdrv->list.next) {
 		INIT_LIST_HEAD(&epdrv->list);
 		list_add_tail(&epdrv->list, &early_platform_driver_list);

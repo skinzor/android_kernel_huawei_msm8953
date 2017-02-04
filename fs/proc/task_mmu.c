@@ -1427,6 +1427,11 @@ cont:
 		if (!page)
 			continue;
 
+		//we don't reclaim page in active lru list
+		if (rp->inactive_lru && (PageActive(page) ||
+		    PageUnevictable(page)))
+			continue;
+
 		if (isolate_lru_page(page))
 			continue;
 
@@ -1457,6 +1462,8 @@ enum reclaim_type {
 	RECLAIM_ANON,
 	RECLAIM_ALL,
 	RECLAIM_RANGE,
+	RECLAIM_SOFT,
+	RECLAIM_INACTIVE,
 };
 
 struct reclaim_param reclaim_task_anon(struct task_struct *task,
@@ -1516,7 +1523,7 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	struct mm_walk reclaim_walk = {};
 	unsigned long start = 0;
 	unsigned long end = 0;
-	struct reclaim_param rp;
+	struct reclaim_param rp = {NULL, 0, 0, 0, false};
 
 	memset(buffer, 0, sizeof(buffer));
 	if (count > sizeof(buffer) - 1)
@@ -1526,7 +1533,11 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		return -EFAULT;
 
 	type_buf = strstrip(buffer);
-	if (!strcmp(type_buf, "file"))
+	if (!strcmp(type_buf, "soft"))
+		type = RECLAIM_SOFT;
+	else if (!strcmp(type_buf, "inactive"))
+		type = RECLAIM_INACTIVE;
+	else if (!strcmp(type_buf, "file"))
 		type = RECLAIM_FILE;
 	else if (!strcmp(type_buf, "anon"))
 		type = RECLAIM_ANON;
@@ -1574,6 +1585,15 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	mm = get_task_mm(task);
 	if (!mm)
 		goto out;
+	//here we add a soft shrinker for reclaim
+	if (type == RECLAIM_SOFT) {
+		smart_soft_shrink(mm);
+		mmput(mm);
+		goto out;
+	}
+
+	if (type == RECLAIM_INACTIVE)
+		rp.inactive_lru = true;
 
 	reclaim_walk.mm = mm;
 	reclaim_walk.pmd_entry = reclaim_pte_range;

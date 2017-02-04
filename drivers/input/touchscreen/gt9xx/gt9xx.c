@@ -1,47 +1,4 @@
-/* drivers/input/touchscreen/gt9xx.c
- *
- * Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
- *
- * Linux Foundation chooses to take subject only to the GPLv2 license
- * terms, and distributes only under these terms.
- *
- * 2010 - 2013 Goodix Technology.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be a reference
- * to you, when you are integrating the GOODiX's CTP IC into your system,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * Version: 1.8
- * Authors: andrew@goodix.com, meta@goodix.com
- * Release Date: 2013/04/25
- * Revision record:
- *      V1.0:
- *          first Release. By Andrew, 2012/08/31
- *      V1.2:
- *          modify gtp_reset_guitar,slot report,tracking_id & 0x0F.
- *                  By Andrew, 2012/10/15
- *      V1.4:
- *          modify gt9xx_update.c. By Andrew, 2012/12/12
- *      V1.6:
- *          1. new heartbeat/esd_protect mechanism(add external watchdog)
- *          2. doze mode, sliding wakeup
- *          3. 3 more cfg_group(GT9 Sensor_ID: 0~5)
- *          3. config length verification
- *          4. names & comments
- *                  By Meta, 2013/03/11
- *      V1.8:
- *          1. pen/stylus identification
- *          2. read double check & fixed config support
- *          2. new esd & slide wakeup optimization
- *                  By Meta, 2013/06/08
- */
+
 
 #include <linux/regulator/consumer.h>
 #include "gt9xx.h"
@@ -2421,15 +2378,7 @@ static int gtp_init_ext_watchdog(struct i2c_client *client)
 	return 0;
 }
 
-/*******************************************************
-Function:
-	Esd protect function.
-	Added external watchdog by meta, 2013/03/07
-Input:
-	work: delayed work
-Output:
-	None.
-*******************************************************/
+
 static void gtp_esd_check_func(struct work_struct *work)
 {
 	s32 retry;

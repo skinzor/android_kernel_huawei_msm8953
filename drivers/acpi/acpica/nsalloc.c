@@ -258,7 +258,6 @@ void acpi_ns_install_node(struct acpi_walk_state *walk_state, struct acpi_namesp
 	if (!child_node) {
 		parent_node->child = node;
 	} else {
-		/* Add node to the end of the peer list */
 
 		while (child_node->peer) {
 			child_node = child_node->peer;

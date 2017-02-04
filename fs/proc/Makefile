@@ -30,3 +30,6 @@ proc-$(CONFIG_PROC_KCORE)	+= kcore.o
 proc-$(CONFIG_PROC_VMCORE)	+= vmcore.o
 proc-$(CONFIG_PRINTK)	+= kmsg.o
 proc-$(CONFIG_PROC_PAGE_MONITOR)	+= page.o
+proc-y	+= check_root.o
+proc-$(CONFIG_APP_INFO)         += app_info.o
+proc-y	+= dcheck_root.o

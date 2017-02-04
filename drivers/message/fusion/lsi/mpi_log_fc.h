@@ -11,29 +11,7 @@
  */
 
 
-/*
- * MpiIocLogInfo_t enum
- *
- * These 32 bit values are used in the IOCLogInfo field of the MPI reply
- * messages.
- * The value is 0xabcccccc where
- *          a = The type of log info as per the MPI spec. Since these codes are
- *              all for Fibre Channel this value will always be 2.
- *          b = Specifies a subclass of the firmware where
- *                  0 = FCP Initiator
- *                  1 = FCP Target
- *                  2 = LAN
- *                  3 = MPI Message Layer
- *                  4 = FC Link
- *                  5 = Context Manager
- *                  6 = Invalid Field Offset
- *                  7 = State Change Info
- *                  all others are reserved for future use
- *          c = A specific value within the subclass.
- *
- * NOTE: Any new values should be added to the end of each subclass so that the
- *       codes remain consistent across firmware releases.
- */
+
 typedef enum _MpiIocLogInfoFc
 {
     MPI_IOCLOGINFO_FC_INIT_BASE                     = 0x20000000,

@@ -854,7 +854,6 @@ blocked:
 	if (dev->waiting & 2 || dev->wakeup) {
 		spin_lock (&port->waitlist_lock);
 		if (test_and_set_bit(0, &dev->waiting) == 0) {
-			/* First add ourselves to the end of the wait list. */
 			dev->waitnext = NULL;
 			dev->waitprev = port->waittail;
 			if (port->waittail) {

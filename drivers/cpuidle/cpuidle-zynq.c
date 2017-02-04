@@ -1,29 +1,4 @@
-/*
- * Copyright (C) 2012-2013 Xilinx
- *
- * CPU idle support for Xilinx Zynq
- *
- * based on arch/arm/mach-at91/cpuidle.c
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * The cpu idle uses wait-for-interrupt and RAM self refresh in order
- * to implement two idle states -
- * #1 wait-for-interrupt
- * #2 wait-for-interrupt and RAM self refresh
- *
- * Maintainer: Michal Simek <michal.simek@xilinx.com>
- */
+
 
 #include <linux/init.h>
 #include <linux/cpuidle.h>
@@ -37,7 +12,6 @@
 static int zynq_enter_idle(struct cpuidle_device *dev,
 			   struct cpuidle_driver *drv, int index)
 {
-	/* Add code for DDR self refresh start */
 	cpu_do_idle();
 
 	return index;

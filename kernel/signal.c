@@ -1,14 +1,4 @@
-/*
- *  linux/kernel/signal.c
- *
- *  Copyright (C) 1991, 1992  Linus Torvalds
- *
- *  1997-11-02  Modified for POSIX.1b signals by Richard Henderson
- *
- *  2003-06-02  Jim Houston - Concurrent Computer Corp.
- *		Changes to use preallocated sigqueue structures
- *		to allow signals to be sent reliably.
- */
+
 
 #include <linux/slab.h>
 #include <linux/export.h>
@@ -44,6 +34,10 @@
 #include <asm/siginfo.h>
 #include <asm/cacheflush.h>
 #include "audit.h"	/* audit_signal_info() */
+
+#ifdef CONFIG_HUAWEI_KSTATE
+#include <linux/hw_kcollect.h>
+#endif
 
 /*
  * SLAB caches for signal bits.
@@ -1189,6 +1183,11 @@ int do_send_sig_info(int sig, struct siginfo *info, struct task_struct *p,
 	int ret = -ESRCH;
 
 	if (lock_task_sighand(p, &flags)) {
+#ifdef CONFIG_HUAWEI_KSTATE
+        if (sig == SIGKILL || sig == SIGTERM || sig == SIGABRT) {
+            hwkillinfo(p->tgid, sig);
+        }
+#endif
 		ret = send_signal(sig, info, p, group);
 		unlock_task_sighand(p, &flags);
 	}

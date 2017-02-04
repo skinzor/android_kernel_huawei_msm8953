@@ -144,7 +144,6 @@ static void usb_dvobj_deinit(struct usb_interface *usb_intf)
 
 	usb_set_intfdata(usb_intf, NULL);
 	if (dvobj) {
-		/* Modify condition for 92DU DMDP 2010.11.18, by Thomas */
 		if ((dvobj->NumInterfaces != 2 &&
 		    dvobj->NumInterfaces != 3) ||
 		    (dvobj->InterfaceNumber == 1)) {

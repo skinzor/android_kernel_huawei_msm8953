@@ -1,38 +1,4 @@
-/*
-    Conexant cx24116/cx24118 - DVBS/S2 Satellite demod/tuner driver
 
-    Copyright (C) 2006-2008 Steven Toth <stoth@hauppauge.com>
-    Copyright (C) 2006-2007 Georg Acher
-    Copyright (C) 2007-2008 Darron Broad
-	March 2007
-	    Fixed some bugs.
-	    Added diseqc support.
-	    Added corrected signal strength support.
-	August 2007
-	    Sync with legacy version.
-	    Some clean ups.
-    Copyright (C) 2008 Igor Liplianin
-	September, 9th 2008
-	    Fixed locking on high symbol rates (>30000).
-	    Implement MPEG initialization parameter.
-	January, 17th 2009
-	    Fill set_voltage with actually control voltage code.
-	    Correct set tone to not affect voltage.
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
 
 #include <linux/slab.h>
 #include <linux/kernel.h>
@@ -308,65 +274,7 @@ static int cx24116_set_inversion(struct cx24116_state *state,
 	return 0;
 }
 
-/*
- * modfec (modulation and FEC)
- * ===========================
- *
- * MOD          FEC             mask/val    standard
- * ----         --------        ----------- --------
- * QPSK         FEC_1_2         0x02 0x02+X DVB-S
- * QPSK         FEC_2_3         0x04 0x02+X DVB-S
- * QPSK         FEC_3_4         0x08 0x02+X DVB-S
- * QPSK         FEC_4_5         0x10 0x02+X DVB-S (?)
- * QPSK         FEC_5_6         0x20 0x02+X DVB-S
- * QPSK         FEC_6_7         0x40 0x02+X DVB-S
- * QPSK         FEC_7_8         0x80 0x02+X DVB-S
- * QPSK         FEC_8_9         0x01 0x02+X DVB-S (?) (NOT SUPPORTED?)
- * QPSK         AUTO            0xff 0x02+X DVB-S
- *
- * For DVB-S high byte probably represents FEC
- * and low byte selects the modulator. The high
- * byte is search range mask. Bit 5 may turn
- * on DVB-S and remaining bits represent some
- * kind of calibration (how/what i do not know).
- *
- * Eg.(2/3) szap "Zone Horror"
- *
- * mask/val = 0x04, 0x20
- * status 1f | signal c3c0 | snr a333 | ber 00000098 | unc 0 | FE_HAS_LOCK
- *
- * mask/val = 0x04, 0x30
- * status 1f | signal c3c0 | snr a333 | ber 00000000 | unc 0 | FE_HAS_LOCK
- *
- * After tuning FECSTATUS contains actual FEC
- * in use numbered 1 through to 8 for 1/2 .. 2/3 etc
- *
- * NBC=NOT/NON BACKWARD COMPATIBLE WITH DVB-S (DVB-S2 only)
- *
- * NBC-QPSK     FEC_1_2         0x00, 0x04      DVB-S2
- * NBC-QPSK     FEC_3_5         0x00, 0x05      DVB-S2
- * NBC-QPSK     FEC_2_3         0x00, 0x06      DVB-S2
- * NBC-QPSK     FEC_3_4         0x00, 0x07      DVB-S2
- * NBC-QPSK     FEC_4_5         0x00, 0x08      DVB-S2
- * NBC-QPSK     FEC_5_6         0x00, 0x09      DVB-S2
- * NBC-QPSK     FEC_8_9         0x00, 0x0a      DVB-S2
- * NBC-QPSK     FEC_9_10        0x00, 0x0b      DVB-S2
- *
- * NBC-8PSK     FEC_3_5         0x00, 0x0c      DVB-S2
- * NBC-8PSK     FEC_2_3         0x00, 0x0d      DVB-S2
- * NBC-8PSK     FEC_3_4         0x00, 0x0e      DVB-S2
- * NBC-8PSK     FEC_5_6         0x00, 0x0f      DVB-S2
- * NBC-8PSK     FEC_8_9         0x00, 0x10      DVB-S2
- * NBC-8PSK     FEC_9_10        0x00, 0x11      DVB-S2
- *
- * For DVB-S2 low bytes selects both modulator
- * and FEC. High byte is meaningless here. To
- * set pilot, bit 6 (0x40) is set. When inspecting
- * FECSTATUS bit 7 (0x80) represents the pilot
- * selection whilst not tuned. When tuned, actual FEC
- * in use is found in FECSTATUS as per above. Pilot
- * value is reset.
- */
+
 
 /* A table of modulation, fec and configuration bytes for the demod.
  * Not all S2 mmodulation schemes are support and not all rates with

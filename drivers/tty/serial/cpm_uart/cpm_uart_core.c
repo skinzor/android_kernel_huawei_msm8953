@@ -1,33 +1,4 @@
-/*
- *  Driver for CPM (SCC/SMC) serial ports; core driver
- *
- *  Based on arch/ppc/cpm2_io/uart.c by Dan Malek
- *  Based on ppc8xx.c by Thomas Gleixner
- *  Based on drivers/serial/amba.c by Russell King
- *
- *  Maintainer: Kumar Gala (galak@kernel.crashing.org) (CPM2)
- *              Pantelis Antoniou (panto@intracom.gr) (CPM1)
- *
- *  Copyright (C) 2004, 2007 Freescale Semiconductor, Inc.
- *            (C) 2004 Intracom, S.A.
- *            (C) 2005-2006 MontaVista Software, Inc.
- *		Vitaly Bordug <vbordug@ru.mvista.com>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
+
 
 #include <linux/module.h>
 #include <linux/tty.h>
@@ -601,10 +572,7 @@ static void cpm_uart_set_termios(struct uart_port *port,
 
 	spin_lock_irqsave(&port->lock, flags);
 
-	/* Start bit has not been added (so don't, because we would just
-	 * subtract it later), and we need to add one for the number of
-	 * stops bits (there is always at least one).
-	 */
+	
 	bits++;
 	if (IS_SMC(pinfo)) {
 		/*

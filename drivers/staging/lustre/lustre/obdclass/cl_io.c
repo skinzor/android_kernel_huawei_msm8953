@@ -1,28 +1,4 @@
-/*
- * GPL HEADER START
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 only,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License version 2 for more details (a copy is included
- * in the LICENSE file that accompanied this code).
- *
- * You should have received a copy of the GNU General Public License
- * version 2 along with this program; If not, see
- * http://www.sun.com/software/products/lustre/docs/GPLv2.pdf
- *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
- *
- * GPL HEADER END
- */
+
 /*
  * Copyright (c) 2008, 2010, Oracle and/or its affiliates. All rights reserved.
  * Use is subject to license terms.
@@ -1015,15 +991,7 @@ int cl_io_loop(const struct lu_env *env, struct cl_io *io)
 }
 EXPORT_SYMBOL(cl_io_loop);
 
-/**
- * Adds io slice to the cl_io.
- *
- * This is called by cl_object_operations::coo_io_init() methods to add a
- * per-layer state to the io. New state is added at the end of
- * cl_io::ci_layers list, that is, it is at the bottom of the stack.
- *
- * \see cl_lock_slice_add(), cl_req_slice_add(), cl_page_slice_add()
- */
+
 void cl_io_slice_add(struct cl_io *io, struct cl_io_slice *slice,
 		     struct cl_object *obj,
 		     const struct cl_io_operations *ops)
@@ -1348,15 +1316,7 @@ void cl_io_print(const struct lu_env *env, void *cookie,
 {
 }
 
-/**
- * Adds request slice to the compound request.
- *
- * This is called by cl_device_operations::cdo_req_init() methods to add a
- * per-layer state to the request. New state is added at the end of
- * cl_req::crq_layers list, that is, it is at the bottom of the stack.
- *
- * \see cl_lock_slice_add(), cl_page_slice_add(), cl_io_slice_add()
- */
+
 void cl_req_slice_add(struct cl_req *req, struct cl_req_slice *slice,
 		      struct cl_device *dev,
 		      const struct cl_req_operations *ops)

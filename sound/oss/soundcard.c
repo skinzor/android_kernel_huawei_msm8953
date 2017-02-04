@@ -1,26 +1,4 @@
-/*
- * linux/sound/oss/soundcard.c
- *
- * Sound card driver for Linux
- *
- *
- * Copyright (C) by Hannu Savolainen 1993-1997
- *
- * OSS/Free for Linux is distributed under the GNU GENERAL PUBLIC LICENSE (GPL)
- * Version 2 (June 1991). See the "COPYING" file distributed with this software
- * for more info.
- *
- *
- * Thomas Sailer     : ioctl code reworked (vmalloc/vfree removed)
- *                   integrated sound_switch.c
- * Stefan Reinauer   : integrated /proc/sound (equals to /dev/sndstat,
- *                   which should disappear in the near future)
- * Eric Dumas	     : devfs support (22-Jan-98) <dumas@linux.eu.org> with
- *                   fixups by C. Scott Ananian <cananian@alumni.princeton.edu>
- * Richard Gooch     : moved common (non OSS-specific) devices to sound_core.c
- * Rob Riggs	     : Added persistent DMA buffers support (1998/10/17)
- * Christoph Hellwig : Some cleanup work (2000/03/01)
- */
+
 
 
 #include "sound_config.h"

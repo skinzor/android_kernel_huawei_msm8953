@@ -1,15 +1,4 @@
-/* Copyright (c) 2002,2007-2016, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- */
+
 #include <linux/slab.h>
 #include <linux/sched.h>
 #include <linux/log2.h>
@@ -942,10 +931,7 @@ int adreno_ringbuffer_submitcmd(struct adreno_device *adreno_dev,
 				started));
 	}
 
-	/*
-	 * Add cmds to read the GPU ticks at the start of the cmdbatch and
-	 * write it into the appropriate cmdbatch profiling buffer offset
-	 */
+	
 	if (cmdbatch_user_profiling) {
 		cmds += _get_alwayson_counter(adreno_dev, cmds,
 			cmdbatch->profiling_buffer_gpuaddr +
@@ -985,10 +971,7 @@ int adreno_ringbuffer_submitcmd(struct adreno_device *adreno_dev,
 				retired));
 	}
 
-	/*
-	 * Add cmds to read the GPU ticks at the end of the cmdbatch and
-	 * write it into the appropriate cmdbatch profiling buffer offset
-	 */
+	
 	if (cmdbatch_user_profiling) {
 		cmds += _get_alwayson_counter(adreno_dev, cmds,
 			cmdbatch->profiling_buffer_gpuaddr +

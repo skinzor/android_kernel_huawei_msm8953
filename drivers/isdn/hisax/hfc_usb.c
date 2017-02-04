@@ -1,33 +1,4 @@
-/*
- * hfc_usb.c
- *
- * $Id: hfc_usb.c,v 2.3.2.24 2007/10/14 08:40:29 mbachem Exp $
- *
- * modular HiSax ISDN driver for Colognechip HFC-S USB chip
- *
- * Authors : Peter Sprenger (sprenger@moving-bytes.de)
- *           Martin Bachem (m.bachem@gmx.de, info@colognechip.com)
- *
- *           based on the first hfc_usb driver of
- *           Werner Cornelius (werner@isdn-development.de)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * See Version Histroy at the bottom of this file
- *
- */
+
 
 #include <linux/types.h>
 #include <linux/stddef.h>
@@ -618,7 +589,6 @@ tx_iso_complete(struct urb *urb)
 						/* here frame completion */
 						context_iso_urb->
 							buffer[tx_offset] = 1;
-						/* add 2 byte flags and 16bit CRC at end of ISDN frame */
 						fifo->bit_line += 32;
 					}
 					frame_complete = 1;

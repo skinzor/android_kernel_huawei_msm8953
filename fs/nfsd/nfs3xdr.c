@@ -779,7 +779,6 @@ nfs3svc_encode_readdirres(struct svc_rqst *rqstp, __be32 *p,
 			return 1; /*No room for trailer */
 		rqstp->rq_res.page_len = (resp->count) << 2;
 
-		/* add the 'tail' to the end of the 'head' page - page 0. */
 		rqstp->rq_res.tail[0].iov_base = p;
 		*p++ = 0;		/* no more entries */
 		*p++ = htonl(resp->common.err == nfserr_eof);

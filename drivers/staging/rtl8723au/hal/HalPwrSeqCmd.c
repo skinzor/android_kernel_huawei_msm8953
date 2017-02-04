@@ -12,23 +12,7 @@
  * more details.
  *
  ******************************************************************************/
-/*++
-Copyright (c) Realtek Semiconductor Corp. All rights reserved.
 
-Module Name:
-	HalPwrSeqCmd.c
-
-Abstract:
-	Implement HW Power sequence configuration CMD handling routine for
-	Realtek devices.
-
-Major Change History:
-	When       Who               What
-	---------- ---------------   -------------------------------
-	2011-10-26 Lucas            Modify to be compatible with SD4-CE driver.
-	2011-07-07 Roger            Create.
-
---*/
 #include <HalPwrSeqCmd.h>
 #include <usb_ops_linux.h>
 
@@ -41,7 +25,6 @@ Major Change History:
 /*		We should follow specific format which was released from
 		HW SD. */
 /*  */
-/*	2011.07.07, added by Roger. */
 /*  */
 u8 HalPwrSeqCmdParsing23a(struct rtw_adapter *padapter, u8 CutVersion,
 		       u8 FabVersion, u8 InterfaceType,

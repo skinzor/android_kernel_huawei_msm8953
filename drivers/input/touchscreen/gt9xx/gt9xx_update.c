@@ -1,36 +1,4 @@
-/* drivers/input/touchscreen/gt9xx_update.c
- *
- * 2010 - 2012 Goodix Technology.
- * Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be a reference
- * to you, when you are integrating the GOODiX's CTP IC into your system,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * Latest Version:1.6
- * Author: andrew@goodix.com
- * Revision Record:
- *      V1.0:
- *          first release. By Andrew, 2012/08/31
- *      V1.2:
- *          add force update,GT9110P pid map. By Andrew, 2012/10/15
- *      V1.4:
- *          1. add config auto update function;
- *          2. modify enter_update_mode;
- *          3. add update file cal checksum.
- *                          By Andrew, 2012/12/12
- *      V1.6:
- *          1. replace guitar_client with i2c_connect_client;
- *          2. support firmware header array update.
- *                          By Meta, 2013/03/11
- */
+
 #include "gt9xx.h"
 #include <linux/firmware.h>
 #include <linux/workqueue.h>
@@ -399,7 +367,6 @@ s32 gup_enter_update_mode(struct i2c_client *client)
 	/* step3:RST output high reset guitar */
 	gpio_direction_output(ts->pdata->reset_gpio, 1);
 
-	/* 20121211 modify start */
 	msleep(20);
 	while (retry++ < 200) {
 		/* step4:Hold ss51 & dsp */
@@ -430,7 +397,6 @@ s32 gup_enter_update_mode(struct i2c_client *client)
 	/* step6:DSP_CK and DSP_ALU_CK PowerOn */
 	ret = gup_set_ic_msg(client, 0x4010, 0x00);
 
-	/* 20121211 modify end */
 	return ret;
 }
 

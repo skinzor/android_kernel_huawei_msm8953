@@ -66,7 +66,7 @@ enum {
 	AESCCMP_OFFSET_A2		=	10,
 	AESCCMP_OFFSET_A4		=	24,
 	AESCCMP_QC_TID_MASK		=	0x0f,
-	AESCCMP_BLK_SIZE_TOTAL	=   16*16,     /*  Added by Annie for CKIP AES MIC BSOD, 2006-08-17. */
+	AESCCMP_BLK_SIZE_TOTAL	=   16*16,
 											/*  16*8 < 4*60  Resove to 16*16 */
 };
 

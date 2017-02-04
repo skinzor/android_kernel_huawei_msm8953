@@ -1,21 +1,4 @@
-/*
- * Copyright (C) 2004-2007,2011-2012 Freescale Semiconductor, Inc.
- * All rights reserved.
- *
- * Author: Li Yang <leoli@freescale.com>
- *         Jiang Bo <tanya.jiang@freescale.com>
- *
- * Description:
- * Freescale high-speed USB SOC DR module device controller driver.
- * This can be found on MPC8349E/MPC8313E/MPC5121E cpus.
- * The driver is previously named as mpc_udc.  Based on bare board
- * code from Dave Liu and Shlomi Gridish.
- *
- * This program is free software; you can redistribute  it and/or modify it
- * under  the terms of  the GNU General  Public License as published by the
- * Free Software Foundation;  either version 2 of the  License, or (at your
- * option) any later version.
- */
+
 
 #undef VERBOSE
 
@@ -737,7 +720,6 @@ static void fsl_queue_td(struct fsl_ep *ep, struct fsl_req *req)
 
 	/* check if the pipe is empty */
 	if (!(list_empty(&ep->queue)) && !(ep_index(ep) == 0)) {
-		/* Add td to the end */
 		struct fsl_req *lastreq;
 		lastreq = list_entry(ep->queue.prev, struct fsl_req, queue);
 		lastreq->tail->next_td_ptr =

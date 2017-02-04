@@ -471,7 +471,6 @@ static int nfcwilink_send(struct nci_dev *ndev, struct sk_buff *skb)
 		return -EINVAL;
 	}
 
-	/* add the ST hdr to the start of the buffer */
 	hdr.len = cpu_to_le16(skb->len);
 	memcpy(skb_push(skb, NFCWILINK_HDR_LEN), &hdr, NFCWILINK_HDR_LEN);
 

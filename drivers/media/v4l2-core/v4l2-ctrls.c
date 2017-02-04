@@ -1873,10 +1873,7 @@ static int handler_new_ref(struct v4l2_ctrl_handler *hdl,
 
 	mutex_lock(hdl->lock);
 
-	/* Add immediately at the end of the list if the list is empty, or if
-	   the last element in the list has a lower ID.
-	   This ensures that when elements are added in ascending order the
-	   insertion is an O(1) operation. */
+	
 	if (list_empty(&hdl->ctrl_refs) || id > node2id(hdl->ctrl_refs.prev)) {
 		list_add_tail(&new_ref->node, &hdl->ctrl_refs);
 		goto insert_in_hash;

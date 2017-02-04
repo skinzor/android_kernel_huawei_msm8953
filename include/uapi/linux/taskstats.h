@@ -18,19 +18,7 @@
 
 #include <linux/types.h>
 
-/* Format for per-task data returned to userland when
- *	- a task exits
- *	- listener requests stats for a task
- *
- * The struct is versioned. Newer versions should only add fields to
- * the bottom of the struct to maintain backward compatibility.
- *
- *
- * To add new fields
- *	a) bump up TASKSTATS_VERSION
- *	b) add comment indicating new version number at end of struct
- *	c) add new fields after version comment; maintain 64-bit alignment
- */
+
 
 
 #define TASKSTATS_VERSION	8
@@ -121,12 +109,7 @@ struct taskstats {
 	/* Basic Accounting Fields end */
 
 	/* Extended accounting fields start */
-	/* Accumulated RSS usage in duration of a task, in MBytes-usecs.
-	 * The current rss usage is added to this counter every time
-	 * a tick is charged to a task's system time. So, at the end we
-	 * will have memory usage multiplied by system time. Thus an
-	 * average usage per system time unit can be calculated.
-	 */
+	
 	__u64	coremem;		/* accumulated RSS usage in MB-usec */
 	/* Accumulated virtual memory usage in duration of a task.
 	 * Same as acct_rss_mem1 above except that we keep track of VM usage.

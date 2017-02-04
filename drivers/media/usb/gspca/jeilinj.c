@@ -288,7 +288,6 @@ static void sd_pkt_scan(struct gspca_dev *gspca_dev,
 	if (header_marker == FRAME_START) {
 		sd->blocks_left = data[0x0a] - 1;
 		PDEBUG(D_STREAM, "blocks_left = 0x%x", sd->blocks_left);
-		/* Start a new frame, and add the JPEG header, first thing */
 		gspca_frame_add(gspca_dev, FIRST_PACKET,
 				sd->jpeg_hdr, JPEG_HDR_SZ);
 		/* Toss line 0 of data block 0, keep the rest. */

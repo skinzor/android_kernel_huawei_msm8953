@@ -384,7 +384,6 @@ static void odm_Process_RSSIForDM(struct odm_dm_struct *dm_odm,
 			}
 			pEntry->rssi_stat.PacketMap = pEntry->rssi_stat.PacketMap<<1;
 		}
-		/* 2011.07.28 LukeLee: modified to prevent unstable CCK RSSI */
 		if (pEntry->rssi_stat.ValidBit >= 64)
 			pEntry->rssi_stat.ValidBit = 64;
 		else

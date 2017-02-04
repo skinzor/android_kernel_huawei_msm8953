@@ -35,6 +35,8 @@
 #include <linux/string_helpers.h>
 #include <linux/alarmtimer.h>
 #include <linux/qpnp/qpnp-revid.h>
+#include <linux/power/huawei_fuelguage.h>
+#include <linux/power/huawei_dsm_charger.h>
 
 /* Register offsets */
 
@@ -310,7 +312,7 @@ static struct fg_mem_data fg_backup_regs[FG_BACKUP_MAX] = {
 	BACKUP(MAH_TO_SOC,	0x4A0,   0,      4,     -EINVAL),
 };
 
-static int fg_debug_mask;
+static int fg_debug_mask = FG_IRQS | FG_STATUS;
 module_param_named(
 	debug_mask, fg_debug_mask, int, S_IRUSR | S_IWUSR
 );
@@ -622,6 +624,8 @@ struct fg_chip {
 	int			last_good_temp;
 	int			batt_temp_low_limit;
 	int			batt_temp_high_limit;
+	/* Add prev_capacity to record last monotonic soc */
+	int			prev_capacity;
 	/* Validating CC_SOC */
 	struct work_struct	cc_soc_store_work;
 	struct fg_wakeup_source	cc_soc_wakeup_source;
@@ -652,6 +656,21 @@ static const mode_t DFS_MODE = S_IRUSR | S_IWUSR;
 static const char *default_batt_type	= "Unknown Battery";
 static const char *loading_batt_type	= "Loading Battery Data";
 static const char *missing_batt_type	= "Disconnected Battery";
+
+static struct fg_chip *global_fg_chip;
+
+static bool factory_mode;
+static int __init early_parse_factory_mode(char *cmdline)
+{
+	if ((cmdline) && !strncmp(cmdline, "factory", strlen("factory"))) {
+		factory_mode = true;
+	}
+
+	return 0;
+}
+early_param("androidboot.huawei_swtype", early_parse_factory_mode);
+
+static bool is_input_present(struct fg_chip *chip);
 
 /* Log buffer */
 struct fg_log_buffer {
@@ -706,6 +725,9 @@ static char *fg_supplicants[] = {
 	"bcl",
 	"fg_adc"
 };
+
+static void qpnp_fuelguage_dump_register(char *reg_value);
+static void qpnp_get_fuelguage_register_head(char *reg_head);
 
 #define DEBUG_PRINT_BUFFER_SIZE 64
 static void fill_string(char *str, size_t str_len, u8 *buf, int buf_len)
@@ -2230,7 +2252,7 @@ static int get_prop_capacity(struct fg_chip *chip)
 		return FULL_CAPACITY;
 	}
 
-	return DIV_ROUND_CLOSEST((msoc - 1) * (FULL_CAPACITY - 2),
+	return DIV_ROUND_CLOSEST((msoc - 1) * (FULL_CAPACITY - 1),
 			FULL_SOC_RAW - 2) + 1;
 }
 
@@ -2700,6 +2722,7 @@ static void update_temp_data(struct work_struct *work)
 	u8 reg[2];
 	bool tried_again = false;
 	int rc, ret, timeout = TEMP_PERIOD_TIMEOUT_MS;
+	int capacity = 0;
 	struct fg_chip *chip = container_of(work,
 				struct fg_chip,
 				update_temp_work.work);
@@ -2781,6 +2804,14 @@ wait:
 	if (chip->soc_slope_limiter_en) {
 		fg_stay_awake(&chip->slope_limit_wakeup_source);
 		schedule_work(&chip->slope_limiter_work);
+	}
+
+	capacity = get_prop_capacity(chip);
+	/* when monotonic soc has been changed, report uevent */
+	if (capacity != chip->prev_capacity) {
+		chip->prev_capacity = capacity;
+		if (chip->power_supply_registered)
+			power_supply_changed(&chip->bms_psy);
 	}
 
 out:
@@ -3248,6 +3279,153 @@ static void battery_age_work(struct work_struct *work)
 				battery_age_work);
 
 	estimate_battery_age(chip, &chip->actual_cap_uah);
+}
+
+static enum power_supply_property fg_power_props[] = {
+	POWER_SUPPLY_PROP_CAPACITY,
+	POWER_SUPPLY_PROP_CAPACITY_RAW,
+	POWER_SUPPLY_PROP_CURRENT_NOW,
+	POWER_SUPPLY_PROP_VOLTAGE_NOW,
+	POWER_SUPPLY_PROP_VOLTAGE_OCV,
+	POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN,
+	POWER_SUPPLY_PROP_CHARGE_NOW,
+	POWER_SUPPLY_PROP_CHARGE_NOW_RAW,
+	POWER_SUPPLY_PROP_CHARGE_NOW_ERROR,
+	POWER_SUPPLY_PROP_CHARGE_FULL,
+	POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
+	POWER_SUPPLY_PROP_TEMP,
+	POWER_SUPPLY_PROP_COOL_TEMP,
+	POWER_SUPPLY_PROP_WARM_TEMP,
+	POWER_SUPPLY_PROP_RESISTANCE,
+	POWER_SUPPLY_PROP_RESISTANCE_ID,
+	POWER_SUPPLY_PROP_BATTERY_TYPE,
+	POWER_SUPPLY_PROP_UPDATE_NOW,
+	POWER_SUPPLY_PROP_ESR_COUNT,
+	POWER_SUPPLY_PROP_VOLTAGE_MIN,
+	POWER_SUPPLY_PROP_CYCLE_COUNT,
+	POWER_SUPPLY_PROP_CYCLE_COUNT_ID,
+	POWER_SUPPLY_PROP_HI_POWER,
+	POWER_SUPPLY_PROP_PROFILE_STATUS,
+	POWER_SUPPLY_PROP_IGNORE_FALSE_NEGATIVE_ISENSE,
+	POWER_SUPPLY_PROP_ENABLE_JEITA_DETECTION,
+	POWER_SUPPLY_PROP_SOC_REPORTING_READY,
+};
+
+static int fg_power_get_property(struct power_supply *psy,
+				       enum power_supply_property psp,
+				       union power_supply_propval *val)
+{
+	struct fg_chip *chip = container_of(psy, struct fg_chip, bms_psy);
+	bool vbatt_low_sts;
+
+	switch (psp) {
+	case POWER_SUPPLY_PROP_BATTERY_TYPE:
+		if (chip->battery_missing)
+			val->strval = missing_batt_type;
+		else if (chip->fg_restarting)
+			val->strval = loading_batt_type;
+		else
+			val->strval = chip->batt_type;
+		break;
+	case POWER_SUPPLY_PROP_CAPACITY:
+		val->intval = get_prop_capacity(chip);
+		/*
+		 * if input presents, avoid shutdown by 0 capacity in
+		 * factory mode
+		 */
+		if (!val->intval && factory_mode && is_input_present(chip)) {
+			val->intval = 1;
+		}
+		break;
+	case POWER_SUPPLY_PROP_CAPACITY_RAW:
+		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_SOC);
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_NOW_ERROR:
+		val->intval = get_sram_prop_now(chip, FG_DATA_VINT_ERR);
+		break;
+	case POWER_SUPPLY_PROP_CURRENT_NOW:
+		val->intval = get_sram_prop_now(chip, FG_DATA_CURRENT);
+		break;
+	case POWER_SUPPLY_PROP_IGNORE_FALSE_NEGATIVE_ISENSE:
+		val->intval = !chip->allow_false_negative_isense;
+		break;
+	case POWER_SUPPLY_PROP_ENABLE_JEITA_DETECTION:
+		val->intval = chip->use_soft_jeita_irq;
+		break;
+	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+		val->intval = get_sram_prop_now(chip, FG_DATA_VOLTAGE);
+		break;
+	case POWER_SUPPLY_PROP_VOLTAGE_OCV:
+		val->intval = get_sram_prop_now(chip, FG_DATA_OCV);
+		break;
+	case POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN:
+		val->intval = chip->batt_max_voltage_uv;
+		break;
+	case POWER_SUPPLY_PROP_TEMP:
+		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_TEMP);
+		break;
+	case POWER_SUPPLY_PROP_COOL_TEMP:
+		val->intval = get_prop_jeita_temp(chip, FG_MEM_SOFT_COLD);
+		break;
+	case POWER_SUPPLY_PROP_WARM_TEMP:
+		val->intval = get_prop_jeita_temp(chip, FG_MEM_SOFT_HOT);
+		break;
+	case POWER_SUPPLY_PROP_RESISTANCE:
+		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ESR);
+		break;
+	case POWER_SUPPLY_PROP_ESR_COUNT:
+		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ESR_COUNT);
+		break;
+	case POWER_SUPPLY_PROP_CYCLE_COUNT:
+		val->intval = fg_get_cycle_count(chip);
+		break;
+	case POWER_SUPPLY_PROP_CYCLE_COUNT_ID:
+		val->intval = chip->cyc_ctr.id;
+		break;
+	case POWER_SUPPLY_PROP_RESISTANCE_ID:
+		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ID);
+		break;
+	case POWER_SUPPLY_PROP_UPDATE_NOW:
+		val->intval = 0;
+		break;
+	case POWER_SUPPLY_PROP_VOLTAGE_MIN:
+		if (!fg_get_vbatt_status(chip, &vbatt_low_sts))
+			val->intval = (int)vbatt_low_sts;
+		else
+			val->intval = 1;
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+		val->intval = chip->nom_cap_uah;
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_FULL:
+		val->intval = chip->learning_data.learned_cc_uah;
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_NOW:
+		val->intval = chip->learning_data.cc_uah;
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_NOW_RAW:
+		val->intval = get_sram_prop_now(chip, FG_DATA_CC_CHARGE);
+		break;
+	case POWER_SUPPLY_PROP_HI_POWER:
+		val->intval = !!chip->bcl_lpm_disabled;
+		break;
+	case POWER_SUPPLY_PROP_PROFILE_STATUS:
+		val->intval = chip->profile_loaded;
+		break;
+	case POWER_SUPPLY_PROP_REGISTER_HEAD:
+		qpnp_get_fuelguage_register_head((char *)val->strval);
+		break;
+	case POWER_SUPPLY_PROP_DUMP_REGISTER:
+		qpnp_fuelguage_dump_register((char *)val->strval);
+		break;
+	case POWER_SUPPLY_PROP_SOC_REPORTING_READY:
+		val->intval = !!chip->profile_loaded;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
 static int correction_times[] = {
@@ -4771,7 +4949,7 @@ static void dump_sram(struct work_struct *work)
 #define MAXRSCHANGE_REG		0x434
 #define ESR_VALUE_OFFSET	1
 #define ESR_STRICT_VALUE	0x4120391F391F3019
-#define ESR_DEFAULT_VALUE	0x58CD4A6761C34A67
+#define ESR_DEFAULT_VALUE	0x392118EC61C34A67
 static void update_esr_value(struct work_struct *work)
 {
 	union power_supply_propval prop = {0, };
@@ -5944,6 +6122,27 @@ static void discharge_gain_work(struct work_struct *work)
 	fg_relax(&chip->dischg_gain_wakeup_source);
 }
 
+static void get_batt_id_from_sram(struct fg_chip *chip)
+{
+	int rc = 0;
+	u8 id_info[2] = {0};
+
+	fg_mem_lock(chip);
+	rc = fg_mem_read(chip, &id_info[0],
+			 fg_data[FG_DATA_BATT_ID].address,
+			 fg_data[FG_DATA_BATT_ID].len,
+			 fg_data[FG_DATA_BATT_ID].offset, 0);
+	rc |= fg_mem_read(chip, &id_info[1],
+			  fg_data[FG_DATA_BATT_ID_INFO].address,
+			  fg_data[FG_DATA_BATT_ID_INFO].len,
+			  fg_data[FG_DATA_BATT_ID_INFO].offset, 0);
+	if (!rc) {
+		fg_data[FG_DATA_BATT_ID].value = id_info[0] * LSB_8B;
+		fg_data[FG_DATA_BATT_ID_INFO].value = id_info[1];
+	}
+	fg_mem_release(chip);
+}
+
 #define LOW_LATENCY			BIT(6)
 #define BATT_PROFILE_OFFSET		0x4C0
 #define PROFILE_INTEGRITY_REG		0x53C
@@ -6021,6 +6220,7 @@ try_again:
 
 	/* unset the restart bits so the fg doesn't continuously restart */
 	reg = REDO_FIRST_ESTIMATE | RESTART_GO;
+	reg |= BIT(4);
 	rc = fg_masked_write(chip, chip->soc_base + SOC_RESTART,
 			reg, 0, 1);
 	if (rc) {
@@ -6117,6 +6317,11 @@ try_again:
 	}
 
 	reg = REDO_FIRST_ESTIMATE | RESTART_GO;
+	/*
+	 * re-trigger the hareware batt id recognize for that the recongization
+	 * isn't right at the moment that the battery BTB is fixing sometimes.
+	 */
+	reg |= BIT(4);
 	rc = fg_masked_write(chip, chip->soc_base + SOC_RESTART,
 			reg, reg, 1);
 	if (rc) {
@@ -6149,6 +6354,7 @@ try_again:
 	}
 	/* unset the restart bits so the fg doesn't continuously restart */
 	reg = REDO_FIRST_ESTIMATE | RESTART_GO;
+	reg |= BIT(4);
 	rc = fg_masked_write(chip, chip->soc_base + SOC_RESTART,
 			reg, 0, 1);
 	if (rc) {
@@ -6195,6 +6401,26 @@ sub_and_fail:
 fail:
 	chip->fg_restarting = false;
 	return -EINVAL;
+}
+
+static void fg_set_esr_cfg(struct fg_chip *chip, u64 default_value, bool pulse_cfg)
+{
+	int rc = 0;
+	u8 val = 0;
+
+	if (pulse_cfg) {
+		fg_mem_masked_write(chip, 0x42C, 0xFF, 0x29, 1);
+		fg_mem_masked_write(chip, 0x4B4, 0xFF, 0x75, 2);
+		val = 0xA5;
+		fg_write(chip, &val, chip->batt_base + 0xD0, 1);
+		fg_masked_write(chip, chip->batt_base + 0xF4, 0x03, 0x02, 1);
+	}
+
+	if (chip->esr_strict_filter)
+		return;
+
+	rc = fg_mem_write(chip, (u8 *)&default_value, MAXRSCHANGE_REG, 8, ESR_VALUE_OFFSET, 0);
+	pr_info("set default esr value:%llx, rc:%d\n", default_value, rc);
 }
 
 #define FG_PROFILE_LEN			128
@@ -6329,6 +6555,11 @@ wait:
 		rc = 0;
 		goto no_profile;
 	}
+	if (strcmp("itech_3000mah", batt_type_str) == 0) {
+		pr_info("no batt profile matched, use itech_3000mah\n");
+		dsm_post_chg_bms_info(DSM_BMS_NOT_STANDARD_BATTERY,
+					"batt id not matched\n");
+	}
 
 	if (!chip->batt_profile)
 		chip->batt_profile = devm_kzalloc(chip->dev,
@@ -6407,6 +6638,12 @@ wait:
 		pr_err("restart failed: %d\n", rc);
 		goto no_profile;
 	}
+	/*
+	 * update the newly recognized batt id immediately in factory mode
+	 * for that some test need to check the batt id, such as MMI1.
+	 */
+	if (factory_mode)
+		get_batt_id_from_sram(chip);
 
 	/*
 	 * Only configure from profile if thermal-coefficients is not
@@ -6479,6 +6716,8 @@ done:
 	pr_info("Battery SOC: %d, V: %duV\n", get_prop_capacity(chip),
 		fg_data[FG_DATA_VOLTAGE].value);
 	complete_all(&chip->fg_reset_done);
+	/* reset the default esr to make sure the low temp discharge smooth */
+	fg_set_esr_cfg(chip, ESR_DEFAULT_VALUE, true);
 	return rc;
 no_profile:
 	chip->soc_reporting_ready = true;
@@ -8540,6 +8779,134 @@ done:
 	fg_cleanup(chip);
 }
 
+#define BUFFER_SIZE	30
+static char DUMP_FG_SOC[] = {0x08};
+static char DUMP_FG_BATT[] = {0x08};
+static char DUMP_REVID_TP_REV[] = {0x08};
+static char DUMP_FG_MEMIF[] = {0x00};
+
+static void get_fuelguage_register_info(char *reg_value, u16 base_addr,
+					char *offset, int length)
+{
+	char buff[BUFFER_SIZE] = {0};
+	int i = 0;
+	int rc = 0;
+	char reg = 0;
+
+	if (NULL == reg_value || NULL == offset) {
+		pr_err("the reg_value or offset is NULL\n");
+		return;
+	}
+
+	if (!global_fg_chip) {
+		pr_err("global_chip is not init ready\n");
+		return;
+	}
+
+	for (i = 0; i < length; i++) {
+		rc = fg_read(global_fg_chip, &reg, base_addr + offset[i], 1);
+		if (rc) {
+			pr_err("spmi read failed: addr=%03X, rc=%d\n",
+					base_addr + offset[i], rc);
+			return;
+		}
+		snprintf(buff, BUFFER_SIZE, "0x%-8.4x", reg);
+		strncat_length_protect(reg_value, buff);
+	}
+}
+
+static void get_fuelguage_register_head(char *reg_head, u16 base_addr,
+					char *offset, int length)
+{
+	char buff[BUFFER_SIZE] = {0};
+	int i = 0;
+
+	for (i = 0; i < length; i++) {
+		snprintf(buff, BUFFER_SIZE, "R[0x%4x] ", base_addr + offset[i]);
+		strncat_length_protect(reg_head, buff);
+	}
+}
+
+static void qpnp_fuelguage_dump_register(char *reg_value)
+{
+	int cpred_vol = 0, vint_err = 0, batt_esr = 0, batt_esr_count = 0;
+	int batt_soc = 0, cc_charge = 0, batt_id = 0, batt_id_info = 0;
+	int cycle_count = 0, cycle_count_id = 0, full_design = 0;
+	int charge_full = 0, charge_now = 0, charge_now_raw = 0;
+
+	if (NULL == reg_value) {
+		pr_err("the reg_value is NULL\n");
+		return;
+	}
+
+	if (!global_fg_chip) {
+		pr_err("global_chip is not init ready\n");
+		return;
+	}
+
+	memset(reg_value, 0, CHARGELOG_SIZE);
+
+	/* add 14 item info, the head is chars */
+	cpred_vol = fg_data[FG_DATA_CPRED_VOLTAGE].value;
+	vint_err = fg_data[FG_DATA_VINT_ERR].value;
+	batt_esr = fg_data[FG_DATA_BATT_ESR].value;
+	batt_esr_count = fg_data[FG_DATA_BATT_ESR_COUNT].value;
+	batt_soc = fg_data[FG_DATA_BATT_SOC].value;
+	cc_charge = fg_data[FG_DATA_CC_CHARGE].value;
+	batt_id = fg_data[FG_DATA_BATT_ID].value;
+	batt_id_info = fg_data[FG_DATA_BATT_ID_INFO].value;
+	cycle_count = fg_get_cycle_count(global_fg_chip);
+	cycle_count_id = global_fg_chip->cyc_ctr.id;
+	full_design = global_fg_chip->nom_cap_uah;
+	charge_full = global_fg_chip->learning_data.learned_cc_uah;
+	charge_now = global_fg_chip->learning_data.cc_uah;
+	charge_now_raw = get_sram_prop_now(global_fg_chip, FG_DATA_CC_CHARGE);
+
+	snprintf(reg_value, MAX_SIZE, "%-12d %-11d %-11d %-17d %-11d %-12d %-10d %-15d %-14d %-17d %-14d %-14d %-13d %-17d ",
+			cpred_vol, vint_err, batt_esr, batt_esr_count, batt_soc,
+			cc_charge, batt_id, batt_id_info, cycle_count,
+			cycle_count_id, full_design, charge_full, charge_now,
+			charge_now_raw);
+
+	/* add the four base reg item, the head is reg address */
+	get_fuelguage_register_info(reg_value, global_fg_chip->soc_base,
+			DUMP_FG_SOC, sizeof(DUMP_FG_SOC));
+	get_fuelguage_register_info(reg_value, global_fg_chip->batt_base,
+			DUMP_FG_BATT, sizeof(DUMP_FG_BATT));
+	get_fuelguage_register_info(reg_value, global_fg_chip->mem_base,
+			DUMP_FG_MEMIF, sizeof(DUMP_FG_MEMIF));
+	get_fuelguage_register_info(reg_value, global_fg_chip->tp_rev_addr,
+			DUMP_REVID_TP_REV, sizeof(DUMP_REVID_TP_REV));
+}
+
+static void qpnp_get_fuelguage_register_head(char *reg_head)
+{
+	if (NULL == reg_head) {
+		pr_err("the reg_head is NULL\n");
+		return;
+	}
+
+	if (!global_fg_chip) {
+		pr_err("global_chip is not init ready\n");
+		return;
+	}
+
+	memset(reg_head, 0, CHARGELOG_SIZE);
+
+	/* add the fg headinfo,the head is chars */
+	snprintf(reg_head, MAX_SIZE, "cpred_vol    vint_err    batt_esr    batt_esr_count    batt_soc    cc_charge    batt_id    batt_id_info    cycle_count    cycle_count_id    full_design    charge_full    charge_now    charge_now_raw    ");
+
+	/* add the reg address to headlog */
+	get_fuelguage_register_head(reg_head, global_fg_chip->soc_base,
+			DUMP_FG_SOC, sizeof(DUMP_FG_SOC));
+	get_fuelguage_register_head(reg_head, global_fg_chip->batt_base,
+			DUMP_FG_BATT, sizeof(DUMP_FG_BATT));
+	get_fuelguage_register_head(reg_head, global_fg_chip->mem_base,
+			DUMP_FG_MEMIF, sizeof(DUMP_FG_MEMIF));
+	get_fuelguage_register_head(reg_head, global_fg_chip->tp_rev_addr,
+			DUMP_REVID_TP_REV, sizeof(DUMP_REVID_TP_REV));
+}
+
 static int fg_probe(struct spmi_device *spmi)
 {
 	struct device *dev = &(spmi->dev);
@@ -8782,6 +9149,8 @@ static int fg_probe(struct spmi_device *spmi)
 		chip->revision[DIG_MAJOR], chip->revision[DIG_MINOR],
 		chip->revision[ANA_MAJOR], chip->revision[ANA_MINOR],
 		chip->pmic_subtype);
+
+	global_fg_chip = chip;
 
 	return rc;
 

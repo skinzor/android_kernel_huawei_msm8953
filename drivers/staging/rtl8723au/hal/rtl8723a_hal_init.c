@@ -269,7 +269,6 @@ int rtl8723a_FirmwareDownload(struct rtw_adapter *padapter)
 	fw_size = fw->size;
 	release_firmware(fw);
 
-	/*  To Check Fw header. Added by tynli. 2009.12.04. */
 	pFwHdr = (struct rt_8723a_firmware_hdr *)firmware_buf;
 
 	pHalData->FirmwareVersion = le16_to_cpu(pFwHdr->Version);
@@ -402,8 +401,7 @@ hal_ReadEFuse_WiFi(struct rtw_adapter *padapter,
 	u16 i, total, used;
 	struct hal_data_8723a *pHalData = GET_HAL_DATA(padapter);
 
-	/*  Do NOT excess total size of EFuse table.
-	    Added by Roger, 2008.11.10. */
+	
 	if ((_offset + _size_byte) > EFUSE_MAP_LEN_8723A) {
 		DBG_8723A("%s: Invalid offset(%#x) with read bytes(%#x)!!\n",
 			  __func__, _offset, _size_byte);
@@ -495,8 +493,7 @@ hal_ReadEFuse_BT(struct rtw_adapter *padapter,
 	u16 i, total, used;
 	struct hal_data_8723a *pHalData = GET_HAL_DATA(padapter);
 
-	/*  Do NOT excess total size of EFuse table.
-	    Added by Roger, 2008.11.10. */
+	
 	if ((_offset + _size_byte) > EFUSE_BT_MAP_LEN) {
 		DBG_8723A("%s: Invalid offset(%#x) with read bytes(%#x)!!\n",
 			  __func__, _offset, _size_byte);
@@ -845,7 +842,6 @@ void rtl8723a_read_chip_version(struct rtw_adapter *padapter)
 	/*  ROM code version. */
 	ChipVersion.ROMVer = ((value32 & RF_RL_ID) >> 20);
 
-	/*  For multi-function consideration. Added by Roger, 2010.10.06. */
 	pHalData->MultiFunc = RT_MULTI_FUNC_NONE;
 	value32 = rtl8723au_read32(padapter, REG_MULTI_FUNC_CTRL);
 	pHalData->MultiFunc |=
@@ -988,7 +984,6 @@ void rtl8723a_SetBeaconRelatedRegisters(struct rtw_adapter *padapter)
 	rtl8723au_write8(padapter, REG_SLOT, 0x09);
 
 	/*  */
-	/*  Reset TSF Timer to zero, added by Roger. 2008.06.24 */
 	/*  */
 	value32 = rtl8723au_read32(padapter, REG_TCR);
 	value32 &= ~TSFRST;
@@ -1301,7 +1296,6 @@ n. LEDCFG 0x4C[15:0] = 0x8080
 	/*  <Roger_Notes> For RTL8723u multi-function configuration which
 	    was autoload from Efuse offset 0x0a and 0x0b, */
 	/*  WLAN HW GPIO[9], GPS HW GPIO[10] and BT HW GPIO[11]. */
-	/*  Added by Roger, 2010.10.07. */
 	/*  */
 	/* 2. Disable GPIO[8] and GPIO[12] */
 
@@ -2194,7 +2188,6 @@ static void rtl8723a_fill_default_txdesc(struct xmit_frame *pxmitframe,
 	 * because we use Hw beacon. */
 	/*  (3) Use HW Qos SEQ to control the seq num of Ext port
 	 * non-Qos packets. */
-	/*  2010.06.23. Added by tynli. */
 	if (!pattrib->qos_en) {
 		/*  Hw set sequence number */
 		ptxdesc->hwseq_en = 1;	/*  HWSEQ_EN */
@@ -2235,7 +2228,6 @@ void rtl8723a_update_txdesc(struct xmit_frame *pxmitframe, u8 *pbuf)
  * descriptor of this packets, then
  */
 /*			Fw can tell Hw to send these packet derectly. */
-/*  Added by tynli. 2009.10.15. */
 /*  */
 void rtl8723a_fill_fake_txdesc(struct rtw_adapter *padapter, u8 *pDesc,
 			       u32 BufferLen, u8 IsPsPoll, u8 IsBTQosNull)

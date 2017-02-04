@@ -1,27 +1,4 @@
-/*
- * Garmin GPS driver
- *
- * Copyright (C) 2006-2011 Hermann Kneissel herkne@gmx.de
- *
- * The latest version of the driver can be found at
- * http://sourceforge.net/projects/garmin-gps/
- *
- * This driver has been derived from v2.1 of the visor driver.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111 USA
- */
+
 
 #include <linux/kernel.h>
 #include <linux/errno.h>
@@ -663,8 +640,7 @@ static int gsp_send(struct garmin_data *garmin_data_p,
 
 	src = garmin_data_p->outbuffer+GARMIN_PKTHDR_LENGTH;
 	if (k > (GARMIN_PKTHDR_LENGTH-2)) {
-		/* can't add stuffing DLEs in place, move data to end
-		   of buffer ... */
+		
 		dst = garmin_data_p->outbuffer+GPS_OUT_BUFSIZ-datalen;
 		memcpy(dst, src, datalen);
 		src = dst;

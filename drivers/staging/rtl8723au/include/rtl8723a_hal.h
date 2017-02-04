@@ -75,7 +75,6 @@
 /*  */
 /*  This structure must be cared byte-ordering */
 /*  */
-/*  Added by tynli. 2009.12.04. */
 struct rt_8723a_firmware_hdr {
 	/*  8-byte alinment required */
 
@@ -181,7 +180,7 @@ enum ChannelPlan
 #define EFUSE_REAL_CONTENT_LEN		512
 #define EFUSE_MAP_LEN				128
 #define EFUSE_MAX_SECTION			16
-#define EFUSE_IC_ID_OFFSET			506	/* For some inferiority IC purpose. added by Roger, 2009.09.02. */
+#define EFUSE_IC_ID_OFFSET			506
 #define AVAILABLE_EFUSE_ADDR(addr)	(addr < EFUSE_REAL_CONTENT_LEN)
 /*  */
 /*  <Roger_Notes> */
@@ -319,7 +318,7 @@ struct hal_data_8723a {
 	u32	AntennaRxPath;					/*  Antenna path Rx */
 	u8	ExternalPA;
 
-	u8	bLedOpenDrain; /*  Support Open-drain arrangement for controlling the LED. Added by Roger, 2009.10.16. */
+	u8	bLedOpenDrain;
 
 	u8	b1x1RecvCombine;	/*  for 1T1R receive combining */
 
@@ -367,9 +366,8 @@ struct hal_data_8723a {
 #endif
 
 	u8	bDumpRxPkt;/* for debug */
-	u8	FwRsvdPageStartOffset; /* 2010.06.23. Added by tynli. Reserve page start offset except beacon in TxQ. */
+	u8	FwRsvdPageStartOffset;
 
-	/*  2010/08/09 MH Add CU power down mode. */
 	u8	pwrdown;
 
 	/*  Add for dual MAC  0--Mac0 1--Mac1 */
@@ -378,7 +376,6 @@ struct hal_data_8723a {
 	u8	OutEpQueueSel;
 	u8	OutEpNumber;
 
-	/*  2010/11/22 MH Add for slim combo debug mode selective. */
 	/*  This is used for fix the drawback of CU TSMC-A/UMC-A cut. HW auto suspend ability. Close BT clock. */
 	bool		SlimComboDbg;
 
@@ -394,15 +391,13 @@ struct hal_data_8723a {
 	u32			SysIntrMask;
 
 	/*  */
-	/*  2011/02/23 MH Add for 8723 mylti function definition. The define should be moved to an */
 	/*  independent file in the future. */
 	/*  */
 	/* 8723-----------------------------------------*/
 	enum RT_MULTI_FUNC	MultiFunc; /*  For multi-function consideration. */
 	enum RT_POLARITY_CTL	PolarityCtl; /*  For Wifi PDn Polarity control. */
 	enum RT_REGULATOR_MODE	RegulatorMode; /*  switching regulator or LDO */
-	/* 8723-----------------------------------------
-	 *  2011/02/23 MH Add for 8723 mylti function definition. The define should be moved to an */
+	
 	/*  independent file in the future. */
 
 	bool				bMACFuncEnable;

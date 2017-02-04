@@ -1126,20 +1126,7 @@ static void bcm63xx_udc_free_request(struct usb_ep *ep,
 	kfree(breq);
 }
 
-/**
- * bcm63xx_udc_queue - Queue up a new request.
- * @ep: Endpoint associated with the request.
- * @req: Request to add.
- * @mem_flags: Unused.
- *
- * If the queue is empty, start this request immediately.  Otherwise, add
- * it to the list.
- *
- * ep0 replies are sent through this function from the gadget driver, but
- * they are treated differently because they need to be handled by the ep0
- * state machine.  (Sometimes they are replies to control requests that
- * were spoofed by this driver, and so they shouldn't be transmitted at all.)
- */
+
 static int bcm63xx_udc_queue(struct usb_ep *ep, struct usb_request *req,
 	gfp_t mem_flags)
 {

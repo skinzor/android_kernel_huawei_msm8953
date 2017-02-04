@@ -1,21 +1,4 @@
-/* ZD1211 USB-WLAN driver for Linux
- *
- * Copyright (C) 2005-2007 Ulrich Kunitz <kune@deine-taler.de>
- * Copyright (C) 2006-2007 Daniel Drake <dsd@gentoo.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
- */
+
 
 #include <linux/kernel.h>
 
@@ -283,7 +266,7 @@ static int zd1211b_al2230_init_hw(struct zd_rf *rf)
 		0xa3b2f0,
 
 		0x6da010, /* Reg6 update for MP versio */
-		0xe36280, /* Modified by jxiao for Bor-Chin on 2004/08/02 */
+		0xe36280,
 		0x116000,
 		0x9dc020, /* External control TX power (ZD_CR31) */
 		0x5ddb00, /* RegA update for MP version */

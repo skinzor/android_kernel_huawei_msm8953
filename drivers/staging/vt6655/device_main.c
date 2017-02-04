@@ -290,7 +290,6 @@ static void device_init_td0_ring(struct vnt_private *pDevice);
 static void device_init_td1_ring(struct vnt_private *pDevice);
 
 static int  device_dma0_tx_80211(struct sk_buff *skb, struct net_device *dev);
-//2008-0714<Add>by Mike Liu
 static bool device_release_WPADEV(struct vnt_private *pDevice);
 
 static int  ethtool_ioctl(struct net_device *dev, void __user *useraddr);
@@ -1006,10 +1005,8 @@ static void device_free_info(struct vnt_private *pDevice)
 	struct net_device *dev = pDevice->dev;
 
 	ASSERT(pDevice);
-//2008-0714-01<Add>by chester
 	device_release_WPADEV(pDevice);
 
-//2008-07-21-01<Add>by MikeLiu
 //unregister wpadev
 	if (wpa_set_wpadev(pDevice, 0) != 0)
 		pr_err("unregister wpadev fail?\n");
@@ -1565,7 +1562,6 @@ static int  device_open(struct net_device *dev)
 	if (!device_init_rings(pDevice))
 		return -ENOMEM;
 
-//2008-5-13 <add> by chester
 	i = request_irq(pDevice->pcid->irq, &device_intr, IRQF_SHARED, dev->name, dev);
 	if (i)
 		return i;
@@ -1641,7 +1637,6 @@ static int  device_close(struct net_device *dev)
 {
 	struct vnt_private *pDevice = netdev_priv(dev);
 	PSMgmtObject     pMgmt = pDevice->pMgmt;
-//2007-1121-02<Add>by EinsnLiu
 	if (pDevice->bLinkPass) {
 		bScheduleCommand((void *)pDevice, WLAN_CMD_DISASSOCIATE, NULL);
 		mdelay(30);
@@ -1674,7 +1669,6 @@ static int  device_close(struct net_device *dev)
 	BSSvClearNodeDBTable(pDevice, 0);
 	free_irq(dev->irq, dev);
 	pDevice->flags &= (~DEVICE_FLAGS_OPENED);
-	//2008-0714-01<Add>by chester
 	device_release_WPADEV(pDevice);
 
 	pr_debug("device_close..\n");
@@ -2160,7 +2154,7 @@ static int  device_xmit(struct sk_buff *skb, struct net_device *dev) {
 	pLastTD->pTDInfo->skb = skb;
 	pLastTD->pTDInfo->byFlags = 0;
 	pLastTD->pTDInfo->byFlags |= TD_FLAGS_NETIF_SKB;
-	pDevice->nTxDataTimeCout = 0; //2008-8-21 chester <add> for send null packet
+	pDevice->nTxDataTimeCout = 0;
 
 	if (AVAIL_TD(pDevice, TYPE_AC0DMA) <= 1)
 		netif_stop_queue(dev);
@@ -2476,7 +2470,6 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
 	return IRQ_RETVAL(handled);
 }
 
-//2008-8-4 <add> by chester
 static int Config_FileGetParameter(unsigned char *string,
 				   unsigned char *dest, unsigned char *source)
 {
@@ -2857,7 +2850,6 @@ static int  device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
 		rc = -EOPNOTSUPP;
 		break;
 
-//2008-0409-07, <Add> by Einsn Liu
 #ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
 	case SIOCSIWAUTH:
 		pr_debug(" SIOCSIWAUTH\n");
@@ -2912,7 +2904,6 @@ static int  device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
 		break;
 
 #endif // #ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
-//End Add -- //2008-0409-07, <Add> by Einsn Liu
 
 	case IOCTL_CMD_TEST:
 

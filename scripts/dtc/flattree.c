@@ -413,11 +413,7 @@ void dt_to_blob(FILE *f, struct boot_info *bi, int version)
 		fdt.totalsize = cpu_to_fdt32(tsize);
 	}
 
-	/*
-	 * Assemble the blob: start with the header, add with alignment
-	 * the reserve buffer, add the reserve map terminating zeroes,
-	 * the device tree itself, and finally the strings.
-	 */
+	
 	blob = data_append_data(blob, &fdt, vi->hdr_size);
 	blob = data_append_align(blob, 8);
 	blob = data_merge(blob, reservebuf);

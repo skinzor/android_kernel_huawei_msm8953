@@ -265,7 +265,6 @@ static int lbs_add_supported_rates_tlv(u8 *tlv)
 	return sizeof(rate_tlv->header) + i;
 }
 
-/* Add common rates from a TLV and return the new end of the TLV */
 static u8 *
 add_ie_rates(u8 *tlv, const u8 *ie, int *nrates)
 {

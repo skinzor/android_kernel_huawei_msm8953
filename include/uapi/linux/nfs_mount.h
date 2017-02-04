@@ -13,13 +13,7 @@
 #include <linux/nfs2.h>
 #include <linux/nfs3.h>
 
-/*
- * WARNING!  Do not delete or change the order of these fields.  If
- * a new field is required then add it to the end.  The version field
- * tracks which fields are present.  This will ensure some measure of
- * mount-to-kernel version compatibility.  Some of these aren't used yet
- * but here they are anyway.
- */
+
 #define NFS_MOUNT_VERSION	6
 #define NFS_MAX_CONTEXT_LEN	256
 

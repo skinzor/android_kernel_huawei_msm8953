@@ -1160,16 +1160,7 @@ static void asd_swap_head_scb(struct asd_ha_struct *asd_ha,
 		cpu_to_le64(((u64)seq->next_scb.dma_handle));
 }
 
-/**
- * asd_start_timers -- (add and) start timers of SCBs
- * @list: pointer to struct list_head of the scbs
- * @to: timeout in jiffies
- *
- * If an SCB in the @list has no timer function, assign the default
- * one,  then start the timer of the SCB.  This function is
- * intended to be called from asd_post_ascb_list(), just prior to
- * posting the SCBs to the sequencer.
- */
+
 static void asd_start_scb_timers(struct list_head *list)
 {
 	struct asd_ascb *ascb;

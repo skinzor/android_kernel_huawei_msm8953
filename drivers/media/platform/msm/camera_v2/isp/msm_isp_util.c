@@ -21,9 +21,20 @@
 #include "msm_camera_io_util.h"
 #include "cam_smmu_api.h"
 
+#ifdef CONFIG_HUAWEI_DSM
+#include "msm_camera_dsm.h"
+#endif
+
 #define MAX_ISP_V4l2_EVENTS 100
 static DEFINE_MUTEX(bandwidth_mgr_mutex);
 static struct msm_isp_bandwidth_mgr isp_bandwidth_mgr;
+
+#ifdef CONFIG_HUAWEI_DSM
+static uint32_t overflow_cnt = 0;
+static uint32_t overflow_reported_dsm = 0;
+
+void camera_report_dsm_err_msm_isp(struct vfe_device *vfe_dev, int type, int err_num , const char* str);
+#endif
 
 static uint64_t msm_isp_cpp_clk_rate;
 
@@ -185,6 +196,9 @@ void msm_isp_get_timestamp(struct msm_isp_timestamp *time_stamp,
 	struct vfe_device *vfe_dev)
 {
 	struct timespec ts;
+	ktime_get_ts(&ts);
+	time_stamp->buf_time.tv_sec    = ts.tv_sec;
+	time_stamp->buf_time.tv_usec   = ts.tv_nsec/1000;
 	do_gettimeofday(&(time_stamp->event_time));
 	if (vfe_dev->vt_enable) {
 		msm_isp_get_avtimer_ts(time_stamp);
@@ -777,7 +791,11 @@ static long msm_isp_ioctl_unlocked(struct v4l2_subdev *sd,
 	 * longer time to complete such as start/stop ISP streams
 	 * which blocks until the hardware start/stop streaming
 	 */
-	ISP_DBG("%s: cmd: %d\n", __func__, _IOC_TYPE(cmd));
+#ifdef CONFIG_HUAWEI_KERNEL
+	pr_debug("%s cmd: %d\n", __func__, _IOC_TYPE(cmd));
+#else
+	ISP_DBG("%s cmd: %d\n", __func__, _IOC_TYPE(cmd));
+#endif
 	switch (cmd) {
 	case VIDIOC_MSM_VFE_REG_CFG: {
 		mutex_lock(&vfe_dev->realtime_mutex);
@@ -1901,6 +1919,18 @@ irqreturn_t msm_isp_process_irq(int irq_num, void *data)
 	msm_isp_process_overflow_irq(vfe_dev,
 		&irq_status0, &irq_status1, 0);
 
+	if ((vfe_dev->irq_status0 == irq_status0) &&
+			(vfe_dev->irq_status1 == irq_status1) &&
+			(vfe_dev->ping_pong_status == ping_pong_status)) {
+		pr_err("%s:VFE%d status0 0x%x status1 0x%x pingpong %d already handled\n",
+			__func__, vfe_dev->pdev->id, irq_status0, irq_status1, ping_pong_status);
+		return IRQ_HANDLED;
+	}
+
+	vfe_dev->irq_status0 = irq_status0;
+	vfe_dev->irq_status1 = irq_status1;
+	vfe_dev->ping_pong_status = ping_pong_status;
+
 	vfe_dev->hw_info->vfe_ops.core_ops.
 		get_error_mask(&error_mask0, &error_mask1);
 	error_mask0 &= irq_status0;
@@ -1966,6 +1996,13 @@ void msm_isp_do_tasklet(unsigned long data)
 			!= NO_OVERFLOW) {
 			ISP_DBG("%s: Recovery in processing, Ignore IRQs!!!\n",
 				__func__);
+#ifdef CONFIG_HUAWEI_DSM
+		if ((overflow_cnt++ > 3) && (0 == overflow_reported_dsm))
+		{
+			overflow_reported_dsm = 1;
+			camera_report_dsm_err_msm_isp(vfe_dev, DSM_CAMERA_ISP_OVERFLOW, irq_status0, NULL);
+		}
+#endif
 			continue;
 		}
 		msm_isp_process_error_info(vfe_dev);
@@ -2062,6 +2099,10 @@ int msm_isp_open_node(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	vfe_dev->isp_raw0_debug = 0;
 	vfe_dev->isp_raw1_debug = 0;
 	vfe_dev->isp_raw2_debug = 0;
+
+	vfe_dev->irq_status0 = 0;
+	vfe_dev->irq_status1 = 0;
+	vfe_dev->ping_pong_status = 0;
 
 	if (vfe_dev->hw_info->vfe_ops.core_ops.init_hw(vfe_dev) < 0) {
 		pr_err("%s: init hardware failed\n", __func__);
@@ -2180,6 +2221,10 @@ int msm_isp_close_node(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 
 	mutex_unlock(&vfe_dev->core_mutex);
 	mutex_unlock(&vfe_dev->realtime_mutex);
+#ifdef CONFIG_HUAWEI_DSM
+	overflow_cnt = 0;
+	overflow_reported_dsm = 0;
+#endif
 	return 0;
 }
 
@@ -2227,3 +2272,58 @@ void msm_isp_save_framedrop_values(struct vfe_device *vfe_dev,
 		spin_unlock_irqrestore(&stream_info->lock, flags);
 	}
 }
+#ifdef CONFIG_HUAWEI_DSM
+static char camera_isp_dsm_log_buff[MSM_CAMERA_DSM_BUFFER_SIZE] = {0};
+void camera_report_dsm_err_msm_isp(struct vfe_device *vfe_dev, int type, int err_num , const char* str)
+{
+	ssize_t len = 0;
+	long max_clk = 0;
+	int rc = 0;
+
+	memset(camera_isp_dsm_log_buff, 0, MSM_CAMERA_DSM_BUFFER_SIZE);
+
+	/* camera record error info according to err type */
+	switch(type)
+	{
+		case DSM_CAMERA_ISP_OVERFLOW:
+		{
+			/* isp overflow occurred*/
+			len += snprintf(camera_isp_dsm_log_buff+len, MSM_CAMERA_DSM_BUFFER_SIZE-len, "[msm_sensor]ISP Bus overflow detected.\n");
+			len += snprintf(camera_isp_dsm_log_buff+len, MSM_CAMERA_DSM_BUFFER_SIZE-len,
+					"isp_bandwidth[ISP_VFE] ab:%llu ib:%llu\nisp_bandwidth[ISP_CPP] ab:%llu ib:%llu\n",
+						isp_bandwidth_mgr.client_info[ISP_VFE0 + vfe_dev->pdev->id].ab,
+						isp_bandwidth_mgr.client_info[ISP_VFE0 + vfe_dev->pdev->id].ib,
+						isp_bandwidth_mgr.client_info[ISP_CPP].ab,
+						isp_bandwidth_mgr.client_info[ISP_CPP].ib);
+
+			vfe_dev->hw_info->vfe_ops.platform_ops.get_max_clk_rate(vfe_dev, &max_clk);
+			len += snprintf(camera_isp_dsm_log_buff+len, MSM_CAMERA_DSM_BUFFER_SIZE-len,
+					"pixel_clock:%ld, max clock:%ld\n", vfe_dev->axi_data.src_info[VFE_PIX_0].pixel_clock, max_clk);
+			break;
+		}
+
+		case DSM_CAMERA_ISP_AXI_STREAM_FAIL:
+			/* isp start/stop AXI stream failed */
+			len += snprintf(camera_isp_dsm_log_buff+len, MSM_CAMERA_DSM_BUFFER_SIZE-len, "[msm_sensor]%s. ISP AXI wait for config done failed.\n", str);
+			len += snprintf(camera_isp_dsm_log_buff+len, MSM_CAMERA_DSM_BUFFER_SIZE-len, "pix_stream_count:%d  num_active_stream:%d  active:%d\n",
+					vfe_dev->axi_data.src_info[VFE_PIX_0].pix_stream_count, vfe_dev->axi_data.num_active_stream, vfe_dev->axi_data.src_info[VFE_PIX_0].active);
+			break;
+
+		default:
+			break;
+	}
+
+	if ( len >= MSM_CAMERA_DSM_BUFFER_SIZE -1 )
+	{
+		ISP_DBG("write camera_isp_dsm_log_buff overflow.\n");
+		return;
+	}
+
+	rc = camera_report_dsm_err( type, err_num, camera_isp_dsm_log_buff);
+	if (rc < 0)
+	{
+		ISP_DBG("%s  camera_report_dsm_err fail.\n", __func__);
+	}
+	return ;
+}
+#endif

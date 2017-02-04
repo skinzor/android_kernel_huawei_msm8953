@@ -34,13 +34,7 @@
 
 #include <linux/cn_proc.h>
 
-/*
- * Size of a cn_msg followed by a proc_event structure.  Since the
- * sizeof struct cn_msg is a multiple of 4 bytes, but not 8 bytes, we
- * add one 4-byte word to the size here, and then start the actual
- * cn_msg structure 4 bytes into the stack buffer.  The result is that
- * the immediately following proc_event structure is aligned to 8 bytes.
- */
+
 #define CN_PROC_MSG_SIZE (sizeof(struct cn_msg) + sizeof(struct proc_event) + 4)
 
 /* See comment above; we test our assumption about sizeof struct cn_msg here. */

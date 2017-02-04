@@ -3161,7 +3161,6 @@ static void single_unlink_async(struct fusbh200_hcd *fusbh200, struct fusbh200_q
 {
 	struct fusbh200_qh		*prev;
 
-	/* Add to the end of the list of QHs waiting for the next IAAD */
 	qh->qh_state = QH_STATE_UNLINK;
 	if (fusbh200->async_unlink)
 		fusbh200->async_unlink_last->unlink_next = qh;
@@ -4661,7 +4660,6 @@ static bool itd_complete(struct fusbh200_hcd *fusbh200, struct fusbh200_itd *itd
 done:
 	itd->urb = NULL;
 
-	/* Add to the end of the free list for later reuse */
 	list_move_tail(&itd->itd_list, &stream->free_list);
 
 	/* Recycle the iTDs when the pipeline is empty (ep no longer in use) */
