@@ -3428,7 +3428,8 @@ int msm_do_bam_disable_enable(enum usb_ctrl bam)
 	struct usb_bam_sps_type usb_bam_sps = ctx->usb_bam_sps;
 	struct usb_bam_pipe_connect *pipe_connect;
 	int qdss_idx;
-	struct msm_usb_bam_platform_data *pdata;
+	static bool bam_enabled;
+	int ret;
 
 	if (!ctx->usb_bam_pdev)
 		return 0;

@@ -32,6 +32,7 @@ int mmc_discard_queue(struct mmc_host *host, u32 tasks);
 #ifdef CONFIG_MMC_PASSWORDS
 int mmc_lock_unlock_by_buf(struct mmc_card *card, u8* key_buf,int key_len, int mode);
 #endif
+int mmc_switch_status(struct mmc_card *card, bool ignore_crc);
 
 #endif
 

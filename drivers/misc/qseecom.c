@@ -173,6 +173,35 @@ struct sglist_info {
 #define HUAWEI_TA_MAGIC_NUM  0x08171401
 #define HUAWEI_UID  1000
 
+struct sglist_info {
+	uint32_t indexAndFlags;
+	uint32_t sizeOrCount;
+};
+
+/*
+ * The 31th bit indicates only one or multiple physical address inside
+ * the request buffer. If it is set,  the index locates a single physical addr
+ * inside the request buffer, and `sizeOrCount` is the size of the memory being
+ * shared at that physical address.
+ * Otherwise, the index locates an array of {start, len} pairs (a
+ * "scatter/gather list"), and `sizeOrCount` gives the number of entries in
+ * that array.
+ *
+ * The 30th bit indicates 64 or 32bit address; when it is set, physical addr
+ * and scatter gather entry sizes are 64-bit values.  Otherwise, 32-bit values.
+ *
+ * The bits [0:29] of `indexAndFlags` hold an offset into the request buffer.
+ */
+#define SGLISTINFO_SET_INDEX_FLAG(c, s, i)	\
+	((uint32_t)(((c & 1) << 31) | ((s & 1) << 30) | (i & 0x3fffffff)))
+
+#define SGLISTINFO_TABLE_SIZE	(sizeof(struct sglist_info) * MAX_ION_FD)
+
+#define FEATURE_ID_WHITELIST	15	/*whitelist feature id*/
+
+#define MAKE_WHITELIST_VERSION(major, minor, patch) \
+	(((major & 0x3FF) << 22) | ((minor & 0x3FF) << 12) | (patch & 0xFFF))
+
 struct qseecom_registered_listener_list {
 	struct list_head                 list;
 	struct qseecom_register_listener_req svc;
