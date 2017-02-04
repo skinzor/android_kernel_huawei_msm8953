@@ -1,27 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2009-2010  Realtek Corporation.
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in the
- * file called LICENSE.
- *
- * Contact Information:
- * wlanfae <wlanfae@realtek.com>
- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
- * Hsinchu 300, Taiwan.
- *
- * Larry Finger <Larry.Finger@lwfinger.net>
- *
- *****************************************************************************/
+
 
 #include "../wifi.h"
 #include "../efuse.h"
@@ -1069,7 +1046,6 @@ static void _rtl8821ae_hw_configure(struct ieee80211_hw *hw)
 	/* AGGR_BK_TIME Reg51A 0x16 */
 	rtl_write_word(rtlpriv, REG_NAV_PROT_LEN, 0x0040);
 
-	/*For Rx TP. Suggested by SD1 Richard. Added by tynli. 2010.04.12.*/
 	rtl_write_dword(rtlpriv, REG_FAST_EDCA_CTRL, 0x03086666);
 
 	rtl_write_byte(rtlpriv, REG_HT_SINGLE_AMPDU, 0x80);
@@ -2604,7 +2580,7 @@ static void _rtl8821ae_read_power_value_fromprom(struct ieee80211_hw *hw,
 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
 		 "hal_ReadPowerValueFromPROM8821ae(): hwinfo[0x%x]=0x%x\n",
 		 (eeAddr+1), hwinfo[eeAddr+1]);
-	if (0xFF == hwinfo[eeAddr+1])  /*YJ,add,120316*/
+	if (0xFF == hwinfo[eeAddr+1])
 		autoload_fail = true;
 
 	if (autoload_fail) {

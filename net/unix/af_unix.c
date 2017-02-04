@@ -1675,7 +1675,6 @@ restart:
 		err = len;
 		goto out_free;
 	}
-
 	sk_locked = 0;
 	unix_state_lock(other);
 restart_locked:

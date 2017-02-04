@@ -1,19 +1,4 @@
-/* bnx2x_cmn.c: Broadcom Everest network driver.
- *
- * Copyright (c) 2007-2013 Broadcom Corporation
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation.
- *
- * Maintained by: Ariel Elior <ariel.elior@qlogic.com>
- * Written by: Eliezer Tamir
- * Based on code from Michael Chan's bnx2 driver
- * UDP CSUM errata workaround by Arik Gendelman
- * Slowpath and fastpath rework by Vladislav Zolotarov
- * Statistics and Link management by Yitchak Gertner
- *
- */
+
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
@@ -3925,7 +3910,6 @@ netdev_tx_t bnx2x_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 			pbd2->global_data = cpu_to_le16(global_data);
 
-			/* add addition parse BD indication to start BD */
 			SET_FLAG(tx_start_bd->general_data,
 				 ETH_TX_START_BD_PARSE_NBDS, 1);
 			/* set encapsulation flag in start BD */

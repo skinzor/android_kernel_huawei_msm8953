@@ -56,7 +56,7 @@ struct dm_priv
 	#endif
 
 	/* for High Power */
-	u8 DynamicTxHighPowerLvl;/* Add by Jacken Tx Power Control for Near/Far Range 2008/03/06 */
+	u8 DynamicTxHighPowerLvl;
 
 	/* for tx power tracking */
 	u8	bTXPowerTracking;
@@ -121,7 +121,6 @@ struct dm_priv
 	u8	RSSI_Select;
 /*	u8	DIG_Dynamic_MIN ; */
 /*  duplicate code,will move to ODM ######### */
-	/*  Add for Reading Initial Data Rate SEL Register 0x484 during watchdog. Using for fill tx desc. 2011.3.21 by Thomas */
 	u8	INIDATA_RATE[32];
 };
 

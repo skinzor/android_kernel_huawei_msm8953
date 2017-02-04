@@ -43,24 +43,7 @@
  */
 
 
-/*
- * Calculate the bit offset in the hamming code buffer based on the bit's
- * offset in the data buffer.  Since the hamming code reserves all
- * power-of-two bits for parity, the data bit number and the code bit
- * number are offset by all the parity bits beforehand.
- *
- * Recall that bit numbers in hamming code are 1-based.  This function
- * takes the 0-based data bit from the caller.
- *
- * An example.  Take bit 1 of the data buffer.  1 is a power of two (2^0),
- * so it's a parity bit.  2 is a power of two (2^1), so it's a parity bit.
- * 3 is not a power of two.  So bit 1 of the data buffer ends up as bit 3
- * in the code buffer.
- *
- * The caller can pass in *p if it wants to keep track of the most recent
- * number of parity bits added.  This allows the function to start the
- * calculation at the last place.
- */
+
 static unsigned int calc_code_bit(unsigned int i, unsigned int *p_cache)
 {
 	unsigned int b, p = 0;

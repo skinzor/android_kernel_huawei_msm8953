@@ -21,8 +21,13 @@
 #include <linux/mmc/card.h>
 #include <linux/mmc/pm.h>
 #include <linux/mmc/ring_buffer.h>
+#include <linux/slab.h>
+
 
 #define MMC_AUTOSUSPEND_DELAY_MS	3000
+#ifdef CONFIG_HW_MMC_TEST
+#define CARD_ADDR_MAGIC 0xA5A55A5AA5A55A5ALL
+#endif
 
 struct mmc_ios {
 	unsigned int	clock;			/* clock rate */
@@ -441,6 +446,7 @@ struct mmc_host {
 #define MMC_CAP2_SLEEP_AWAKE	(1 << 28)	/* Use Sleep/Awake (CMD5) */
 /* use max discard ignoring max_busy_timeout parameter */
 #define MMC_CAP2_MAX_DISCARD_SIZE	(1 << 29)
+#define MMC_CAP2_REDUCE_RESUME_TIME	(1 << 31)
 
 	mmc_pm_flag_t		pm_caps;	/* supported pm features */
 
@@ -557,6 +563,9 @@ struct mmc_host {
 		ktime_t start;
 	} perf;
 	bool perf_enable;
+#ifdef CONFIG_HW_MMC_TEST
+	int test_status;            /* save mmc_test status */
+#endif
 #endif
 	struct mmc_trace_buffer trace_buf;
 	enum dev_state dev_status;
@@ -620,6 +629,7 @@ static inline void mmc_set_bus_resume_policy(struct mmc_host *host, int manual)
 }
 
 extern int mmc_resume_bus(struct mmc_host *host);
+
 
 int mmc_power_save_host(struct mmc_host *host);
 int mmc_power_restore_host(struct mmc_host *host);

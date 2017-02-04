@@ -21,6 +21,9 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/workqueue.h>
+#include "leds.h"
+int led_debug_mask = 3;
+module_param_named(led_debug, led_debug_mask, int, S_IRUGO | S_IWUSR | S_IWGRP);
 
 struct gpio_led_data {
 	struct led_classdev cdev;
@@ -98,7 +101,6 @@ static int create_gpio_led(const struct gpio_led *template,
 	int ret, state;
 
 	led_dat->gpio = -1;
-
 	/* skip leds that aren't available */
 	if (!gpio_is_valid(template->gpio)) {
 		dev_info(parent, "Skipping unavailable LED gpio %d (%s)\n",
@@ -128,13 +130,13 @@ static int create_gpio_led(const struct gpio_led *template,
 	led_dat->cdev.brightness = state ? LED_FULL : LED_OFF;
 	if (!template->retain_state_suspended)
 		led_dat->cdev.flags |= LED_CORE_SUSPENDRESUME;
+	led_INFO("[leds]%s: enter %d.gpio = %d state = %d\n",__func__, __LINE__, led_dat->gpio, (led_dat->active_low ^ state));
 
 	ret = gpio_direction_output(led_dat->gpio, led_dat->active_low ^ state);
 	if (ret < 0)
 		return ret;
 
 	INIT_WORK(&led_dat->work, gpio_led_work);
-
 	ret = led_classdev_register(parent, &led_dat->cdev);
 	if (ret < 0)
 		return ret;
@@ -168,7 +170,7 @@ static struct gpio_leds_priv *gpio_leds_create_of(struct platform_device *pdev)
 	struct device_node *np = pdev->dev.of_node, *child;
 	struct gpio_leds_priv *priv;
 	int count, ret;
-
+	led_INFO("[leds]%s: enter %d.\n",__func__, __LINE__);
 	/* count LEDs in this device, so we know how much to allocate */
 	count = of_get_available_child_count(np);
 	if (!count)

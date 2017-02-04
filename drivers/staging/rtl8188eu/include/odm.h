@@ -840,7 +840,6 @@ struct odm_dm_struct {
 			* array index. STA MacID=0,
 			* VWiFi Client MacID={1, ODM_ASSOCIATE_ENTRY_NUM-1} */
 	/*  */
-	/*  2012/02/14 MH Add to share 88E ra with other SW team. */
 	/*  We need to colelct all support abilit to a proper area. */
 	/*  */
 	bool	RaSupport88E;
@@ -904,7 +903,6 @@ struct odm_dm_struct {
 
 	/*  ODM relative time. */
 	struct timer_list PathDivSwitchTimer;
-	/* 2011.09.27 add for Path Diversity */
 	struct timer_list CCKPathDiversityTimer;
 	struct timer_list FastAntTrainingTimer;
 };		/*  DM_Dynamic_Mechanism_Structure */
@@ -1072,7 +1070,6 @@ extern	u8 CCKSwingTable_Ch14 [CCK_TABLE_SIZE][8];
 
 /*  check Sta pointer valid or not */
 #define IS_STA_VALID(pSta)		(pSta)
-/*  20100514 Joseph: Add definition for antenna switching test after link. */
 /*  This indicates two different the steps. */
 /*  In SWAW_STEP_PEAK, driver needs to switch antenna and listen to the
  *  signal on the air. */

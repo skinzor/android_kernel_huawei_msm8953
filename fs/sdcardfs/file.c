@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * fs/sdcardfs/file.c
  *
@@ -17,6 +18,9 @@
  * under the terms of the Apache 2.0 License OR version 2 of the GNU
  * General Public License.
  */
+=======
+
+>>>>>>> afd1784a008... Import huawei
 
 #include "sdcardfs.h"
 #ifdef CONFIG_SDCARD_FS_FADV_NOACTIVE
@@ -51,7 +55,11 @@ static ssize_t sdcardfs_read(struct file *file, char __user *buf,
 	/* update our inode atime upon a successful lower read */
 	if (err >= 0)
 		fsstack_copy_attr_atime(dentry->d_inode,
+<<<<<<< HEAD
 					file_inode(lower_file));
+=======
+					lower_file->f_path.dentry->d_inode);
+>>>>>>> afd1784a008... Import huawei
 
 	return err;
 }
@@ -59,7 +67,11 @@ static ssize_t sdcardfs_read(struct file *file, char __user *buf,
 static ssize_t sdcardfs_write(struct file *file, const char __user *buf,
 			    size_t count, loff_t *ppos)
 {
+<<<<<<< HEAD
 	int err;
+=======
+	int err = 0;
+>>>>>>> afd1784a008... Import huawei
 	struct file *lower_file;
 	struct dentry *dentry = file->f_path.dentry;
 
@@ -74,23 +86,37 @@ static ssize_t sdcardfs_write(struct file *file, const char __user *buf,
 	/* update our inode times+sizes upon a successful lower write */
 	if (err >= 0) {
 		fsstack_copy_inode_size(dentry->d_inode,
+<<<<<<< HEAD
 					file_inode(lower_file));
 		fsstack_copy_attr_times(dentry->d_inode,
 					file_inode(lower_file));
+=======
+					lower_file->f_path.dentry->d_inode);
+		fsstack_copy_attr_times(dentry->d_inode,
+					lower_file->f_path.dentry->d_inode);
+>>>>>>> afd1784a008... Import huawei
 	}
 
 	return err;
 }
 
+<<<<<<< HEAD
 static int sdcardfs_readdir(struct file *file, struct dir_context *ctx)
 {
 	int err;
+=======
+/*
+static int sdcardfs_readdir(struct file *file, void *dirent, filldir_t filldir)
+{
+	int err = 0;
+>>>>>>> afd1784a008... Import huawei
 	struct file *lower_file = NULL;
 	struct dentry *dentry = file->f_path.dentry;
 
 	lower_file = sdcardfs_lower_file(file);
 
 	lower_file->f_pos = file->f_pos;
+<<<<<<< HEAD
 	err = iterate_dir(lower_file, ctx);
 	file->f_pos = lower_file->f_pos;
 	if (err >= 0)		/* copy the atime */
@@ -98,6 +124,36 @@ static int sdcardfs_readdir(struct file *file, struct dir_context *ctx)
 					file_inode(lower_file));
 	return err;
 }
+=======
+	err = vfs_readdir(lower_file, filldir, dirent);
+	file->f_pos = lower_file->f_pos;
+	if (err >= 0)
+		fsstack_copy_attr_atime(dentry->d_inode,
+					lower_file->f_path.dentry->d_inode);
+	return err;
+}
+*/
+
+/*
+ * Switch vfs_readdir to iterate_dir
+ */
+static int sdcardfs_iterate_dir(struct file *file, struct dir_context *ctx)
+{
+        int err = 0;
+        struct file *lower_file = NULL;
+        struct dentry *dentry = file->f_path.dentry;
+
+        lower_file = sdcardfs_lower_file(file);
+
+        lower_file->f_pos = file->f_pos;
+        err = iterate_dir(lower_file, ctx);
+        file->f_pos = lower_file->f_pos;
+        if (err >= 0)           /* copy the atime */
+                fsstack_copy_attr_atime(dentry->d_inode,
+                                        lower_file->f_path.dentry->d_inode);
+        return err;
+}
+>>>>>>> afd1784a008... Import huawei
 
 static long sdcardfs_unlocked_ioctl(struct file *file, unsigned int cmd,
 				  unsigned long arg)
@@ -173,6 +229,7 @@ static int sdcardfs_mmap(struct file *file, struct vm_area_struct *vma)
 	if (!SDCARDFS_F(file)->lower_vm_ops) {
 		err = lower_file->f_op->mmap(lower_file, vma);
 		if (err) {
+<<<<<<< HEAD
 			printk(KERN_ERR "sdcardfs: lower mmap failed %d\n", err);
 			goto out;
 		}
@@ -181,6 +238,10 @@ static int sdcardfs_mmap(struct file *file, struct vm_area_struct *vma)
 				vma->vm_end - vma->vm_start);
 		if (err) {
 			printk(KERN_ERR "sdcardfs: do_munmap failed %d\n", err);
+=======
+			printk(KERN_ERR "sdcardfs: lower mmap failed %d\n",
+						err);
+>>>>>>> afd1784a008... Import huawei
 			goto out;
 		}
 	}
@@ -190,8 +251,14 @@ static int sdcardfs_mmap(struct file *file, struct vm_area_struct *vma)
 	 * don't want its test for ->readpage which returns -ENOEXEC.
 	 */
 	file_accessed(file);
+<<<<<<< HEAD
 	vma->vm_ops = &sdcardfs_vm_ops;
 
+=======
+        fput(file);
+        get_file(lower_file);
+        vma->vm_file = lower_file;
+>>>>>>> afd1784a008... Import huawei
 	file->f_mapping->a_ops = &sdcardfs_aops; /* set our aops */
 	if (!SDCARDFS_F(file)->lower_vm_ops) /* save for our ->fault */
 		SDCARDFS_F(file)->lower_vm_ops = saved_vm_ops;
@@ -209,6 +276,10 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 	struct dentry *parent = dget_parent(dentry);
 	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
 	const struct cred *saved_cred = NULL;
+<<<<<<< HEAD
+=======
+	int has_rw;
+>>>>>>> afd1784a008... Import huawei
 
 	/* don't open unhashed/deleted files */
 	if (d_unhashed(dentry)) {
@@ -216,7 +287,15 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 		goto out_err;
 	}
 
+<<<<<<< HEAD
 	if(!check_caller_access_to_name(parent->d_inode, dentry->d_name.name)) {
+=======
+	has_rw = get_caller_has_rw_locked(sbi->pkgl_id, sbi->options.derive);
+
+	if(!check_caller_access_to_name(parent->d_inode, dentry->d_name.name,
+				sbi->options.derive,
+				open_flags_to_access_mode(file->f_flags), has_rw)) {
+>>>>>>> afd1784a008... Import huawei
 		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n"
                          "	dentry: %s, task:%s\n",
 						 __func__, dentry->d_name.name, current->comm);
@@ -227,6 +306,10 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 	/* save current_cred and override it */
 	OVERRIDE_CRED(sbi, saved_cred);
 
+<<<<<<< HEAD
+=======
+	file->f_mode |= FMODE_NOMAPPABLE;
+>>>>>>> afd1784a008... Import huawei
 	file->private_data =
 		kzalloc(sizeof(struct sdcardfs_file_info), GFP_KERNEL);
 	if (!SDCARDFS_F(file)) {
@@ -235,9 +318,14 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 	}
 
 	/* open lower object and link sdcardfs's file struct to lower's */
+<<<<<<< HEAD
 	sdcardfs_get_lower_path(file->f_path.dentry, &lower_path);
 	lower_file = dentry_open(&lower_path, file->f_flags, current_cred());
 	path_put(&lower_path);
+=======
+	sdcardfs_copy_lower_path(file->f_path.dentry, &lower_path);
+	lower_file = dentry_open(&lower_path, file->f_flags, current_cred());
+>>>>>>> afd1784a008... Import huawei
 	if (IS_ERR(lower_file)) {
 		err = PTR_ERR(lower_file);
 		lower_file = sdcardfs_lower_file(file);
@@ -252,7 +340,14 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 	if (err)
 		kfree(SDCARDFS_F(file));
 	else {
+<<<<<<< HEAD
 		sdcardfs_copy_and_fix_attrs(inode, sdcardfs_lower_inode(inode));
+=======
+		mutex_lock(&inode->i_mutex);
+		sdcardfs_copy_inode_attr(inode, sdcardfs_lower_inode(inode));
+		fix_derived_permission(inode);
+		mutex_unlock(&inode->i_mutex);
+>>>>>>> afd1784a008... Import huawei
 	}
 
 out_revert_cred:
@@ -268,10 +363,15 @@ static int sdcardfs_flush(struct file *file, fl_owner_t id)
 	struct file *lower_file = NULL;
 
 	lower_file = sdcardfs_lower_file(file);
+<<<<<<< HEAD
 	if (lower_file && lower_file->f_op && lower_file->f_op->flush) {
 		filemap_write_and_wait(file->f_mapping);
 		err = lower_file->f_op->flush(lower_file, id);
 	}
+=======
+	if (lower_file && lower_file->f_op && lower_file->f_op->flush)
+		err = lower_file->f_op->flush(lower_file, id);
+>>>>>>> afd1784a008... Import huawei
 
 	return err;
 }
@@ -291,23 +391,35 @@ static int sdcardfs_file_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
+<<<<<<< HEAD
 static int sdcardfs_fsync(struct file *file, loff_t start, loff_t end,
 			int datasync)
+=======
+static int
+sdcardfs_fsync(struct file *file, loff_t start, loff_t end, int datasync)
+>>>>>>> afd1784a008... Import huawei
 {
 	int err;
 	struct file *lower_file;
 	struct path lower_path;
 	struct dentry *dentry = file->f_path.dentry;
 
+<<<<<<< HEAD
 	err = __generic_file_fsync(file, start, end, datasync);
 	if (err)
 		goto out;
 
+=======
+>>>>>>> afd1784a008... Import huawei
 	lower_file = sdcardfs_lower_file(file);
 	sdcardfs_get_lower_path(dentry, &lower_path);
 	err = vfs_fsync_range(lower_file, start, end, datasync);
 	sdcardfs_put_lower_path(dentry, &lower_path);
+<<<<<<< HEAD
 out:
+=======
+
+>>>>>>> afd1784a008... Import huawei
 	return err;
 }
 
@@ -323,6 +435,14 @@ static int sdcardfs_fasync(int fd, struct file *file, int flag)
 	return err;
 }
 
+<<<<<<< HEAD
+=======
+static struct file *sdcardfs_get_lower_file(struct file *f)
+{
+	return sdcardfs_lower_file(f);
+}
+
+>>>>>>> afd1784a008... Import huawei
 const struct file_operations sdcardfs_main_fops = {
 	.llseek		= generic_file_llseek,
 	.read		= sdcardfs_read,
@@ -337,13 +457,21 @@ const struct file_operations sdcardfs_main_fops = {
 	.release	= sdcardfs_file_release,
 	.fsync		= sdcardfs_fsync,
 	.fasync		= sdcardfs_fasync,
+<<<<<<< HEAD
+=======
+	.get_lower_file = sdcardfs_get_lower_file,
+>>>>>>> afd1784a008... Import huawei
 };
 
 /* trimmed directory options */
 const struct file_operations sdcardfs_dir_fops = {
 	.llseek		= generic_file_llseek,
 	.read		= generic_read_dir,
+<<<<<<< HEAD
 	.iterate	= sdcardfs_readdir,
+=======
+	.iterate	= sdcardfs_iterate_dir,
+>>>>>>> afd1784a008... Import huawei
 	.unlocked_ioctl	= sdcardfs_unlocked_ioctl,
 #ifdef CONFIG_COMPAT
 	.compat_ioctl	= sdcardfs_compat_ioctl,
@@ -353,4 +481,8 @@ const struct file_operations sdcardfs_dir_fops = {
 	.flush		= sdcardfs_flush,
 	.fsync		= sdcardfs_fsync,
 	.fasync		= sdcardfs_fasync,
+<<<<<<< HEAD
+=======
+	.get_lower_file = sdcardfs_get_lower_file,
+>>>>>>> afd1784a008... Import huawei
 };

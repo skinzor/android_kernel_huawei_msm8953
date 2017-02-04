@@ -1,30 +1,5 @@
 
-/*
 
-  Linux Driver for BusLogic MultiMaster and FlashPoint SCSI Host Adapters
-
-  Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-
-  This program is free software; you may redistribute and/or modify it under
-  the terms of the GNU General Public License Version 2 as published by the
-  Free Software Foundation.
-
-  This program is distributed in the hope that it will be useful, but
-  WITHOUT ANY WARRANTY, without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-  for complete details.
-
-  The author respectfully requests that any modifications to this software be
-  sent directly to him for evaluation and testing.
-
-  Special thanks to Wayne Yen, Jin-Lon Hon, and Alex Win of BusLogic, whose
-  advice has been invaluable, to David Gentzel, for writing the original Linux
-  BusLogic driver, and to Paul Gortmaker, for being such a dedicated test site.
-
-  Finally, special thanks to Mylex/BusLogic for making the FlashPoint SCCB
-  Manager available as freely redistributable source code.
-
-*/
 
 #define blogic_drvr_version		"2.1.17"
 #define blogic_drvr_date		"12 September 2013"
@@ -2307,14 +2282,7 @@ static void __init blogic_inithoststruct(struct blogic_adapter *adapter,
 	host->cmd_per_lun = adapter->untag_qdepth;
 }
 
-/*
-  blogic_slaveconfig will actually set the queue depth on individual
-  scsi devices as they are permanently added to the device chain.  We
-  shamelessly rip off the SelectQueueDepths code to make this work mostly
-  like it used to.  Since we don't get called once at the end of the scan
-  but instead get called for each device, we have to do things a bit
-  differently.
-*/
+
 static int blogic_slaveconfig(struct scsi_device *dev)
 {
 	struct blogic_adapter *adapter =
@@ -2465,10 +2433,7 @@ static int __init blogic_init(void)
 		memcpy(myadapter, adapter, sizeof(struct blogic_adapter));
 		myadapter->scsi_host = host;
 		myadapter->host_no = host->host_no;
-		/*
-		   Add Host Adapter to the end of the list of registered
-		   BusLogic Host Adapters.
-		 */
+		
 		list_add_tail(&myadapter->host_list, &blogic_host_list);
 
 		/*

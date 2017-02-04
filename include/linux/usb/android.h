@@ -21,6 +21,7 @@
 
 enum android_function_index {
 	ANDROID_FFS,
+	ANDROID_FFS_HDB,
 	ANDROID_MBIM_BAM,
 	ANDROID_ECM_BAM,
 	ANDROID_AUDIO,
@@ -58,6 +59,8 @@ static enum android_function_index name_to_func_idx(const char *name)
 
 	if (!strncasecmp("FFS", name, FUNC_NAME_LEN))
 		return ANDROID_FFS;
+	if (!strncasecmp("FFS_HDB", name, FUNC_NAME_LEN))
+		return ANDROID_FFS_HDB;
 	if (!strncasecmp("USB_MBIM", name, FUNC_NAME_LEN))
 		return ANDROID_MBIM_BAM;
 	if (!strncasecmp("ECM_QC", name, FUNC_NAME_LEN))

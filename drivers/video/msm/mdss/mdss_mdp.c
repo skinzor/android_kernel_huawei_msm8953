@@ -57,6 +57,7 @@
 #include "mdss_smmu.h"
 
 #include "mdss_mdp_trace.h"
+#include <linux/hw_lcd_common.h>
 
 #define AXI_HALT_TIMEOUT_US	0x4000
 #define AUTOSUSPEND_TIMEOUT_MS	200
@@ -1488,6 +1489,10 @@ void mdss_mdp_clk_ctrl(int enable)
 				changed++;
 		} else {
 			pr_err("Can not be turned off\n");
+#ifdef CONFIG_HUAWEI_DSM
+			/* report mdp clk dsm error */
+			lcd_report_dsm_err(DSM_LCD_MDSS_MDP_CLK_ERROR_NO,0,0);
+#endif
 		}
 	}
 
@@ -1594,7 +1599,8 @@ static int mdss_mdp_gdsc_notifier_call(struct notifier_block *self,
 
 	mdata = container_of(self, struct mdss_data_type, gdsc_cb);
 
-	if (event & REGULATOR_EVENT_ENABLE) {
+	if (!mdss_mdp_req_init_restore_cfg(mdata) &&
+		(event & REGULATOR_EVENT_ENABLE)) {
 		__mdss_restore_sec_cfg(mdata);
 	} else if (event & REGULATOR_EVENT_PRE_DISABLE) {
 		pr_debug("mdss gdsc is getting disabled\n");

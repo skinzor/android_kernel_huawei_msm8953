@@ -90,7 +90,6 @@ static void nwsign(char *r_data1, char *r_data2, char *outdata) {
  PUT_LE32(outdata+12,(w3+GET_LE32(r_data1+12)) & 0xffffffff);
 }
 
-/* Make a signature for the current packet and add it at the end of the */
 /* packet. */
 void __sign_packet(struct ncp_server *server, const char *packet, size_t size, __u32 totalsize, void *sign_buff) {
 	unsigned char data[64];

@@ -30,6 +30,22 @@
 #include <linux/regulator/of_regulator.h>
 #include <linux/qpnp/power-on.h>
 
+#ifdef CONFIG_HUAWEI_DSM
+#include <dsm/dsm_pub.h>
+#include <linux/hw_lcd_common.h>
+#endif
+
+#include <soc/qcom/smsm.h>
+
+#ifdef CONFIG_HUAWEI_PMU_DSM
+#include <linux/power/huawei_dsm_charger.h>
+#endif
+
+#include <linux/kallsyms.h>
+#include <linux/syscalls.h>
+#include <linux/rtc.h>
+#include <linux/hwboot_fail.h>
+
 #define CREATE_MASK(NUM_BITS, POS) \
 	((unsigned char) (((1 << (NUM_BITS)) - 1) << (POS)))
 #define PON_MASK(MSB_BIT, LSB_BIT) \
@@ -150,9 +166,114 @@
 
 #define QPNP_KEY_STATUS_DELAY			msecs_to_jiffies(250)
 
-#define QPNP_PON_BUFFER_SIZE			9
+#define QPNP_PON_BUFFER_SIZE			10
 
 #define QPNP_POFF_REASON_UVLO			13
+
+#define PON_DIS_PWRKPD_RESET 1
+
+
+#ifdef CONFIG_HUAWEI_PMU_DSM
+#define REASON_MAX		16
+
+#define CHECK_PMU_STATUS_DELAY			msecs_to_jiffies(30000)
+#define PA_CPU_TEMP_THRESH_FAC			75
+#define PA_CPU_TEMP_THRESH			70
+#define TSENS_TEMP_THRESH			90
+#define TSENS_ID2		2
+#define TSENS_ID5		5
+#define PON_REA_SMPL	1
+#define PON_HARD_RESET	0
+#define POFF_REA_TFT			12
+#define POFF_REA_UVLO			13
+#define POFF_REA_PMIC_OVETEMP		14
+#define POFF_REA_STAGE3		15
+#define LDO1_ADDR_BASE			0x14000
+#define LDO_OFFSET				0x100
+#define STATUS1_OFFSET			0x08
+#define STATUS2_OFFSET			0x09
+#define LDO_ON_MASK			0x20
+#define LDO_VOL_MASK			0x80
+#define LDO_NUM					23
+/**/
+#define LDO_EMPTY_NO20			20
+#define LDO_EMPTY_NO21			21
+/*the No. support OCP and the OCP mask bit */
+#define LDO_OCP_MASK			0x40
+#define LDO_OCP_NO4			3
+#define LDO_OCP_NO18			17
+#define LDO_OCP_NO22			21
+
+#define QPNP_LONG_PRESS_DELAY			(0)
+#define LP_PATH_FILE_SIZE	(256)
+#define LP_CUR_TIME_SIZE	(20)
+#define LP_INFO_BUF_SIZE	(140)
+#define BOOT_STAGE_CODE_SIZE (12)
+#define LP_KMSG_FILE_NAME	"kmsg.log"
+#define LP_APPLOG_FILE_NAME	"applog.log"
+#define LP_BOOTFAIL_FILE_NAME	"bootFail_info.txt"
+#define LP_RECOVERY_FILE_NAME	"recovery_info.txt"
+#define LP_LOG_PATH_NAME      "/log/boot_fail"
+#define LP_PAD_DEVICE_NAME	"/dev/block/bootdevice/by-name/pad"
+#define LP_ERROR_NO "06"
+#define HISI_PLATFORM_ID "01"
+#define REC_DO_NOTHING "0"
+#define REC_RESULT_FAIL "0"
+
+//extern char *hw_boot_success_command;
+
+static void get_current_time(char *buf, unsigned int buf_len) {
+	struct timeval tv;
+	struct rtc_time tm;
+
+	if (NULL == buf || 0 == buf_len) {
+		return;
+	}
+
+	memset(&tv, 0, sizeof(struct timeval));
+	memset(&tm, 0, sizeof(struct rtc_time));
+
+	do_gettimeofday(&tv);
+	tv.tv_sec -= sys_tz.tz_minuteswest * 60;
+	rtc_time_to_tm(tv.tv_sec, &tm);
+
+	snprintf(buf, buf_len, "%04d%02d%02d%02d%02d%02d",
+		tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+		tm.tm_hour, tm.tm_min, tm.tm_sec);
+}
+
+struct log {
+	u64 ts_nsec;            /* timestamp in nanoseconds */
+	u16 len;                /* length of entire record */
+	u16 text_len;           /* length of text buffer */
+	u16 dict_len;           /* length of dictionary buffer */
+	u8 facility;            /* syslog facility */
+	u8 flags:5;             /* internal record flags */
+	u8 level:3;             /* syslog level */
+	pid_t pid;              /* task pid */
+	char comm[TASK_COMM_LEN];               /* task name */
+#if defined(CONFIG_LOG_BUF_MAGIC)
+	u32 magic;              /* handle for ramdump analysis tools */
+#endif
+};
+
+extern char* log_buf_addr_get(void);
+extern unsigned int log_buf_len_get(void);
+
+/*pmu dsm client definition */
+struct dsm_dev dsm_pmu = {
+	.name = "dsm_pmu", // dsm client name
+	.fops = NULL,
+	.buff_size = 1024, // buffer size
+};
+struct dsm_client *pmu_dclient = NULL;
+
+extern char *saved_command_line;
+
+extern int dsm_get_pa_temp(void);
+extern int dsm_get_cpu_temp(void);
+extern int dsm_get_tsens_temp(uint32_t tsensor_id, long *temp);
+#endif
 
 enum qpnp_pon_version {
 	QPNP_PON_GEN1_V1,
@@ -200,6 +321,10 @@ struct qpnp_pon {
 	struct pon_regulator	*pon_reg_cfg;
 	struct list_head	list;
 	struct delayed_work	bark_work;
+	struct delayed_work long_press_bark_work;
+#ifdef CONFIG_HUAWEI_PMU_DSM
+	struct delayed_work dsm_pmu_work;
+#endif
 	struct dentry		*debugfs;
 	int			pon_trigger_reason;
 	int			pon_power_off_reason;
@@ -222,12 +347,17 @@ struct qpnp_pon {
 
 static struct qpnp_pon *sys_reset_dev;
 static DEFINE_SPINLOCK(spon_list_slock);
+bool power_key_ps = false;
 static LIST_HEAD(spon_dev_list);
+bool uvlo_event_trigger = false;
 
 static u32 s1_delay[PON_S1_COUNT_MAX + 1] = {
 	0 , 32, 56, 80, 138, 184, 272, 408, 608, 904, 1352, 2048,
 	3072, 4480, 6720, 10256
 };
+#ifdef CONFIG_HUAWEI_KERNEL
+int huawei_pon_regs[MAX_REG_TYPE] = {-1, -1, -1};
+#endif
 
 static const char * const qpnp_pon_reason[] = {
 	[0] = "Triggered from Hard Reset",
@@ -290,6 +420,34 @@ static const char * const qpnp_poff_reason[] = {
 	[39] = "Triggered from S3_RESET_KPDPWR_ANDOR_RESIN (power key and/or reset line)",
 };
 
+#ifdef CONFIG_HUAWEI_PMU_DSM
+static const char * const qpnp_pon_warm_reset_reason[] = {
+	[0] = "Triggered by Software",
+	[1] = "Triggered by PS_HOLD",
+	[2] = "Triggered by PMIC Watchdog",
+	[3] = "Triggered by Keypad_Reset1",
+	[4] = "Triggered by Keypad_Reset2",
+	[5] = "Triggered by simultaneous KPDPWR_N + RESIN_N",
+	[6] = "Triggered by RESIN_N",
+	[7] = "Triggered by KPDPWR_N",
+	[8] = "Unknow",
+	[9] = "Unknow",
+	[10] = "Unknow",
+	[11] = "Unknow",
+	[12] = "Triggered AFP",
+	[13] = "Unknow",
+	[14] = "Unknow",
+	[15] = "Unknow",
+};
+#endif
+
+#ifdef CONFIG_HUAWEI_DSM
+struct lcd_pwr_status_t lcd_pwr_status = {
+	.panel_power_on = 1,
+	.lcd_dcm_pwr_status = 0x0F,
+};
+#endif
+
 /*
  * On the kernel command line specify
  * qpnp-power-on.warm_boot=1 to indicate a warm
@@ -297,6 +455,18 @@ static const char * const qpnp_poff_reason[] = {
  */
 static int warm_boot;
 module_param(warm_boot, int, 0);
+
+static int hw_get_pwrkpd_flag(void)
+{
+	smem_exten_huawei_paramater *smem = NULL;
+
+	smem = smem_alloc(SMEM_ID_VENDOR1, sizeof(smem_exten_huawei_paramater), 0, SMEM_ANY_HOST_FLAG);
+	if(NULL != smem)
+	{
+		return smem->pwrkpd_reset;
+	}
+	return -1;
+}
 
 static int
 qpnp_pon_masked_write(struct qpnp_pon *pon, u16 addr, u8 mask, u8 val)
@@ -711,7 +881,11 @@ static int qpnp_pon_store_and_clear_warm_reset(struct qpnp_pon *pon)
 			QPNP_PON_WARM_RESET_REASON1(pon), rc);
 		return rc;
 	}
-
+#ifdef CONFIG_HUAWEI_KERNEL
+	if (0 == pon->spmi->sid){
+		huawei_pon_regs[WARM_REASON_INDEX] = pon->warm_reset_reason1;
+	}
+#endif
 	if (is_pon_gen1(pon) || pon->subtype == PON_1REG) {
 		rc = spmi_ext_register_readl(pon->spmi->ctrl, pon->spmi->sid,
 				QPNP_PON_WARM_RESET_REASON2(pon),
@@ -790,8 +964,7 @@ qpnp_pon_input_dispatch(struct qpnp_pon *pon, u32 pon_type)
 	default:
 		return -EINVAL;
 	}
-
-	pr_debug("PMIC input: code=%d, sts=0x%hhx\n",
+	pr_info("PMIC input: code=%d, sts=0x%hhx\n",
 					cfg->key_code, pon_rt_sts);
 	key_status = pon_rt_sts & pon_rt_bit;
 
@@ -805,6 +978,34 @@ qpnp_pon_input_dispatch(struct qpnp_pon *pon, u32 pon_type)
 
 	input_report_key(pon->pon_input, cfg->key_code, key_status);
 	input_sync(pon->pon_input);
+#define POWERKEY_KEYCODE 116
+#define KEY_DOWN_S 1
+#define KEY_UP_S 0
+	if(cfg->key_code == POWERKEY_KEYCODE && key_status == KEY_DOWN_S)
+	{
+		power_key_ps = true;
+	}
+
+#ifdef CONFIG_HUAWEI_DSM
+	/*optimize 20110 report strategy for device monitor.*/
+	/*when device wake up,we enable the timer,3 senconds later report the lcd power status if work abnormally*/
+	if((cfg->key_code == POWERKEY_KEYCODE) && (key_status == KEY_DOWN_S) && (lcd_pwr_status.panel_power_on== 0))
+	{
+		del_timer(&lcd_pwr_status.lcd_dsm_t);
+		lcd_pwr_status.lcd_dsm_t.function = lcd_dcm_pwr_status_handler;
+		lcd_pwr_status.lcd_dsm_t.data = 0;
+		lcd_pwr_status.lcd_dsm_t.expires = jiffies + 3*HZ;
+		add_timer(&lcd_pwr_status.lcd_dsm_t);
+	}
+	/*(lcd_dcm_pwr_status & 0x000f) >> 3 == 1 means lcd  power on*/
+	/*when device suspend,del the timer*/
+	else if((cfg->key_code == POWERKEY_KEYCODE) && (key_status == KEY_DOWN_S) && (lcd_pwr_status.panel_power_on== 1))
+	{
+		del_timer(&lcd_pwr_status.lcd_dsm_t);
+		/* clear dcm_pwr_status when del timer */
+		lcd_pwr_status.lcd_dcm_pwr_status = 0;
+	}
+#endif
 
 	cfg->old_state = !!key_status;
 
@@ -815,16 +1016,36 @@ static irqreturn_t qpnp_kpdpwr_irq(int irq, void *_pon)
 {
 	int rc;
 	struct qpnp_pon *pon = _pon;
+#ifdef CONFIG_HUAWEI_KERNEL
+	struct timeval tv_pwr;
+	struct tm tm_pwr;
+#endif
 
 	rc = qpnp_pon_input_dispatch(pon, PON_KPDPWR);
 	if (rc)
 		dev_err(&pon->spmi->dev, "Unable to send input event\n");
 
+#ifdef CONFIG_HUAWEI_KERNEL
+	do_gettimeofday(&tv_pwr);
+	time_to_tm(tv_pwr.tv_sec, 0, &tm_pwr);
+	pr_info("Exit %s : [%ld-%d-%d]%d:%d:%d:%ld\n",__func__,tm_pwr.tm_year + 1900,tm_pwr.tm_mon+1,
+		tm_pwr.tm_mday,tm_pwr.tm_hour,tm_pwr.tm_min,tm_pwr.tm_sec,tv_pwr.tv_usec%1000);
+#endif
+
 	return IRQ_HANDLED;
 }
 
+#ifdef CONFIG_MSM_DLOAD_MODE
+extern void clear_dload_mode(void);
+#endif
 static irqreturn_t qpnp_kpdpwr_bark_irq(int irq, void *_pon)
 {
+#ifdef CONFIG_MSM_DLOAD_MODE
+	/* clear dload mode to reduce false triggering dump*/
+	clear_dload_mode();
+#endif
+	pr_info("long press power key have detected!\n");
+
 	return IRQ_HANDLED;
 }
 
@@ -960,6 +1181,243 @@ static void bark_work_func(struct work_struct *work)
 	}
 
 err_return:
+	return;
+}
+
+static int lp_save_kernel_log_to_file(char *file_name, char *log_buf, unsigned int size){
+	int err = 0;
+	int fd = -1;
+	u32 *first_idx = NULL;
+	u32 *next_idx = NULL;
+	struct log *cur = NULL;
+	char *pos = NULL;
+	int wrap_cnt = 0;
+	char line[1024] = {0};
+	char *pline = NULL;
+	u32 left_len = 0;
+	u32 copy_len = 0;
+        
+	fd = sys_open((const char __force *)file_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd < 0) {
+		err = -1;
+		pr_err("%s:%d, sys_open %s failed!\n", __FUNCTION__, __LINE__, file_name);
+		goto out;
+	}
+
+	first_idx = (u32 *)kallsyms_lookup_name("log_first_idx");
+	next_idx = (u32 *)kallsyms_lookup_name("log_next_idx");
+
+	if (NULL == first_idx || NULL == next_idx){
+		pr_err("%s:%d, cannot get address of log_first_idx or log_next_idx\n", __FUNCTION__, __LINE__);
+		goto out;
+	}
+
+	pr_err("[debug]%s:%d, first_idx=0x%x, next_idx=0x%x \n", __FUNCTION__, __LINE__, *first_idx, *next_idx);
+
+	pos = log_buf + *first_idx;
+	while (pos != log_buf + *next_idx && wrap_cnt < 2) {
+		cur = (struct log *)pos;
+		pline = line;
+		pline += snprintf(line, sizeof(line), "[pid:%5d,%-16s][%5llu.%09llu]", cur->pid, cur->comm,
+			cur->ts_nsec/1000000000, cur->ts_nsec%1000000000);
+		left_len = sizeof(line) - (pline - line) - 2;
+		copy_len = cur->text_len;
+		if (left_len < copy_len) 
+			copy_len = left_len;
+
+		memcpy(pline, (char *)cur + sizeof(struct log), copy_len);
+		pline[copy_len] = '\n';	// output a newline
+		pline[copy_len+1] = '\0';	// line buffer is big enough
+
+		if (sys_write((unsigned int )fd, line, strlen(line)) < 0) {
+			err = -1;
+			pr_err("%s:%d, sys_write %s failed!\n", __FUNCTION__, __LINE__, file_name);
+			goto out;
+		}
+
+		if (0 == cur->len){
+			wrap_cnt++;
+			pos = log_buf;
+		}
+		else{
+			pos += cur->len;
+		}
+	}
+
+	sys_sync();
+
+out:
+	if (fd >= 0) {
+		sys_close(fd);
+		fd = -1;
+	}
+	return err;
+}
+
+static int lp_save_log_to_file(char *file_name, int flag, const char *buf, unsigned int size){
+	int err = 0;
+	int fd = -1;
+
+	fd = sys_open((const char __force *)file_name, flag, 0644);
+	if (fd < 0) {
+		err = -1;
+		pr_err("%s:%d, sys_open %s failed!\n", __FUNCTION__, __LINE__, file_name);
+		goto out;
+	}
+
+	if (sys_write((unsigned int )fd, buf, size) < 0) {
+		err = -1;
+		pr_err("%s:%d, sys_write %s failed!\n", __FUNCTION__, __LINE__, file_name);
+		goto out;
+	}
+
+	sys_sync();
+
+out:
+	if (fd >= 0) {
+		sys_close(fd);
+		fd = -1;
+	}
+	return err;
+}
+
+static void lp_save_log_to_log(char *log_buf, unsigned int log_size) {
+	int err = 0;
+	struct stat stat_buf = {0};
+	char log_path_name[LP_PATH_FILE_SIZE] = LP_LOG_PATH_NAME;
+	char log_file_name[LP_PATH_FILE_SIZE] = {0};
+	char cur_time[LP_CUR_TIME_SIZE] = {0};
+	char info_buf[LP_INFO_BUF_SIZE] = {0};
+	char boot_stage_code[BOOT_STAGE_CODE_SIZE] = {0};
+	char *pbuf = NULL;
+	int flag = O_WRONLY | O_CREAT | O_TRUNC;
+
+	/* create /log/bootFail/ if not exist */
+	err = sys_newstat(log_path_name, &stat_buf);
+	if (err < 0) {
+		err = sys_mkdir((const char __user __force *)log_path_name, 0755);
+		if (err < 0) {
+			pr_err("%s:%d, sys_mkdir %s fail, err=%d\n", __FUNCTION__, __LINE__, log_path_name, err);
+			return;
+		}
+	}
+	snprintf(boot_stage_code, BOOT_STAGE_CODE_SIZE,"0x%08x", get_boot_stage());
+	/* create /log/bootFail/bootfail_2016xxxxxxxxxx_0xxx(boot_stage)06(errno)xx(platformID)/ */
+	strncat(log_path_name, "/bootfail_", strlen("/bootfail_"));
+	get_current_time(cur_time, sizeof(cur_time));
+        strncat(log_path_name, cur_time, strlen(cur_time));
+        strncat(log_path_name, "_", strlen("_"));
+	strncat(log_path_name, boot_stage_code, BOOT_STAGE_CODE_SIZE);
+	strncat(log_path_name, LP_ERROR_NO, strlen(LP_ERROR_NO));
+	strncat(log_path_name, HISI_PLATFORM_ID, strlen(HISI_PLATFORM_ID));
+	//TBD
+	err = sys_mkdir((const char __user __force *)log_path_name, 0755);
+	if (err < 0) {
+		pr_err("%s:%d, sys_mkdir %s fail, err=%d\n", __FUNCTION__, __LINE__, log_path_name, err);
+		return;
+	}
+
+	strncat(log_path_name, "/", strlen("/"));
+	/* save kernel log to kmsg.log */
+	strlcpy(log_file_name, log_path_name, sizeof(log_file_name));
+	strncat(log_file_name, LP_KMSG_FILE_NAME, sizeof(log_file_name) - strlen(log_file_name) - 1);
+	err = lp_save_kernel_log_to_file(log_file_name, log_buf, log_size);
+	if (err < 0) {
+		pr_err("%s:%d, lp_save_log_to_file %s failed!\n", __FUNCTION__, __LINE__, log_file_name);
+		return;
+	}
+
+	/* generate bootFail_info.txt */
+	strlcpy(log_file_name, log_path_name, sizeof(log_file_name));
+	strncat(log_file_name, LP_BOOTFAIL_FILE_NAME, sizeof(log_file_name) - strlen(log_file_name) - 1);
+	pbuf = info_buf;
+	pbuf += snprintf(pbuf, LP_INFO_BUF_SIZE, "time:%s\r\n", cur_time);
+	pbuf += snprintf(pbuf, LP_INFO_BUF_SIZE - (pbuf - info_buf), "boot_stage:%s\r\n", boot_stage_code);
+	pbuf += snprintf(pbuf, LP_INFO_BUF_SIZE - (pbuf - info_buf), "bootFailErrno:%s\r\n", LP_ERROR_NO);
+	pbuf += snprintf(pbuf, LP_INFO_BUF_SIZE - (pbuf - info_buf), "isUserPerceptible:%s\r\n", "yes");
+	pbuf += snprintf(pbuf, LP_INFO_BUF_SIZE - (pbuf - info_buf), "isSystemRooted:%s\r\n", "no");
+	err = lp_save_log_to_file(log_file_name, flag, info_buf, strlen(info_buf));
+	if (err < 0) {
+		pr_err("%s:%d, lp_save_log_to_file %s failed!\n", __FUNCTION__, __LINE__, log_file_name);
+		return;
+	}
+
+	/* generate recovery_info.txt */
+	strlcpy(log_file_name, log_path_name, sizeof(log_file_name));
+	strncat(log_file_name, LP_RECOVERY_FILE_NAME, sizeof(log_file_name) - strlen(log_file_name) - 1);
+	pbuf = info_buf;
+	pbuf += snprintf(pbuf, LP_INFO_BUF_SIZE, "rcvMethod:%s\r\n", REC_DO_NOTHING);
+	pbuf += snprintf(pbuf, LP_INFO_BUF_SIZE - (pbuf - info_buf), "rcvResult:%s\r\n", REC_RESULT_FAIL);
+	err = lp_save_log_to_file(log_file_name, flag, info_buf, strlen(info_buf));
+	if (err < 0) {
+		pr_err("%s:%d, lp_save_log_to_file %s failed!\n", __FUNCTION__, __LINE__, log_file_name);
+		return;
+	}
+}
+
+static void lp_save_log_to_pad(char *log_buf, unsigned int log_size) {
+	int fd = -1;
+
+	/* save kernel log to pad partition */
+	fd = sys_open((const char __force *)LP_PAD_DEVICE_NAME, O_RDWR, 0);
+	if (fd < 0) {
+		pr_err("%s:%d, sys_open %s failed!\n", __FUNCTION__, __LINE__, LP_PAD_DEVICE_NAME);
+		goto out;
+	}
+
+	if (sys_write((unsigned int )fd, log_buf, log_size) < 0) {
+		pr_err("%s:%d, sys_write failed!\n", __FUNCTION__, __LINE__);
+		goto out;
+	}
+
+	sys_sync();
+
+out:
+	if (fd >= 0) {
+		sys_close(fd);
+		fd = -1;
+	}
+	return;
+}
+
+static void long_press_bark_work_func(struct work_struct *work) {
+	char *log_buf = NULL;
+	unsigned int log_size = 0;
+	mm_segment_t old_fs = 0;
+	int err = 0;
+	struct stat stat_buf = {0};
+
+	//pr_info("hw_boot_success_command is %s\n",hw_boot_success_command);
+	if(get_boot_stage() == STAGE_BOOT_SUCCESS){
+		return;
+	}
+	pr_info("%s:%d, begin to save kernel log\n", __FUNCTION__, __LINE__);	// for debug
+
+	/* get __log_buf address */
+	log_buf = log_buf_addr_get();
+	log_size = log_buf_len_get();
+	if (NULL == log_buf || 0 == log_size) {
+		pr_err("%s:%d, log_buf is NULL or log_size is zero\n", __FUNCTION__, __LINE__);
+		return;
+	}
+
+	old_fs = get_fs();	/* save previous value */
+	set_fs(get_ds());	/* use kernel limit */
+
+	/* save kernel log to log or pad */
+	err = sys_newstat("/log", &stat_buf);
+	if (err >= 0) {
+		lp_save_log_to_log(log_buf, log_size);
+	}
+	else{
+		pr_err("%s:%d, /log is not exist, save log to pad partition\n", __FUNCTION__, __LINE__);
+		lp_save_log_to_pad(log_buf, log_size);
+	}
+	set_fs(old_fs);
+	pr_info("%s:%d, end to save kernel log\n", __FUNCTION__, __LINE__);
+
+	boot_fail_err(KERNEL_PRESS10S,0,NULL);
+	pr_info("Boot_monitor detect error:KERNEL_PRESS10S\n");
 	return;
 }
 
@@ -1222,6 +1680,7 @@ static int qpnp_pon_config_init(struct qpnp_pon *pon)
 	struct qpnp_pon_config *cfg;
 	u8 pmic_type;
 	u8 revid_rev4;
+	int pwrkpd_flag = 0;
 
 	if (!pon->num_pon_config) {
 		dev_dbg(&pon->spmi->dev, "num_pon_config: %d\n",
@@ -1266,6 +1725,12 @@ static int qpnp_pon_config_init(struct qpnp_pon *pon)
 				}
 			} else {
 				cfg->config_reset = true;
+			}
+
+			pwrkpd_flag = hw_get_pwrkpd_flag();
+			/* if disable pwrkpd flag is true, disable pwrkpd reset function */
+			if (PON_DIS_PWRKPD_RESET == pwrkpd_flag) {
+				cfg->support_reset = 0;
 			}
 
 			cfg->use_bark = of_property_read_bool(pp,
@@ -1318,6 +1783,11 @@ static int qpnp_pon_config_init(struct qpnp_pon *pon)
 				}
 			} else {
 				cfg->config_reset = true;
+			}
+
+			pwrkpd_flag = hw_get_pwrkpd_flag();
+			if (PON_DIS_PWRKPD_RESET == pwrkpd_flag) {
+				cfg->support_reset = 0;
 			}
 
 			cfg->use_bark = of_property_read_bool(pp,
@@ -1388,6 +1858,10 @@ static int qpnp_pon_config_init(struct qpnp_pon *pon)
 			rc = of_property_read_u32(pp, "qcom,support-reset",
 							&cfg->support_reset);
 
+			pwrkpd_flag = hw_get_pwrkpd_flag();
+			if (PON_DIS_PWRKPD_RESET == pwrkpd_flag) {
+				cfg->support_reset = 0;
+			}
 			if (rc) {
 				if (rc == -EINVAL) {
 					dev_dbg(&pon->spmi->dev,
@@ -1927,6 +2401,323 @@ static int read_gen2_pon_off_reason(struct qpnp_pon *pon, u16 *reason,
 	return 0;
 }
 
+#ifdef CONFIG_HUAWEI_PMU_DSM
+/* monitor power-on and power-off reasons, if abnormal, notify to dsm*/
+static void monitor_power_on_off_reason(struct qpnp_pon *pon)
+{
+	int rc, index, index_warm;
+	u8 pon_sts = 0;
+	u8 buf[2]={0};
+	u16 poff_sts = 0;
+	u16 pon_warm_reset_reason = 0;  //0x80A,0x80B
+
+	if(!pon)
+		return;
+
+	/* warm reset reason reg value */
+	rc = spmi_ext_register_readl(pon->spmi->ctrl, pon->spmi->sid,
+				QPNP_PON_WARM_RESET_REASON1(pon), (u8 *)&pon_warm_reset_reason, 2);
+	if (rc) {
+		pr_err("Unable to read WARM_RESET_RESASON reg\n");
+		return;
+	}
+
+	index_warm = ffs(pon_warm_reset_reason);
+	if ((index_warm > REASON_MAX) || (index_warm < 0))
+		index_warm = 0;
+
+	/* PON reason */
+	rc = spmi_ext_register_readl(pon->spmi->ctrl, pon->spmi->sid,
+				QPNP_PON_REASON1(pon), &pon_sts, 1);
+	if (rc) {
+		dev_err(&pon->spmi->dev, "Unable to read PON_RESASON1 reg\n");
+		return;
+	}
+
+	index = ffs(pon_sts) - 1;
+	if (index >= ARRAY_SIZE(qpnp_pon_reason) || index < 0){
+		dev_dbg(&pon->spmi->dev,
+			"PMIC@SID%d Power-on reason: Unknown, reg:0x%x\n",
+			pon->spmi->sid, pon_sts);
+	}else{
+		if(PON_REA_SMPL == index){
+			dev_info(&pon->spmi->dev,
+				"PMIC@SID%d Power-on reason: %s, reg:0x%x\n",
+				pon->spmi->sid, qpnp_pon_reason[index], pon_sts);
+			/* if power on reason is SMPL, record this log, and notify to the dsm server*/
+			if(!dsm_client_ocuppy(pmu_dclient)){
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d Power-on reason: %s, reg:0x%x\n",
+					pon->spmi->sid, qpnp_pon_reason[index], pon_sts);
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d:Warm-reset reason: %s and reg: 0x%x \n",
+					pon->spmi->sid, index_warm?qpnp_pon_warm_reset_reason[index_warm - 1]:
+					"Unknown", pon_warm_reset_reason);
+				dsm_client_notify(pmu_dclient, DSM_ABNORMAL_POWERON_REASON_1);
+			}
+		}
+	}
+
+	/* POFF reason */
+	rc = spmi_ext_register_readl(pon->spmi->ctrl, pon->spmi->sid,
+				QPNP_POFF_REASON1(pon),
+				buf, 2);
+	if (rc) {
+		dev_err(&pon->spmi->dev, "Unable to read POFF_RESASON regs\n");
+		return;
+	}
+	poff_sts = buf[0] | (buf[1] << 8);
+	index = ffs(poff_sts) - 1;
+	if (index >= ARRAY_SIZE(qpnp_poff_reason) || index < 0){
+		dev_info(&pon->spmi->dev,
+				"PMIC@SID%d: Unknown power-off reason, reg:0x%x\n",
+				pon->spmi->sid, poff_sts);
+	}else{
+		if(POFF_REA_TFT == index){
+			dev_info(&pon->spmi->dev,
+				"PMIC@SID%d Power-off reason: %s, reg:0x%x\n",
+				pon->spmi->sid, qpnp_poff_reason[index], poff_sts);
+			/* if power on reason is TFT, record this log, and notify to the dsm server*/
+			if(!dsm_client_ocuppy(pmu_dclient)){
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d Power-off reason: %s, reg:0x%x\n",
+					pon->spmi->sid, qpnp_poff_reason[index], poff_sts);
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d:Warm-reset reason: %s and reg: 0x%x \n",
+					pon->spmi->sid, index_warm?qpnp_pon_warm_reset_reason[index_warm - 1]:
+					"Unknown", pon_warm_reset_reason);
+				dsm_client_notify(pmu_dclient, DSM_ABNORMAL_POWEROFF_REASON_1);
+			}
+		}
+
+		if(POFF_REA_UVLO == index){
+			dev_info(&pon->spmi->dev,
+				"PMIC@SID%d Power-off reason: %s, reg:0x%x\n",
+				pon->spmi->sid, qpnp_poff_reason[index], poff_sts);
+			uvlo_event_trigger = true;
+			/* if power on reason is UVLO, record this log, and notify to the dsm server*/
+			if(!dsm_client_ocuppy(pmu_dclient)){
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d Power-off reason: %s, reg:0x%x\n",
+					pon->spmi->sid, qpnp_poff_reason[index], poff_sts);
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d:Warm-reset reason: %s and reg: 0x%x \n",
+					pon->spmi->sid, index_warm?qpnp_pon_warm_reset_reason[index_warm - 1]:
+					"Unknown", pon_warm_reset_reason);
+				dsm_client_notify(pmu_dclient, DSM_ABNORMAL_POWEROFF_REASON_2);
+			}
+		}
+
+		if(POFF_REA_PMIC_OVETEMP == index){
+			dev_info(&pon->spmi->dev,
+				"PMIC@SID%d Power-off reason: %s, reg:0x%x\n",
+				pon->spmi->sid, qpnp_poff_reason[index], poff_sts);
+			/* if power on reason is PMIC_OVETEMP, record this log, and notify to the dsm server*/
+			if(!dsm_client_ocuppy(pmu_dclient)){
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d Power-off reason: %s, reg:0x%x\n",
+					pon->spmi->sid, qpnp_poff_reason[index], poff_sts);
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d:Warm-reset reason: %s and reg: 0x%x \n",
+					pon->spmi->sid, index_warm?qpnp_pon_warm_reset_reason[index_warm - 1]:
+					"Unknown", pon_warm_reset_reason);
+				dsm_client_notify(pmu_dclient, DSM_ABNORMAL_POWEROFF_REASON_2);
+			}
+		}
+
+		if(POFF_REA_STAGE3 == index){
+			dev_info(&pon->spmi->dev,
+				"PMIC@SID%d Power-off reason: %s, reg:0x%x\n",
+				pon->spmi->sid, qpnp_poff_reason[index], poff_sts);
+			/* if power on reason is STAGE3, record this log, and notify to the dsm server*/
+			if(!dsm_client_ocuppy(pmu_dclient)){
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d Power-off reason: %s, reg:0x%x\n",
+					pon->spmi->sid, qpnp_poff_reason[index], poff_sts);
+				dsm_client_record(pmu_dclient,
+					"PMIC@SID%d:Warm-reset reason: %s and reg: 0x%x \n",
+					pon->spmi->sid, index_warm?qpnp_pon_warm_reset_reason[index_warm - 1]:
+					"Unknown", pon_warm_reset_reason);
+				dsm_client_notify(pmu_dclient, DSM_ABNORMAL_POWEROFF_REASON_2);
+			}
+		}
+	}
+}
+
+/* monitor pa and cpu temeraure, if abnormal, notify to dsm*/
+static void monitor_pa_cpu_temperature(void)
+{
+	int pa_temp = 0, cpu_temp = 0;
+	long tsen_temp;
+	uint32_t tsensor_id2;
+	uint32_t tsensor_id5;
+	int ret = 0;
+	int comp_temp;
+
+	pa_temp = dsm_get_pa_temp();
+	cpu_temp = dsm_get_cpu_temp();
+
+	if(strstr(saved_command_line,"androidboot.huawei_swtype=factory")!=NULL) {
+		comp_temp = PA_CPU_TEMP_THRESH_FAC;
+	}else{
+		comp_temp = PA_CPU_TEMP_THRESH;
+	}
+
+	if(comp_temp < pa_temp){
+		/* if pa_temp is over 70 degree, record this log, and notify to the dsm server*/
+		if(!dsm_client_ocuppy(pmu_dclient)){
+			dsm_client_record(pmu_dclient,
+				"pa_temp is high, over %d degree: pa_temp = %d\n", comp_temp , pa_temp);
+			dsm_client_notify(pmu_dclient, DSM_PA_OVERTEMP);
+		}
+	}
+
+	if(PA_CPU_TEMP_THRESH < cpu_temp){
+		/* if cpu_temp is over 70 degree, record this log, and notify to the dsm server*/
+		if(!dsm_client_ocuppy(pmu_dclient)){
+			dsm_client_record(pmu_dclient,
+				"cpu_temp is high, over 70 degree: cpu_temp = %d\n", cpu_temp);
+			dsm_client_notify(pmu_dclient, DSM_CPU_OVERTEMP);
+		}
+	}
+
+	tsensor_id2 = TSENS_ID2;
+	ret = dsm_get_tsens_temp(tsensor_id2, &tsen_temp);
+	if(ret < 0){
+		pr_err("Unable to read temperature for tsen_id:%d. err:%d\n",
+			tsensor_id2, ret);
+		return;
+	}
+
+	if(TSENS_TEMP_THRESH < tsen_temp){
+		/* if zone2(tsens2) temp is over 90 degree, record this log, and notify to the dsm server*/
+		if(!dsm_client_ocuppy(pmu_dclient)){
+			dsm_client_record(pmu_dclient,
+				"zone2 is high, over 90 degree: tsen_temp = %d\n", (int)tsen_temp);
+			pr_info("zone2 is high, over 90 degree: tsen_temp = %ld\n", tsen_temp);
+			dsm_client_notify(pmu_dclient, DSM_THERMAL_ZONE2_OVERTEMP);
+		}
+	}
+
+	tsensor_id5 = TSENS_ID5;
+	ret = dsm_get_tsens_temp(tsensor_id5, &tsen_temp);
+	if(ret < 0){
+		pr_err("Unable to read temperature for tsen_id:%d. err:%d\n",
+			tsensor_id5, ret);
+		return;
+	}
+
+	if(TSENS_TEMP_THRESH < tsen_temp){
+		/* if zone4(tsens5) temp is over 90 degree, record this log, and notify to the dsm server*/
+		if(!dsm_client_ocuppy(pmu_dclient)){
+			dsm_client_record(pmu_dclient,
+				"zone4 is high, over 90 degree: tsen_temp = %d\n", (int)tsen_temp);
+			pr_info("zone4 is high, over 90 degree: tsen_temp = %ld\n", tsen_temp);
+			dsm_client_notify(pmu_dclient, DSM_THERMAL_ZONE4_OVERTEMP);
+		}
+	}
+}
+
+/*===========================================
+FUNCTION: qpnp_read_ldo_status_reg
+DESCRIPTION: this function is used to read ldo_x status reg value
+IPNUT: pon: point to qpnp_pon; status_no: status reg addr offset;
+           ldo_no: ldo number; ldo_val: pointer to ldo status value
+RETURN:	0: success; none 0: read failed
+=============================================*/
+static int qpnp_read_ldo_status_reg(struct qpnp_pon *pon, int status_no, int ldo_no, u8 *ldo_val )
+{
+	int rc = 0;
+	u8 *ldo_status_val;
+	u8 sid = 0;
+	u16 addr = 0;
+
+	if(ldo_val == NULL){
+		pr_info("ldo_val is NULL pointer\n");
+		return -EINVAL;
+	}
+
+	ldo_status_val = ldo_val;
+	sid = ((LDO1_ADDR_BASE + status_no + ldo_no*LDO_OFFSET) >> 16) & 0xF;
+	addr = (LDO1_ADDR_BASE + status_no + ldo_no*LDO_OFFSET) & 0xFFFF;
+	rc = spmi_ext_register_readl(pon->spmi->ctrl, sid,addr, ldo_status_val, 1);
+	if (rc) {
+		pr_err("Unable to read LDO status1 reg value\n");
+		return rc;
+	}
+	return rc;
+}
+
+/* monitor LDO1 to LDO18 output voltage, if voltage is below VREG_OK threshold, notify to dsm*/
+static void monitor_ldo_voltage(struct qpnp_pon *pon)
+{
+	int i = 0;
+	int rc = 0;
+	u8 ldo_status2[LDO_NUM] = {0};
+
+	if (!pon)
+		return;
+
+	for(i = 0; i < LDO_NUM; i++){
+
+		if(i == LDO_EMPTY_NO20 || i == LDO_EMPTY_NO21)
+			continue;
+
+		rc = qpnp_read_ldo_status_reg(pon, STATUS2_OFFSET, i, &ldo_status2[i]);
+		if (rc) {
+			pr_err("Unable to read LDO status2 reg value\n");
+			return;
+		}
+
+		if((i >= LDO_OCP_NO4 && i <= LDO_OCP_NO18) || (i == LDO_OCP_NO22)){
+			if((LDO_OCP_MASK & ldo_status2[i])){
+				msleep(10);
+				/* after 10 ms, read status2 reg again */
+				rc = qpnp_read_ldo_status_reg(pon, STATUS2_OFFSET, i, &ldo_status2[i]);
+				if (rc) {
+					pr_err("Unable to read LDO status2 reg value again\n");
+					return;
+				}
+
+				if((LDO_OCP_MASK & ldo_status2[i])){
+					pr_info("LDO_%d OCP,LDO status2 regs val: 0x%x\n",(i+1), ldo_status2[i]);
+					if(!dsm_client_ocuppy(pmu_dclient)){
+						dsm_client_record(pmu_dclient,
+							"LDO_%d OCP,LDO status2 regs val: 0x%x\n",
+							(i+1), ldo_status2[i]);
+						dsm_client_notify(pmu_dclient, (DSM_LDO1_OCP+i));
+					}
+				}
+			}
+		}
+
+		/* delete the check code for LDOs power low */
+	}
+}
+
+static void dsm_pmu_work_func(struct work_struct *work)
+{
+	static int check_poweron_off_reason_flag = 0;
+	struct qpnp_pon *pon =
+		container_of(work, struct qpnp_pon, dsm_pmu_work.work);
+
+	if (!pmu_dclient) {
+		pmu_dclient = dsm_register_client(&dsm_pmu);
+	}
+
+	if(!check_poweron_off_reason_flag){
+		monitor_power_on_off_reason(pon);
+		check_poweron_off_reason_flag = 1;
+	}
+
+	monitor_pa_cpu_temperature();
+
+	monitor_ldo_voltage(pon);
+
+	schedule_delayed_work(&pon->dsm_pmu_work, CHECK_PMU_STATUS_DELAY);
+}
+#endif
+
 static int qpnp_pon_probe(struct spmi_device *spmi)
 {
 	struct qpnp_pon *pon;
@@ -1940,6 +2731,7 @@ static int qpnp_pon_probe(struct spmi_device *spmi)
 	const char *s3_src;
 	u8 s3_src_reg;
 	unsigned long flags;
+	int pwrkpd_flag = 0;
 
 	pon = devm_kzalloc(&spmi->dev, sizeof(struct qpnp_pon),
 							GFP_KERNEL);
@@ -2061,11 +2853,16 @@ static int qpnp_pon_probe(struct spmi_device *spmi)
 	} else {
 		pon->pon_trigger_reason = index;
 		dev_info(&pon->spmi->dev,
-			"PMIC@SID%d Power-on reason: %s and '%s' boot\n",
+			"PMIC@SID%d Power-on reason: %s and '%s' boot, index:0x%x\n",
 			pon->spmi->sid, qpnp_pon_reason[index],
-			cold_boot ? "cold" : "warm");
+			cold_boot ? "cold" : "warm", index);
+#ifdef CONFIG_HUAWEI_KERNEL
+		/*we only restore SID0 power on reason*/
+		if (0 == pon->spmi->sid){
+			huawei_pon_regs[PON_REASON_INDEX] = index;
+		}
+#endif
 	}
-
 	/* POFF reason */
 	if (!is_pon_gen1(pon) && pon->subtype != PON_1REG) {
 		rc = read_gen2_pon_off_reason(pon, &poff_sts,
@@ -2091,9 +2888,15 @@ static int qpnp_pon_probe(struct spmi_device *spmi)
 	} else {
 		pon->pon_power_off_reason = index;
 		dev_info(&pon->spmi->dev,
-				"PMIC@SID%d: Power-off reason: %s\n",
+				"PMIC@SID%d: Power-off reason: %s, index:0x%x\n",
 				pon->spmi->sid,
-				qpnp_poff_reason[index]);
+				qpnp_poff_reason[index], index);
+#ifdef CONFIG_HUAWEI_KERNEL
+		/*we only restore SID0 power off reason*/
+		if (0 == pon->spmi->sid){
+			huawei_pon_regs[POFF_REASON_INDEX] = index;
+		}
+#endif
 	}
 
 	if (pon->pon_trigger_reason == PON_SMPL ||
@@ -2106,6 +2909,12 @@ static int qpnp_pon_probe(struct spmi_device *spmi)
 	/* program s3 debounce */
 	rc = of_property_read_u32(pon->spmi->dev.of_node,
 				"qcom,s3-debounce", &s3_debounce);
+	/* if disable pwrkpd flag is true, set s3 timer to 128s */
+	pwrkpd_flag = hw_get_pwrkpd_flag();
+	if (PON_DIS_PWRKPD_RESET == pwrkpd_flag) {
+		s3_debounce = QPNP_PON_S3_TIMER_SECS_MAX;
+	}
+
 	if (rc) {
 		if (rc != -EINVAL) {
 			dev_err(&pon->spmi->dev, "Unable to read s3 timer rc:%d\n",
@@ -2160,6 +2969,12 @@ static int qpnp_pon_probe(struct spmi_device *spmi)
 	else /* default combination */
 		s3_src_reg = QPNP_PON_S3_SRC_KPDPWR_AND_RESIN;
 
+	/* set s3 timer trigger source to pwrkpd if pwrkpd reset flag is true */
+	pwrkpd_flag = hw_get_pwrkpd_flag();
+	if (PON_DIS_PWRKPD_RESET == pwrkpd_flag) {
+		s3_src_reg = QPNP_PON_S3_SRC_KPDPWR_AND_RESIN;
+	}
+
 	/*
 	 * S3 source is a write once register. If the register has
 	 * been configured by bootloader then this operation will
@@ -2175,6 +2990,17 @@ static int qpnp_pon_probe(struct spmi_device *spmi)
 	dev_set_drvdata(&spmi->dev, pon);
 
 	INIT_DELAYED_WORK(&pon->bark_work, bark_work_func);
+
+	INIT_DELAYED_WORK(&pon->long_press_bark_work, long_press_bark_work_func);
+
+#ifdef CONFIG_HUAWEI_DSM
+	init_timer(&lcd_pwr_status.lcd_dsm_t);
+#endif
+
+#ifdef CONFIG_HUAWEI_PMU_DSM
+	INIT_DELAYED_WORK(&pon->dsm_pmu_work, dsm_pmu_work_func);
+	schedule_delayed_work(&pon->dsm_pmu_work, CHECK_PMU_STATUS_DELAY);
+#endif
 
 	/* register the PON configurations */
 	rc = qpnp_pon_config_init(pon);
@@ -2292,6 +3118,10 @@ static int qpnp_pon_remove(struct spmi_device *spmi)
 
 	cancel_delayed_work_sync(&pon->bark_work);
 
+#ifdef CONFIG_HUAWEI_PMU_DSM
+	cancel_delayed_work_sync(&pon->dsm_pmu_work);
+#endif
+
 	if (pon->pon_input)
 		input_unregister_device(pon->pon_input);
 	qpnp_pon_debugfs_remove(spmi);
@@ -2303,6 +3133,33 @@ static int qpnp_pon_remove(struct spmi_device *spmi)
 	return 0;
 }
 
+
+#ifdef CONFIG_HUAWEI_PMU_DSM
+static int qpnp_pon_suspend(struct device *dev)
+{
+	struct qpnp_pon *pon = dev_get_drvdata(dev);
+
+	cancel_delayed_work_sync(&pon->dsm_pmu_work);
+
+	return 0;
+}
+static int qpnp_pon_resume(struct device *dev)
+{
+	struct qpnp_pon *pon = dev_get_drvdata(dev);
+
+	schedule_delayed_work(&pon->dsm_pmu_work,
+				msecs_to_jiffies(0));
+
+	return 0;
+}
+
+static const struct dev_pm_ops qpnp_pon_pm_ops = {
+	.suspend	= qpnp_pon_suspend,
+	.resume	= qpnp_pon_resume,
+};
+#endif
+
+
 static struct of_device_id spmi_match_table[] = {
 	{ .compatible = "qcom,qpnp-power-on", },
 	{}
@@ -2312,6 +3169,9 @@ static struct spmi_driver qpnp_pon_driver = {
 	.driver		= {
 		.name	= "qcom,qpnp-power-on",
 		.of_match_table = spmi_match_table,
+#ifdef CONFIG_HUAWEI_PMU_DSM
+		.pm		= &qpnp_pon_pm_ops,
+#endif
 	},
 	.probe		= qpnp_pon_probe,
 	.remove		= qpnp_pon_remove,

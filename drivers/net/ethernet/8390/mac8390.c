@@ -7,9 +7,7 @@
    This software may be used and distributed according to the terms of
    the GNU Public License, incorporated herein by reference.  */
 
-/* 2000-02-28: support added for Dayna and Kinetics cards by
-   A.G.deWijn@phys.uu.nl */
-/* 2000-04-04: support added for Dayna2 by bart@etpmod.phys.tue.nl */
+
 /* 2001-04-18: support for DaynaPort E/LC-M by rayk@knightsmanor.org */
 /* 2001-05-15: support for Cabletron ported from old daynaport driver
  * and fixed access to Sonic Sys card which masquerades as a Farallon

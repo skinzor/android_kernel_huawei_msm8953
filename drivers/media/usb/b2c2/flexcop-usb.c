@@ -91,9 +91,7 @@ static int flexcop_usb_readwrite_dw(struct flexcop_device *fc, u16 wRegOffsPCI, 
 	}
 	return 0;
 }
-/*
- * DKT 010817 - add support for V8 memory read/write and flash update
- */
+
 static int flexcop_usb_v8_memory_req(struct flexcop_usb *fc_usb,
 		flexcop_usb_request_t req, u8 page, u16 wAddress,
 		u8 *pbBuffer, u32 buflen)
@@ -233,7 +231,6 @@ static int flexcop_usb_i2c_req(struct flexcop_i2c_adapter *i2c,
 	case USB_FUNC_I2C_WRITE:
 	case USB_FUNC_I2C_MULTIWRITE:
 	case USB_FUNC_I2C_REPEATWRITE:
-		/* DKT 020208 - add this to support special case of DiSEqC */
 	case USB_FUNC_I2C_CHECKWRITE:
 		pipe = B2C2_USB_CTRL_PIPE_OUT;
 		nWaitTime = 2;

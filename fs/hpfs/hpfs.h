@@ -1,10 +1,4 @@
-/*
- *  linux/fs/hpfs/hpfs.h
- *
- *  HPFS structures by Chris Smith, 1993
- *
- *  a little bit modified by Mikulas Patocka, 1998-1999
- */
+
 
 /* The paper
 

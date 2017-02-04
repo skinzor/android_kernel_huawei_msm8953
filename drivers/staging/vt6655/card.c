@@ -873,7 +873,6 @@ bool CARDbRadioPowerOff(struct vnt_private *pDevice)
 	BBvSetDeepSleep(pDevice->PortOffset, pDevice->byLocalID);
 
 	pDevice->bRadioOff = true;
-	//2007-0409-03,<Add> by chester
 	pr_debug("chester power off\n");
 	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_GPIOCTL0, LED_ACTSET);  //LED issue
 	return bResult;
@@ -927,7 +926,6 @@ bool CARDbRadioPowerOn(struct vnt_private *pDevice)
 	}
 
 	pDevice->bRadioOff = false;
-//  2007-0409-03,<Add> by chester
 	pr_debug("chester power on\n");
 	MACvRegBitsOff(pDevice->PortOffset, MAC_REG_GPIOCTL0, LED_ACTSET); //LED issue
 	return bResult;

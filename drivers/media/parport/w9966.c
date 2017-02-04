@@ -440,7 +440,6 @@ static int w9966_calcscale(int size, int min, int max, int *beg, int *end, unsig
 	else
 		*factor |= 0x80; /* set downscale-enable bit */
 
-	/* Modify old beginning and end */
 	*beg -= err / 2;
 	*end += err - (err / 2);
 

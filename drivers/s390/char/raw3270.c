@@ -251,10 +251,7 @@ __raw3270_halt_io(struct raw3270 *rp, struct raw3270_request *rq)
 	return rc;
 }
 
-/*
- * Add the request to the request queue, try to start it if the
- * 3270 device is idle. Return without waiting for end of i/o.
- */
+
 static int
 __raw3270_start(struct raw3270 *rp, struct raw3270_view *view,
 		struct raw3270_request *rq)

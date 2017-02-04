@@ -229,10 +229,8 @@
 #define OID_RT_PRO_WRITE_RF_REG				0xFF818783
 #define OID_RT_PRO_READ_RF_REG				0xFF818784
 
-/*  Meeting House. added by Annie, 2005-07-20. */
 #define OID_RT_MH_VENDER_ID				0xFFEDC100
 
-/* 8711 MP OID added 20051230. */
 #define OID_RT_PRO8711_JOIN_BSS				0xFF871100/* S */
 
 #define OID_RT_PRO_READ_REGISTER			0xFF871101 /* Q */

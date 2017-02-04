@@ -146,7 +146,6 @@ static int hostap_disable_hostapd(struct vnt_private *pDevice, int rtnl_locked)
 	pDevice->bEnableHostWEP = false;
 	pDevice->bEncryptionEnable = false;
 
-/* 4.2007-0118-03,<Add> by EinsnLiu */
 /* execute some clear work */
 	pDevice->pMgmt->byCSSPK = KEY_CTL_NONE;
 	pDevice->pMgmt->byCSSGK = KEY_CTL_NONE;

@@ -91,18 +91,7 @@
 
 */
 
-/*   Changes:
 
-	1.01	GRG 1998.05.06	Round up transfer size, fix ready_wait,
-			        loosed interpretation of ATAPI standard
-				for clearing error status.
-				Eliminate sti();
-	1.02    GRG 1998.06.16  Eliminate an Ugh.
-	1.03    GRG 1998.08.15  Adjusted PT_TMO, use HZ in loop timing,
-				extra debugging
-	1.04    GRG 1998.09.24  Repair minor coding error, added jumbo support
-	
-*/
 
 #define PT_VERSION      "1.04"
 #define PT_MAJOR	96

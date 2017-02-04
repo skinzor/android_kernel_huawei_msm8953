@@ -585,7 +585,7 @@ static int wpa_get_scan(struct vnt_private *pDevice,
 	kfree(ptempBSS);
 #endif
 
-//******mike:bubble sort by stronger RSSI*****//
+// ******mike:bubble sort by stronger RSSI*****//
 
 	count = 0;
 	pBSS = &(pMgmt->sBSSList[0]);
@@ -758,14 +758,13 @@ static int wpa_set_associate(struct vnt_private *pDevice,
 	else
 		pDevice->bEncryptionEnable = false;
 	if (!((pMgmt->eAuthenMode == WMAC_AUTH_SHAREKEY) ||
-	      ((pMgmt->eAuthenMode == WMAC_AUTH_OPEN) && bWepEnabled)))  //DavidWang  //20080717-06,<Modify> by chester//Not to initial WEP
+	      ((pMgmt->eAuthenMode == WMAC_AUTH_OPEN) && bWepEnabled)))
 		KeyvInitTable(&pDevice->sKey, pDevice->PortOffset);
 	spin_lock_irq(&pDevice->lock);
 	pDevice->bLinkPass = false;
 	memset(pMgmt->abyCurrBSSID, 0, 6);
 	pMgmt->eCurrState = WMAC_STATE_IDLE;
 	netif_stop_queue(pDevice->dev);
-	//20080701-02,<Add> by Mike Liu
 /*******search if ap_scan=2 ,which is associating request in hidden ssid mode ****/
 	{
 		PKnownBSS       pCurr = NULL;

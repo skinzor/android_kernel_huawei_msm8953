@@ -420,9 +420,7 @@ typedef struct _FALSE_ALARM_STATISTICS{
 extern u8 MCS_FILTER_ALL[16];
 extern u8 MCS_FILTER_1SS[16];
 
-/* 2007/07/11 MH Modify the macro. Becaus STA may link with a N-AP. If we set
-   STA in A/B/G mode and AP is still in N mode. The macro will be wrong. We have
-   to add a macro to judge wireless mode. */
+
 #define PICK_RATE(_nLegacyRate, _nMcsRate)	\
 		(_nMcsRate==0)?(_nLegacyRate&0x7f):(_nMcsRate)
 /* 2007/07/12 MH We only define legacy and HT wireless mode now. */

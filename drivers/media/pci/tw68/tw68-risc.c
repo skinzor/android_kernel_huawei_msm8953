@@ -28,16 +28,7 @@
 
 #include "tw68.h"
 
-/**
- *  @rp		pointer to current risc program position
- *  @sglist	pointer to "scatter-gather list" of buffer pointers
- *  @offset	offset to target memory buffer
- *  @sync_line	0 -> no sync, 1 -> odd sync, 2 -> even sync
- *  @bpl	number of bytes per scan line
- *  @padding	number of bytes of padding to add
- *  @lines	number of lines in field
- *  @jump	insert a jump at the start
- */
+
 static __le32 *tw68_risc_field(__le32 *rp, struct scatterlist *sglist,
 			    unsigned int offset, u32 sync_line,
 			    unsigned int bpl, unsigned int padding,
@@ -113,26 +104,7 @@ static __le32 *tw68_risc_field(__le32 *rp, struct scatterlist *sglist,
 	return rp;
 }
 
-/**
- * tw68_risc_buffer
- *
- *	This routine is called by tw68-video.  It allocates
- *	memory for the dma controller "program" and then fills in that
- *	memory with the appropriate "instructions".
- *
- *	@pci_dev	structure with info about the pci
- *			slot which our device is in.
- *	@risc		structure with info about the memory
- *			used for our controller program.
- *	@sglist		scatter-gather list entry
- *	@top_offset	offset within the risc program area for the
- *			first odd frame line
- *	@bottom_offset	offset within the risc program area for the
- *			first even frame line
- *	@bpl		number of data bytes per scan line
- *	@padding	number of extra bytes to add at end of line
- *	@lines		number of scan lines
- */
+
 int tw68_risc_buffer(struct pci_dev *pci,
 			struct tw68_buf *buf,
 			struct scatterlist *sglist,

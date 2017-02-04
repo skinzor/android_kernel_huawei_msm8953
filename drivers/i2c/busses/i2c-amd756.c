@@ -1,29 +1,6 @@
-/*
-    Copyright (c) 1999-2002 Merlin Hughes <merlin@merlin.org>
 
-    Shamelessly ripped from i2c-piix4.c:
 
-    Copyright (c) 1998, 1999  Frodo Looijaard <frodol@dds.nl> and
-    Philip Edelbrock <phil@netroedge.com>
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-*/
-
-/*
-    2002-04-08: Added nForce support. (Csaba Halasz)
-    2002-10-03: Fixed nForce PnP I/O port. (Michael Steil)
-    2002-12-28: Rewritten into something that resembles a Linux driver (hch)
-    2003-11-29: Added back AMD8111 removed by the previous rewrite.
-                (Philip Pokorny)
-*/
 
 /*
    Supports AMD756, AMD766, AMD768, AMD8111 and nVidia nForce

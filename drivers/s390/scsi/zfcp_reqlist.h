@@ -140,16 +140,7 @@ zfcp_reqlist_find_rm(struct zfcp_reqlist *rl, unsigned long req_id)
 	return req;
 }
 
-/**
- * zfcp_reqlist_add - Add entry to reqlist
- * @rl: reqlist where to add the entry
- * @req: The entry to add
- *
- * The request id always increases. As an optimization new requests
- * are added here with list_add_tail at the end of the bucket lists
- * while old requests are looked up starting at the beginning of the
- * lists.
- */
+
 static inline void zfcp_reqlist_add(struct zfcp_reqlist *rl,
 				    struct zfcp_fsf_req *req)
 {

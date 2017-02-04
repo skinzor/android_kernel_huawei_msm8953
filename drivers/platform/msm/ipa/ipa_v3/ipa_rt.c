@@ -1,14 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+
 
 #include <linux/bitops.h>
 #include <linux/idr.h>
@@ -1159,10 +1149,7 @@ static int __ipa_add_rt_rule(enum ipa_ip_type ip, const char *name,
 			name ? name : "");
 		goto error;
 	}
-	/*
-	 * do not allow any rules to be added at end of the "default" routing
-	 * tables
-	 */
+	
 	if (!strcmp(tbl->name, IPA_DFLT_RT_TBL_NAME) &&
 	    (tbl->rule_cnt > 0) && (at_rear != 0)) {
 		IPAERR("cannot add rule at end of tbl rule_cnt=%d at_rear=%d\n",
@@ -1316,10 +1303,7 @@ int ipa3_add_rt_rule_after(struct ipa_ioc_add_rt_rule_after *rules)
 		goto bail;
 	}
 
-	/*
-	 * do not allow any rules to be added at end of the "default" routing
-	 * tables
-	 */
+	
 	if (!strcmp(tbl->name, IPA_DFLT_RT_TBL_NAME) &&
 			(&entry->link == tbl->head_rt_rule_list.prev)) {
 		IPAERR("cannot add rule at end of tbl rule_cnt=%d\n",

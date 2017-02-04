@@ -1,16 +1,4 @@
-/*
- *  PowerPC version 
- *    Copyright (C) 1995-1996 Gary Thomas (gdt@linuxppc.org)
- *
- *  Derived from "arch/i386/kernel/signal.c"
- *    Copyright (C) 1991, 1992 Linus Torvalds
- *    1997-11-28  Modified for POSIX.1b signals by Richard Henderson
- *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version
- *  2 of the License, or (at your option) any later version.
- */
+
 
 #include <linux/sched.h>
 #include <linux/mm.h>
@@ -573,10 +561,7 @@ static long setup_trampoline(unsigned int syscall, unsigned int __user *tramp)
 	return err;
 }
 
-/*
- * Userspace code may pass a ucontext which doesn't include VSX added
- * at the end.  We need to check for this case.
- */
+
 #define UCONTEXTSIZEWITHOUTVSX \
 		(sizeof(struct ucontext) - 32*sizeof(long))
 

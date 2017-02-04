@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * fs/sdcardfs/lookup.c
  *
@@ -17,6 +18,9 @@
  * under the terms of the Apache 2.0 License OR version 2 of the GNU
  * General Public License.
  */
+=======
+
+>>>>>>> afd1784a008... Import huawei
 
 #include "sdcardfs.h"
 #include "linux/delay.h"
@@ -64,6 +68,7 @@ int new_dentry_private_data(struct dentry *dentry)
 	return 0;
 }
 
+<<<<<<< HEAD
 struct inode_data {
 	struct inode *lower_inode;
 	userid_t id;
@@ -75,6 +80,12 @@ static int sdcardfs_inode_test(struct inode *inode, void *candidate_data/*void *
 	userid_t current_userid = SDCARDFS_I(inode)->userid;
 	if (current_lower_inode == ((struct inode_data *)candidate_data)->lower_inode &&
 			current_userid == ((struct inode_data *)candidate_data)->id)
+=======
+static int sdcardfs_inode_test(struct inode *inode, void *candidate_lower_inode)
+{
+	struct inode *current_lower_inode = sdcardfs_lower_inode(inode);
+	if (current_lower_inode == (struct inode *)candidate_lower_inode)
+>>>>>>> afd1784a008... Import huawei
 		return 1; /* found a match */
 	else
 		return 0; /* no match */
@@ -86,6 +97,7 @@ static int sdcardfs_inode_set(struct inode *inode, void *lower_inode)
 	return 0;
 }
 
+<<<<<<< HEAD
 struct inode *sdcardfs_iget(struct super_block *sb, struct inode *lower_inode, userid_t id)
 {
 	struct sdcardfs_inode_info *info;
@@ -95,6 +107,15 @@ struct inode *sdcardfs_iget(struct super_block *sb, struct inode *lower_inode, u
 
 	data.id = id;
 	data.lower_inode = lower_inode;
+=======
+static struct inode *sdcardfs_iget(struct super_block *sb,
+				 struct inode *lower_inode)
+{
+	struct sdcardfs_inode_info *info;
+	struct inode *inode; /* the new inode to return */
+	int err;
+
+>>>>>>> afd1784a008... Import huawei
 	inode = iget5_locked(sb, /* our superblock */
 			     /*
 			      * hashval: we use inode number, but we can
@@ -102,9 +123,15 @@ struct inode *sdcardfs_iget(struct super_block *sb, struct inode *lower_inode, u
 			      * instead.
 			      */
 			     lower_inode->i_ino, /* hashval */
+<<<<<<< HEAD
 			     sdcardfs_inode_test,	/* inode comparison function */
 			     sdcardfs_inode_set, /* inode init function */
 			     &data); /* data passed to test+set fxns */
+=======
+			     sdcardfs_inode_test,/* inode comparison function */
+			     sdcardfs_inode_set, /* inode init function */
+			     lower_inode); /* data passed to test+set fxns */
+>>>>>>> afd1784a008... Import huawei
 	if (!inode) {
 		err = -EACCES;
 		iput(lower_inode);
@@ -155,10 +182,19 @@ struct inode *sdcardfs_iget(struct super_block *sb, struct inode *lower_inode, u
 		init_special_inode(inode, lower_inode->i_mode,
 				   lower_inode->i_rdev);
 
+<<<<<<< HEAD
 	/* all well, copy inode attributes */
 	sdcardfs_copy_and_fix_attrs(inode, lower_inode);
 	fsstack_copy_inode_size(inode, lower_inode);
 
+=======
+	/* all well, copy inode attributes, don't need to hold i_mutex here */
+	sdcardfs_copy_inode_attr(inode, lower_inode);
+	fsstack_copy_inode_size(inode, lower_inode);
+
+	fix_derived_permission(inode);
+
+>>>>>>> afd1784a008... Import huawei
 	unlock_new_inode(inode);
 	return inode;
 }
@@ -172,13 +208,21 @@ struct inode *sdcardfs_iget(struct super_block *sb, struct inode *lower_inode, u
  * @lower_path: the lower path (caller does path_get/put)
  */
 int sdcardfs_interpose(struct dentry *dentry, struct super_block *sb,
+<<<<<<< HEAD
 		     struct path *lower_path, userid_t id)
+=======
+		     struct path *lower_path)
+>>>>>>> afd1784a008... Import huawei
 {
 	int err = 0;
 	struct inode *inode;
 	struct inode *lower_inode;
 	struct super_block *lower_sb;
+<<<<<<< HEAD
 
+=======
+    struct sdcardfs_inode_info *info;
+>>>>>>> afd1784a008... Import huawei
 	lower_inode = lower_path->dentry->d_inode;
 	lower_sb = sdcardfs_lower_super(sb);
 
@@ -194,14 +238,32 @@ int sdcardfs_interpose(struct dentry *dentry, struct super_block *sb,
 	 */
 
 	/* inherit lower inode number for sdcardfs's inode */
+<<<<<<< HEAD
 	inode = sdcardfs_iget(sb, lower_inode, id);
+=======
+	inode = sdcardfs_iget(sb, lower_inode);
+>>>>>>> afd1784a008... Import huawei
 	if (IS_ERR(inode)) {
 		err = PTR_ERR(inode);
 		goto out;
 	}
+<<<<<<< HEAD
 
 	d_add(dentry, inode);
 	update_derived_permission_lock(dentry);
+=======
+   info = SDCARDFS_I(inode);
+        if (!strcmp(dentry->d_name.name, "ApkScript"))
+            printk(KERN_ERR "dj_interpose_apk lower_inode->i_mode=%o, inode->i_mode=%o, info->d_mode=%o, dentry.name: %s\n",lower_inode->i_mode, inode->i_mode, info->d_mode, dentry->d_name.name);
+        if (!strcmp(dentry->d_name.name, "ShellScript"))
+            printk(KERN_ERR "dj_interpose_shell lower_inode->i_mode=%o, inode->i_mode=%o, info->d_mode=%o, dentry.name: %s\n",lower_inode->i_mode, inode->i_mode, info->d_mode, dentry->d_name.name);
+	d_add(dentry, inode);
+	update_derived_permission(dentry);
+        if (!strcmp(dentry->d_name.name, "ApkScript"))
+            printk(KERN_ERR "dj_interpose_apk2 lower_inode->i_mode=%o, inode->i_mode=%o, info->d_mode=%o, dentry.name %s\n",lower_inode->i_mode, inode->i_mode, info->d_mode, dentry->d_name.name);
+        if (!strcmp(dentry->d_name.name, "ShellScript"))
+            printk(KERN_ERR "dj_interpose_shell2 lower_inode->i_mode=%o, inode->i_mode=%o, info->d_mode=%o, dentry.name %s\n",lower_inode->i_mode, inode->i_mode, info->d_mode, dentry->d_name.name);
+>>>>>>> afd1784a008... Import huawei
 out:
 	return err;
 }
@@ -213,7 +275,11 @@ out:
  * Fills in lower_parent_path with <dentry,mnt> on success.
  */
 static struct dentry *__sdcardfs_lookup(struct dentry *dentry,
+<<<<<<< HEAD
 		unsigned int flags, struct path *lower_parent_path, userid_t id)
+=======
+		unsigned int flags, struct path *lower_parent_path)
+>>>>>>> afd1784a008... Import huawei
 {
 	int err = 0;
 	struct vfsmount *lower_dir_mnt;
@@ -238,8 +304,18 @@ static struct dentry *__sdcardfs_lookup(struct dentry *dentry,
 	lower_dir_mnt = lower_parent_path->mnt;
 
 	/* Use vfs_path_lookup to check if the dentry exists or not */
+<<<<<<< HEAD
 	err = vfs_path_lookup(lower_dir_dentry, lower_dir_mnt, name, 0,
 				&lower_path);
+=======
+	if (sbi->options.lower_fs == LOWER_FS_EXT4) {
+		err = vfs_path_lookup(lower_dir_dentry, lower_dir_mnt, name,
+				LOOKUP_CASE_INSENSITIVE, &lower_path);
+	} else if (sbi->options.lower_fs == LOWER_FS_FAT) {
+		err = vfs_path_lookup(lower_dir_dentry, lower_dir_mnt, name, 0,
+				&lower_path);
+	}
+>>>>>>> afd1784a008... Import huawei
 
 	/* no error: handle positive dentries */
 	if (!err) {
@@ -250,7 +326,11 @@ static struct dentry *__sdcardfs_lookup(struct dentry *dentry,
 		if(need_graft_path(dentry)) {
 
 			/* setup_obb_dentry()
+<<<<<<< HEAD
  			 * The lower_path will be stored to the dentry's orig_path
+=======
+			 * The lower_path will be stored to the dentry's orig_path
+>>>>>>> afd1784a008... Import huawei
 			 * and the base obbpath will be copyed to the lower_path variable.
 			 * if an error returned, there's no change in the lower_path
 			 * 		returns: -ERRNO if error (0: no error) */
@@ -269,7 +349,11 @@ static struct dentry *__sdcardfs_lookup(struct dentry *dentry,
 		}
 
 		sdcardfs_set_lower_path(dentry, &lower_path);
+<<<<<<< HEAD
 		err = sdcardfs_interpose(dentry, dentry->d_sb, &lower_path, id);
+=======
+		err = sdcardfs_interpose(dentry, dentry->d_sb, &lower_path);
+>>>>>>> afd1784a008... Import huawei
 		if (err) /* path_put underlying path on error */
 			sdcardfs_put_reset_lower_path(dentry);
 		goto out;
@@ -307,8 +391,12 @@ setup_lower:
 	 * the VFS will continue the process of making this negative dentry
 	 * into a positive one.
 	 */
+<<<<<<< HEAD
 	if (flags & (LOOKUP_CREATE|LOOKUP_RENAME_TARGET))
 		err = 0;
+=======
+	err = 0;
+>>>>>>> afd1784a008... Import huawei
 
 out:
 	return ERR_PTR(err);
@@ -326,16 +414,30 @@ out:
  * @nd : nameidata of parent inode
  */
 struct dentry *sdcardfs_lookup(struct inode *dir, struct dentry *dentry,
+<<<<<<< HEAD
 			     unsigned int flags)
+=======
+//			     struct nameidata *nd)
+                               unsigned int flags)
+>>>>>>> afd1784a008... Import huawei
 {
 	struct dentry *ret = NULL, *parent;
 	struct path lower_parent_path;
 	int err = 0;
+<<<<<<< HEAD
+=======
+	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
+>>>>>>> afd1784a008... Import huawei
 	const struct cred *saved_cred = NULL;
 
 	parent = dget_parent(dentry);
 
+<<<<<<< HEAD
 	if(!check_caller_access_to_name(parent->d_inode, dentry->d_name.name)) {
+=======
+	if(!check_caller_access_to_name(parent->d_inode, dentry->d_name.name,
+						sbi->options.derive, 0, 0)) {
+>>>>>>> afd1784a008... Import huawei
 		ret = ERR_PTR(-EACCES);
 		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n"
                          "	dentry: %s, task:%s\n",
@@ -355,7 +457,12 @@ struct dentry *sdcardfs_lookup(struct inode *dir, struct dentry *dentry,
 		goto out;
 	}
 
+<<<<<<< HEAD
 	ret = __sdcardfs_lookup(dentry, flags, &lower_parent_path, SDCARDFS_I(dir)->userid);
+=======
+//	ret = __sdcardfs_lookup(dentry, nd, &lower_parent_path);
+	ret = __sdcardfs_lookup(dentry, flags, &lower_parent_path);
+>>>>>>> afd1784a008... Import huawei
 	if (IS_ERR(ret))
 	{
 		goto out;
@@ -366,10 +473,15 @@ struct dentry *sdcardfs_lookup(struct inode *dir, struct dentry *dentry,
 		fsstack_copy_attr_times(dentry->d_inode,
 					sdcardfs_lower_inode(dentry->d_inode));
 		/* get drived permission */
+<<<<<<< HEAD
 		mutex_lock(&dentry->d_inode->i_mutex);
 		get_derived_permission(parent, dentry);
 		fix_derived_permission(dentry->d_inode);
 		mutex_unlock(&dentry->d_inode->i_mutex);
+=======
+		get_derived_permission(parent, dentry);
+		fix_derived_permission(dentry->d_inode);
+>>>>>>> afd1784a008... Import huawei
 	}
 	/* update parent directory's atime */
 	fsstack_copy_attr_atime(parent->d_inode,

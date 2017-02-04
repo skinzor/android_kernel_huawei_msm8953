@@ -42,9 +42,18 @@
 #include <linux/types.h>
 #include <linux/security.h>
 #include <linux/string.h>
+<<<<<<< HEAD
 #include <linux/list.h>
 #include "multiuser.h"
 
+=======
+#include <linux/ratelimit.h>
+#include "multiuser.h"
+
+/* the file system magic number */
+#define SDCARDFS_SUPER_MAGIC	0xb550ca10
+
+>>>>>>> afd1784a008... Import huawei
 /* the file system name */
 #define SDCARDFS_NAME "sdcardfs"
 
@@ -68,12 +77,23 @@
 
 #define AID_PACKAGE_INFO  1027
 
+<<<<<<< HEAD
 #define fix_derived_permission(x)	\
 	do {						\
 		(x)->i_uid = make_kuid(&init_user_ns, SDCARDFS_I(x)->d_uid);	\
 		(x)->i_gid = make_kgid(&init_user_ns, get_gid(SDCARDFS_I(x)));	\
 		(x)->i_mode = ((x)->i_mode & S_IFMT) | get_mode(SDCARDFS_I(x));\
 	} while (0)
+=======
+/*
+#define fix_derived_permission(x)	\
+	do {						\
+		(x)->i_uid = SDCARDFS_I(x)->d_uid;	\
+		(x)->i_gid = SDCARDFS_I(x)->d_gid;	\
+		(x)->i_mode = ((x)->i_mode & S_IFMT) | SDCARDFS_I(x)->d_mode;\
+	} while (0)
+*/
+>>>>>>> afd1784a008... Import huawei
 
 
 /* OVERRIDE_CRED() and REVERT_CRED()
@@ -101,11 +121,16 @@
 		(int)current->cred->fsuid, 		\
 		(int)current->cred->fsgid);
 
+<<<<<<< HEAD
 /* Android 5.0 support */
+=======
+/* Android 4.4 support */
+>>>>>>> afd1784a008... Import huawei
 
 /* Permission mode for a specific node. Controls how file permissions
  * are derived for children nodes. */
 typedef enum {
+<<<<<<< HEAD
     /* Nothing special; this node should just inherit from its parent. */
     PERM_INHERIT,
     /* This node is one level above a normal root; used for legacy layouts
@@ -123,6 +148,39 @@ typedef enum {
     PERM_ANDROID_MEDIA,
 } perm_t;
 
+=======
+	/* Nothing special; this node should just inherit from its parent. */
+	PERM_INHERIT,
+	/* This node is one level above a normal root; used for legacy layouts
+	 * which use the first level to represent user_id. */
+	PERM_LEGACY_PRE_ROOT,
+	/* This node is "/" */
+	PERM_ROOT,
+	/* This node is "/Android" */
+	PERM_ANDROID,
+	/* This node is "/Android/data" */
+	PERM_ANDROID_DATA,
+	/* This node is "/Android/obb" */
+	PERM_ANDROID_OBB,
+	/* This node is "/Android/media" */
+	PERM_ANDROID_MEDIA,
+	/* This node is "/Android/user" */
+	PERM_ANDROID_USER,
+} perm_t;
+
+/* Permissions structure to derive */
+typedef enum {
+	DERIVE_NONE,
+	DERIVE_LEGACY,
+	DERIVE_UNIFIED,
+} derive_t;
+
+typedef enum {
+	LOWER_FS_EXT4,
+	LOWER_FS_FAT,
+} lower_fs_t;
+
+>>>>>>> afd1784a008... Import huawei
 struct sdcardfs_sb_info;
 struct sdcardfs_mount_options;
 
@@ -149,12 +207,25 @@ extern void sdcardfs_destroy_dentry_cache(void);
 extern int new_dentry_private_data(struct dentry *dentry);
 extern void free_dentry_private_data(struct dentry *dentry);
 extern struct dentry *sdcardfs_lookup(struct inode *dir, struct dentry *dentry,
+<<<<<<< HEAD
 				unsigned int flags);
 extern struct inode *sdcardfs_iget(struct super_block *sb,
 				 struct inode *lower_inode, userid_t id);
 extern int sdcardfs_interpose(struct dentry *dentry, struct super_block *sb,
 			    struct path *lower_path, userid_t id);
 
+=======
+				    unsigned int flags);
+extern int sdcardfs_interpose(struct dentry *dentry, struct super_block *sb,
+			    struct path *lower_path);
+
+#ifdef SDCARD_FS_XATTR
+extern int sdcardfs_setxattr(struct dentry *dentry, const char *name, const void *value, size_t size, int flags);
+extern ssize_t sdcardfs_getxattr(struct dentry *dentry, const char *name, void *value, size_t size);
+extern ssize_t sdcardfs_listxattr(struct dentry *dentry, char *list, size_t size);
+extern int sdcardfs_removexattr(struct dentry *dentry, const char *name);
+#endif // SDCARD_FS_XATTR
+>>>>>>> afd1784a008... Import huawei
 /* file private data */
 struct sdcardfs_file_info {
 	struct file *lower_file;
@@ -164,16 +235,32 @@ struct sdcardfs_file_info {
 /* sdcardfs inode data in memory */
 struct sdcardfs_inode_info {
 	struct inode *lower_inode;
+<<<<<<< HEAD
 	/* state derived based on current position in hierachy */
 	perm_t perm;
 	userid_t userid;
 	uid_t d_uid;
+=======
+	/* state derived based on current position in hierachy
+	 * caution: d_mode does not include file types
+	 */
+	perm_t perm;
+	userid_t userid;
+	uid_t d_uid;
+	gid_t d_gid;
+	mode_t d_mode;
+
+
+>>>>>>> afd1784a008... Import huawei
 	bool under_android;
 
 	struct inode vfs_inode;
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> afd1784a008... Import huawei
 /* sdcardfs dentry data in memory */
 struct sdcardfs_dentry_info {
 	spinlock_t lock;	/* protects lower_path */
@@ -184,16 +271,31 @@ struct sdcardfs_dentry_info {
 struct sdcardfs_mount_options {
 	uid_t fs_low_uid;
 	gid_t fs_low_gid;
+<<<<<<< HEAD
 	userid_t fs_user_id;
 	gid_t gid;
 	mode_t mask;
 	bool multiuser;
 	unsigned int reserved_mb;
+=======
+	gid_t write_gid;
+	gid_t m_gid;
+	int split_perms;
+	derive_t derive;
+	lower_fs_t lower_fs;
+	unsigned int reserved_mb;
+	
+	mode_t mask;
+	
+>>>>>>> afd1784a008... Import huawei
 };
 
 /* sdcardfs super-block data in memory */
 struct sdcardfs_sb_info {
+<<<<<<< HEAD
 	struct super_block *sb;
+=======
+>>>>>>> afd1784a008... Import huawei
 	struct super_block *lower_sb;
 	/* derived perm policy : some of options have been added
 	 * to sdcardfs_mount_options (Android 4.4 support) */
@@ -202,7 +304,11 @@ struct sdcardfs_sb_info {
 	char *obbpath_s;
 	struct path obbpath;
 	void *pkgl_id;
+<<<<<<< HEAD
 	struct list_head list;
+=======
+	char *devpath;
+>>>>>>> afd1784a008... Import huawei
 };
 
 /*
@@ -248,6 +354,22 @@ static inline void sdcardfs_set_lower_inode(struct inode *i, struct inode *val)
 	SDCARDFS_I(i)->lower_inode = val;
 }
 
+<<<<<<< HEAD
+=======
+/* copy the inode attrs from src to dest except uid and gid */
+static inline void sdcardfs_copy_inode_attr(struct inode *dest, const struct inode *src)
+{
+	dest->i_mode = src->i_mode;
+	dest->i_rdev = src->i_rdev;
+	dest->i_atime = src->i_atime;
+	dest->i_mtime = src->i_mtime;
+	dest->i_ctime = src->i_ctime;
+	dest->i_blkbits = src->i_blkbits;
+	dest->i_flags = src->i_flags;
+	set_nlink(dest, src->i_nlink);
+}
+
+>>>>>>> afd1784a008... Import huawei
 /* superblock to lower superblock */
 static inline struct super_block *sdcardfs_lower_super(
 	const struct super_block *sb)
@@ -321,6 +443,7 @@ static inline void sdcardfs_put_reset_##pname(const struct dentry *dent) \
 SDCARDFS_DENT_FUNC(lower_path)
 SDCARDFS_DENT_FUNC(orig_path)
 
+<<<<<<< HEAD
 static inline int get_gid(struct sdcardfs_inode_info *info) {
 	struct sdcardfs_sb_info *sb_info = SDCARDFS_SB(info->vfs_inode.i_sb);
 	if (sb_info->options.gid == AID_SDCARD_RW) {
@@ -357,6 +480,15 @@ static inline int get_mode(struct sdcardfs_inode_info *info) {
 	owner_mode = info->lower_inode->i_mode & 0700;
 	filtered_mode = visible_mode & (owner_mode | (owner_mode >> 3) | (owner_mode >> 6));
 	return filtered_mode;
+=======
+static inline void sdcardfs_copy_lower_path(const struct dentry *dent,
+					struct path *lower_path)
+{
+	spin_lock(&SDCARDFS_D(dent)->lock);
+	pathcpy(lower_path, &SDCARDFS_D(dent)->lower_path);
+	spin_unlock(&SDCARDFS_D(dent)->lock);
+	return;
+>>>>>>> afd1784a008... Import huawei
 }
 
 static inline int has_graft_path(const struct dentry *dent)
@@ -392,6 +524,7 @@ static inline void sdcardfs_put_real_lower(const struct dentry *dent,
 		sdcardfs_put_lower_path(dent, real_lower);
 }
 
+<<<<<<< HEAD
 extern struct mutex sdcardfs_super_list_lock;
 extern struct list_head sdcardfs_super_list;
 
@@ -399,17 +532,33 @@ extern struct list_head sdcardfs_super_list;
 extern appid_t get_appid(void *pkgl_id, const char *app_name);
 extern int check_caller_access_to_name(struct inode *parent_node, const char* name);
 extern int open_flags_to_access_mode(int open_flags);
+=======
+/* for packagelist.c */
+extern int get_caller_has_rw_locked(void *pkgl_id, derive_t derive);
+extern appid_t get_appid(void *pkgl_id, const char *app_name);
+extern int check_caller_access_to_name(struct inode *parent_node, const char* name,
+                                        derive_t derive, int w_ok, int has_rw);
+extern int open_flags_to_access_mode(int open_flags);
+extern void * packagelist_create(gid_t write_gid);
+extern void packagelist_destroy(void *pkgl_id);
+>>>>>>> afd1784a008... Import huawei
 extern int packagelist_init(void);
 extern void packagelist_exit(void);
 
 /* for derived_perm.c */
 extern void setup_derived_state(struct inode *inode, perm_t perm,
+<<<<<<< HEAD
 			userid_t userid, uid_t uid, bool under_android);
 extern void get_derived_permission(struct dentry *parent, struct dentry *dentry);
 extern void get_derived_permission_new(struct dentry *parent, struct dentry *dentry, struct dentry *newdentry);
 extern void get_derive_permissions_recursive(struct dentry *parent);
 
 extern void update_derived_permission_lock(struct dentry *dentry);
+=======
+			userid_t userid, uid_t uid, gid_t gid, mode_t mode);
+extern void get_derived_permission(struct dentry *parent, struct dentry *dentry);
+extern void update_derived_permission(struct dentry *dentry);
+>>>>>>> afd1784a008... Import huawei
 extern int need_graft_path(struct dentry *dentry);
 extern int is_base_obbpath(struct dentry *dentry);
 extern int is_obbpath_invalid(struct dentry *dentry);
@@ -433,14 +582,23 @@ static inline int prepare_dir(const char *path_s, uid_t uid, gid_t gid, mode_t m
 {
 	int err;
 	struct dentry *dent;
+<<<<<<< HEAD
 	struct iattr attrs;
 	struct path parent;
 
 	dent = kern_path_locked(path_s, &parent);
+=======
+	struct path path;
+	struct iattr attrs;
+
+	dent = kern_path_create(AT_FDCWD, path_s, &path, LOOKUP_DIRECTORY);
+
+>>>>>>> afd1784a008... Import huawei
 	if (IS_ERR(dent)) {
 		err = PTR_ERR(dent);
 		if (err == -EEXIST)
 			err = 0;
+<<<<<<< HEAD
 		goto out_unlock;
 	}
 
@@ -453,11 +611,30 @@ static inline int prepare_dir(const char *path_s, uid_t uid, gid_t gid, mode_t m
 
 	attrs.ia_uid = make_kuid(&init_user_ns, uid);
 	attrs.ia_gid = make_kgid(&init_user_ns, gid);
+=======
+		return err;
+	}
+
+	err = mnt_want_write(path.mnt);
+	if (err)
+		goto out;
+
+	err = vfs_mkdir(path.dentry->d_inode, dent, mode);
+	if (err) {
+		if (err == -EEXIST)
+			err = 0;
+		goto out_drop;
+	}
+
+	attrs.ia_uid.val = uid;
+	attrs.ia_gid.val = gid;
+>>>>>>> afd1784a008... Import huawei
 	attrs.ia_valid = ATTR_UID | ATTR_GID;
 	mutex_lock(&dent->d_inode->i_mutex);
 	notify_change(dent, &attrs, NULL);
 	mutex_unlock(&dent->d_inode->i_mutex);
 
+<<<<<<< HEAD
 out_dput:
 	dput(dent);
 
@@ -468,6 +645,63 @@ out_unlock:
 	return err;
 }
 
+=======
+out_drop:
+	mnt_drop_write(path.mnt);
+
+out:
+	dput(dent);
+	/* parent dentry locked by kern_path_create */
+	mutex_unlock(&path.dentry->d_inode->i_mutex);
+	path_put(&path);
+	return err;
+}
+
+
+static inline void fix_derived_permission(struct inode* x)
+{
+    struct sdcardfs_sb_info *sbi = SDCARDFS_SB(x->i_sb);
+    int visible_mode = 0775 & ~(sbi->options.mask);
+    struct inode *current_lower_inode = sdcardfs_lower_inode(x);
+    struct sdcardfs_inode_info *info = SDCARDFS_I(x);
+    int owner_mode = 0;
+    int filtered_mode = 0;
+
+    x->i_uid.val = SDCARDFS_I(x)->d_uid;
+    x->i_gid.val = SDCARDFS_I(x)->d_gid;
+
+    if (sbi->options.m_gid == AID_SDCARD_RW) {
+        /* As an optimization, certain trusted system components only run
+         * as owner but operate across all users. Since we're now handing
+         * out the sdcard_rw GID only to trusted apps, we're okay relaxing
+         * the user boundary enforcement for the default view. The UIDs
+         * assigned to app directories are still multiuser aware. */
+        x->i_gid.val = AID_SDCARD_RW;
+    } else {
+        x->i_gid.val = multiuser_get_uid(info->userid, sbi->options.m_gid);
+    }
+
+    if (SDCARDFS_I(x)->perm == PERM_LEGACY_PRE_ROOT) {
+        /* Top of multi-user view should always be visible to ensure
+         * secondary users can traverse inside. */
+        visible_mode = 0711;
+    } else if (SDCARDFS_I(x)->under_android) {
+        /* Block "other" access to Android directories, since only apps
+         * belonging to a specific user should be in there; we still
+         * leave +x open for the default view. */
+        if (sbi->options.m_gid == AID_SDCARD_RW) {
+            visible_mode = visible_mode & ~0006;
+        } else {
+            visible_mode = visible_mode & ~0007;
+        }
+    }
+    owner_mode = current_lower_inode->i_mode & 0700;
+    filtered_mode = visible_mode & (owner_mode | (owner_mode >> 3) | (owner_mode >> 6));
+    x->i_mode = (x->i_mode & S_IFMT) | filtered_mode;
+}
+
+
+>>>>>>> afd1784a008... Import huawei
 /*
  * Return 1, if a disk has enough free space, otherwise 0.
  * We assume that any files can not be overwritten.
@@ -487,12 +721,21 @@ static inline int check_min_free_space(struct dentry *dentry, size_t size, int d
 		sdcardfs_put_lower_path(dentry, &lower_path);
 
 		if (unlikely(err))
+<<<<<<< HEAD
 			return 0;
 
 		/* Invalid statfs informations. */
 		if (unlikely(statfs.f_bsize == 0))
 			return 0;
 
+=======
+			goto out_invalid;
+	
+		/* Invalid statfs informations. */
+		if (unlikely(statfs.f_bsize == 0))
+			goto out_invalid;
+	
+>>>>>>> afd1784a008... Import huawei
 		/* if you are checking directory, set size to f_bsize. */
 		if (unlikely(dir))
 			size = statfs.f_bsize;
@@ -502,6 +745,7 @@ static inline int check_min_free_space(struct dentry *dentry, size_t size, int d
 
 		/* not enough space */
 		if ((u64)size > avail)
+<<<<<<< HEAD
 			return 0;
 
 		/* enough space */
@@ -527,4 +771,40 @@ static inline void sdcardfs_copy_and_fix_attrs(struct inode *dest, const struct 
 	dest->i_flags = src->i_flags;
 	set_nlink(dest, src->i_nlink);
 }
+=======
+			goto out_nospc;
+	
+		/* enough space */
+		if ((avail - size) > (sbi->options.reserved_mb * 1024 * 1024))
+			return 1;
+		goto out_nospc;
+	} else
+		return 1;
+
+out_invalid:
+	printk(KERN_INFO "statfs               : invalid return\n");
+	printk(KERN_INFO "vfs_statfs error#    : %d\n", err);
+	printk(KERN_INFO "statfs.f_type        : 0x%X\n", (u32)statfs.f_type);
+	printk(KERN_INFO "statfs.f_blocks      : %llu blocks\n", statfs.f_blocks);
+	printk(KERN_INFO "statfs.f_bfree       : %llu blocks\n", statfs.f_bfree);
+	printk(KERN_INFO "statfs.f_files       : %llu\n", statfs.f_files);
+	printk(KERN_INFO "statfs.f_ffree       : %llu\n", statfs.f_ffree);
+	printk(KERN_INFO "statfs.f_fsid.val[1] : 0x%X\n", (u32)statfs.f_fsid.val[1]);
+	printk(KERN_INFO "statfs.f_fsid.val[0] : 0x%X\n", (u32)statfs.f_fsid.val[0]);
+	printk(KERN_INFO "statfs.f_namelen     : %ld\n", statfs.f_namelen);
+	printk(KERN_INFO "statfs.f_frsize      : %ld\n", statfs.f_frsize);
+	printk(KERN_INFO "statfs.f_flags       : %ld\n", statfs.f_flags);
+	printk(KERN_INFO "sdcardfs reserved_mb : %u\n", sbi->options.reserved_mb);
+	if (sbi->devpath)
+		printk(KERN_INFO "sdcardfs source path : %s\n", sbi->devpath);
+
+out_nospc:
+	printk_ratelimited(KERN_INFO "statfs.f_bavail : %llu blocks / "
+				     "statfs.f_bsize : %ld bytes / "
+				     "required size : %llu byte\n"
+				,statfs.f_bavail, statfs.f_bsize, (u64)size);
+	return 0;
+}
+
+>>>>>>> afd1784a008... Import huawei
 #endif	/* not _SDCARDFS_H_ */

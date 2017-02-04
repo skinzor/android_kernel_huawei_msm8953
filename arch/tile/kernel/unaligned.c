@@ -1425,7 +1425,6 @@ void jit_bundle_gen(struct pt_regs *regs, tilegx_bundle_bits bundle,
 		__insn_mtspr(SPR_EX_CONTEXT_0_0, regs->pc + 8);
 		__insn_mtspr(SPR_EX_CONTEXT_0_1, PL_ICS_EX1(USER_PL, 0));
 
-		/* Modify pc at the start of new JIT. */
 		regs->pc = (unsigned long)&jit_code_area[idx].insn[0];
 		/* Set ICS in SPR_EX_CONTEXT_K_1. */
 		regs->ex1 = PL_ICS_EX1(USER_PL, 1);

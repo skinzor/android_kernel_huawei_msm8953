@@ -207,7 +207,6 @@ struct sta_info {
 	/*  Please be care, dont declare too much structure here. It will cost memory * STA support num. */
 	/*  */
 	/*  */
-	/*  2011/10/20 MH Add for ODM STA info. */
 	/*  */
 	/*  Driver Write */
 	u8		bValid;				/*  record the sta status link or not? */

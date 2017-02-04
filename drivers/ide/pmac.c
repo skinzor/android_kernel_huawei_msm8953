@@ -1,27 +1,4 @@
-/*
- * Support for IDE interfaces on PowerMacs.
- *
- * These IDE interfaces are memory-mapped and have a DBDMA channel
- * for doing DMA.
- *
- *  Copyright (C) 1998-2003 Paul Mackerras & Ben. Herrenschmidt
- *  Copyright (C) 2007-2008 Bartlomiej Zolnierkiewicz
- *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version
- *  2 of the License, or (at your option) any later version.
- *
- * Some code taken from drivers/ide/ide-dma.c:
- *
- *  Copyright (c) 1995-1998  Mark Lord
- *
- * TODO: - Use pre-calculated (kauai) timing tables all the time and
- * get rid of the "rounded" tables used previously, so we have the
- * same table format for all controllers and can then just have one
- * big table
- * 
- */
+
 #include <linux/types.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -1514,7 +1491,6 @@ static int pmac_ide_build_dmatable(ide_drive_t *drive, struct ide_cmd *cmd)
 	/* convert the last command to an input/output last command */
 	if (count) {
 		st_le16(&table[-1].command, wr? OUTPUT_LAST: INPUT_LAST);
-		/* add the stop command to the end of the list */
 		memset(table, 0, sizeof(struct dbdma_cmd));
 		st_le16(&table->command, DBDMA_STOP);
 		mb();

@@ -651,6 +651,7 @@ int wcnss_wlan_power(struct device *dev,
 	}
 
 	up(&wcnss_power_on_lock);
+
 	return rc;
 
 fail_iris_xo:
@@ -661,6 +662,7 @@ fail_iris_on:
 
 fail_wcnss_on:
 	up(&wcnss_power_on_lock);
+
 	return rc;
 }
 EXPORT_SYMBOL(wcnss_wlan_power);

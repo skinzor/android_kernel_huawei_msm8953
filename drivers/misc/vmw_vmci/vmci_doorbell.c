@@ -151,14 +151,7 @@ static void dbell_index_table_add(struct dbell_entry *entry)
 
 	spin_lock_bh(&vmci_doorbell_it.lock);
 
-	/*
-	 * Below we try to allocate an index in the notification
-	 * bitmap with "not too much" sharing between resources. If we
-	 * use less that the full bitmap, we either add to the end if
-	 * there are no unused flags within the currently used area,
-	 * or we search for unused ones. If we use the full bitmap, we
-	 * allocate the index round robin.
-	 */
+	
 	if (max_notify_idx < PAGE_SIZE || notify_idx_count < PAGE_SIZE) {
 		if (last_notify_idx_released < max_notify_idx &&
 		    !dbell_index_table_find(last_notify_idx_released)) {

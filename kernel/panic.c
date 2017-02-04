@@ -24,6 +24,7 @@
 #include <linux/init.h>
 #include <linux/nmi.h>
 #include <linux/console.h>
+#include <linux/hwboot_fail.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/exception.h>
@@ -81,6 +82,9 @@ void panic(const char *fmt, ...)
 	va_list args;
 	long i, i_next = 0;
 	int state = 0;
+
+	boot_fail_err(KERNEL_AP_PANIC,0,NULL);
+	pr_err(KERN_EMERG "Boot_monitor detect error:KERNEL_AP_PANIC\n");
 
 	trace_kernel_panic(0);
 	/*

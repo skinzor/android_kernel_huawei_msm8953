@@ -112,8 +112,7 @@ static int _InitPowerOn(struct rtw_adapter *padapter)
 	rtl8723au_write8(padapter, REG_APS_FSMCO + 2, value8 | BIT(3));
 
 	/*  Enable MAC DMA/WMAC/SCHEDULE/SEC block */
-	/*  Set CR bit10 to enable 32k calibration. Suggested by SD1 Gimmy.
-	    Added by tynli. 2011.08.31. */
+	
 	value16 = rtl8723au_read16(padapter, REG_CR);
 	value16 |= (HCI_TXDMA_EN | HCI_RXDMA_EN | TXDMA_EN | RXDMA_EN |
 		    PROTOCOL_EN | SCHEDULE_EN | MACTXEN | MACRXEN |
@@ -712,7 +711,6 @@ int rtl8723au_hal_init(struct rtw_adapter *Adapter)
 
 	/*  */
 	/*  Disable BAR, suggested by Scott */
-	/*  2010.04.09 add by hpfan */
 	/*  */
 	rtl8723au_write32(Adapter, REG_BAR_MODE_CTRL, 0x0201ffff);
 
@@ -1099,7 +1097,6 @@ static void CardDisableRTL8723U(struct rtw_adapter *Adapter)
 			       PWR_INTF_USB_MSK,
 			       rtl8723AU_card_disable_flow);
 
-	/*  Reset MCU IO Wrapper, added by Roger, 2011.08.30. */
 	u1bTmp = rtl8723au_read8(Adapter, REG_RSV_CTRL + 1);
 	rtl8723au_write8(Adapter, REG_RSV_CTRL+1, u1bTmp & ~BIT(0));
 	u1bTmp = rtl8723au_read8(Adapter, REG_RSV_CTRL + 1);
@@ -1325,7 +1322,6 @@ static void _ReadSilmComboMode(struct rtw_adapter *Adapter)
 /*	Assumption: */
 /*		PASSIVE_LEVEL */
 /*  */
-/*	Added by Roger, 2010.11.23. */
 /*  */
 static void hal_EfuseCellSel(struct rtw_adapter *Adapter)
 {

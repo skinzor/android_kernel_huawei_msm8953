@@ -26,6 +26,9 @@
 #include "mmc_ops.h"
 #include "sd_ops.h"
 
+#ifdef CONFIG_HUAWEI_EMMC_DSM
+#include <linux/mmc/dsm_emmc.h>
+#endif
 static const unsigned int tran_exp[] = {
 	10000,		100000,		1000000,	10000000,
 	0,		0,		0,		0
@@ -703,6 +706,16 @@ static int mmc_read_ext_csd(struct mmc_card *card, u8 *ext_csd)
 		card->ext_csd.barrier_support = 0;
 		card->ext_csd.cache_flush_policy = 0;
 	}
+#ifdef CONFIG_HUAWEI_EMMC_DSM
+	/* eMMC v5.0 or later */
+	if(!strcmp(mmc_hostname(card->host), "mmc0")){
+		if (card->ext_csd.rev >= 7) {
+			card->ext_csd.pre_eol_info = ext_csd[EXT_CSD_PRE_EOL_INFO];
+			card->ext_csd.device_life_time_est_typ_a = ext_csd[EXT_CSD_DEVICE_LIFE_TIME_EST_TYP_A];
+			card->ext_csd.device_life_time_est_typ_b = ext_csd[EXT_CSD_DEVICE_LIFE_TIME_EST_TYP_B];
+		}
+	}
+#endif
 
 out:
 	return err;
@@ -1606,6 +1619,51 @@ out:
 	return err;
 }
 
+static bool is_runmode_factory_type(void)
+{
+	if(strstr(saved_command_line, "androidboot.huawei_swtype=factory") != NULL) {
+		pr_info("%s : run mode is factory\n", __func__);
+		return true;
+	}else{
+		pr_info("%s : rum mode is nornal\n", __func__);
+		return false;
+	}
+}
+static bool is_batterystate_exist(void)
+{
+	if(strstr(saved_command_line, "androidboot.huawei_battery_state=exist") != NULL) {
+		pr_info("%s: battery state exist\n", __func__);
+		return true;
+	}else{
+		pr_info("%s: battery state no exist\n", __func__);
+		return false;
+	}
+}
+static bool mmc_screen_test_cache_enable(struct mmc_card *card)
+{
+	bool need_cache_on = true;
+	bool runmode_normal = false;
+	if(card == NULL)
+	{
+		pr_info("card is null and then return\n");
+		return need_cache_on;
+	}
+	runmode_normal = !is_runmode_factory_type();
+
+	pr_info("runmode_normal=%d is_batterystate_exist=%d card->cid.manfid=0x%x\n", runmode_normal, is_batterystate_exist(), card->cid.manfid);
+	if(runmode_normal ||  !(is_batterystate_exist() && (card->cid.manfid == CID_MANFID_SAMSUNG)))
+	{
+		pr_info("need_cache_on\n");
+		need_cache_on = true;
+	}
+	else
+	{
+		pr_info("need_cache_off\n");
+		need_cache_on = false;
+	}
+	return need_cache_on;
+}
+
 /*
  * Handle the detection and initialisation of a card.
  *
@@ -1936,7 +1994,7 @@ reinit:
 	 * If HPI is not supported then cache shouldn't be enabled.
 	 */
 	if (card->ext_csd.cache_size > 0) {
-		if (card->ext_csd.hpi_en &&
+		if (card->ext_csd.hpi_en && (mmc_screen_test_cache_enable(card)) &&
 			(!(card->quirks & MMC_QUIRK_CACHE_DISABLE))) {
 			err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 					EXT_CSD_CACHE_CTRL, 1,
@@ -2055,7 +2113,7 @@ reinit:
 	 * that auto bkops will eventually kick in and the device will
 	 * handle bkops without START_BKOPS from the host.
 	 */
-	if (mmc_card_support_auto_bkops(card)) {
+	if (mmc_card_support_auto_bkops(card) && (mmc_screen_test_cache_enable(card))) {
 		/*
 		 * Ignore the return value of setting auto bkops.
 		 * If it failed, will run in backward compatible mode.
@@ -2065,16 +2123,42 @@ reinit:
 
 	if (card->ext_csd.cmdq_support && (card->host->caps2 &
 					   MMC_CAP2_CMD_QUEUE)) {
-		err = mmc_select_cmdq(card);
-		if (err) {
-			pr_err("%s: selecting CMDQ mode: failed: %d\n",
+		if(mmc_screen_test_cache_enable(card)) {
+			err = mmc_select_cmdq(card);
+			if (err) {
+				pr_err("%s: selecting CMDQ mode: failed: %d\n",
 					   mmc_hostname(card->host), err);
+				card->ext_csd.cmdq_support = 0;
+				oldcard = card;
+				goto reinit;
+			}
+		}else{
 			card->ext_csd.cmdq_support = 0;
-			oldcard = card;
-			goto reinit;
+			pr_info("%s: ext_csd.cmdq_support = %d\n", __func__, card->ext_csd.cmdq_support);
 		}
 	}
+#ifdef CONFIG_HUAWEI_EMMC_DSM
+	/* eMMC v5.0 or later */
+	if(!strcmp(mmc_hostname(card->host), "mmc0")){
+		if (card->ext_csd.rev >= 7) {
+			if( card->ext_csd.device_life_time_est_typ_a >= DEVICE_LIFE_TRIGGER_LEVEL ||
+				card->ext_csd.device_life_time_est_typ_b >= DEVICE_LIFE_TRIGGER_LEVEL)
+			{
+					DSM_EMMC_LOG(card, DSM_EMMC_LIFE_TIME_EST_ERR,
+						"%s:eMMC life time has problem, device_life_time_est_typ_a[268]:%d, device_life_time_est_typ_b{269]:%d\n",
+						__FUNCTION__, card->ext_csd.device_life_time_est_typ_a, card->ext_csd.device_life_time_est_typ_b);
+			}
 
+			if(card->ext_csd.pre_eol_info == EXT_CSD_PRE_EOL_INFO_WARNING ||
+				card->ext_csd.pre_eol_info == EXT_CSD_PRE_EOL_INFO_URGENT)
+			{
+				DSM_EMMC_LOG(card, DSM_EMMC_PRE_EOL_INFO_ERR,
+					"%s:eMMC average reserved blocks has problem, PRE_EOL_INFO[267]:%d\n", __FUNCTION__,
+					card->ext_csd.pre_eol_info);
+			}
+		}
+	}
+#endif
 	return 0;
 
 free_card:
@@ -2172,7 +2256,7 @@ static int mmc_sleepawake(struct mmc_host *host, bool sleep)
 	return err;
 }
 
-static int mmc_can_poweroff_notify(const struct mmc_card *card)
+int mmc_can_poweroff_notify(const struct mmc_card *card)
 {
 	return card &&
 		mmc_card_mmc(card) &&
@@ -2478,7 +2562,7 @@ out:
 /*
  * Suspend callback
  */
-static int mmc_suspend(struct mmc_host *host)
+int mmc_suspend(struct mmc_host *host)
 {
 	int err;
 	ktime_t start = ktime_get();
@@ -2726,6 +2810,10 @@ static const struct mmc_bus_ops mmc_ops = {
 	.power_restore = mmc_power_restore,
 	.alive = mmc_alive,
 	.change_bus_speed = mmc_change_bus_speed,
+#ifdef CONFIG_MMC_PASSWORDS
+	.sysfs_add = NULL,
+	.sysfs_remove = NULL,
+#endif
 };
 
 /*
@@ -2804,3 +2892,331 @@ err:
 
 	return err;
 }
+#ifdef CONFIG_HUAWEI_EMMC_DSM
+unsigned int emmc_dsm_real_upload_size=0;
+static unsigned int g_last_msg_code=0; /*last sent error code*/
+static unsigned int g_last_msg_count=0; /*last sent the code count*/
+#define ERR_MAX_COUNT 10
+/*
+ * first send the err msg to /dev/exception node.
+ * if it produces lots of reduplicated msg, will just record the times
+ * for every error, it's better to set max times
+ * @code: error number
+ * @err_msg: error message
+ * @return: 0:don't report, 1: report
+ */
+static int dsm_emmc_process_log(int code, char *err_msg)
+{
+	int ret=0;
+	/*the MAX times of erevy err code*/
+	static int emmc_pre_eol_max_count = ERR_MAX_COUNT;
+	static int emmc_life_time_err_max_count = ERR_MAX_COUNT;
+#ifdef CONFIG_HUAWEI_EMMC_DSM_DEBUG
+	static int system_w_err_max_count = ERR_MAX_COUNT;
+	static int erase_err_max_count = ERR_MAX_COUNT;
+	static int send_cxd_err_max_count = ERR_MAX_COUNT;
+	static int emmc_read_err_max_count = ERR_MAX_COUNT;
+	static int emmc_write_err_max_count = ERR_MAX_COUNT;
+	static int emmc_tuning_err_max_count = ERR_MAX_COUNT;
+	static int emmc_set_width_err_max_count = ERR_MAX_COUNT;
+	static int vdet_err_max_count = ERR_MAX_COUNT;
+	static int emmc_packed_command_err_max_count = ERR_MAX_COUNT;
+	static char emmc_rsp_err_max_count = ERR_MAX_COUNT;
+	static char emmc_host_timeout_max_count = ERR_MAX_COUNT;
+	static char emmc_host_err_max_count = ERR_MAX_COUNT;
+	static char emmc_urgent_bkops_max_count = ERR_MAX_COUNT;
+	static char emmc_dyncap_needed_max_count = ERR_MAX_COUNT;
+	static char emmc_syspool_exhausted_max_count = ERR_MAX_COUNT;
+	static char emmc_cache_err_max_count = ERR_MAX_COUNT;
+	static char emmc_cache_timeout_max_count = ERR_MAX_COUNT;
+#endif
+
+	/*filter: if it has the same msg code with last, record err code&count*/
+	if (g_last_msg_code == code) {
+		ret = 0;
+		g_last_msg_count++;
+	} else {
+		g_last_msg_code = code;
+		g_last_msg_count = 0;
+		ret = 1;
+	}
+
+	/*restrict count of every error, note:deplicated msg donesn't its count*/
+	if(1 == ret){
+		switch (code){
+			case DSM_EMMC_LIFE_TIME_EST_ERR:
+				if(0 < emmc_life_time_err_max_count){
+					emmc_life_time_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_PRE_EOL_INFO_ERR:
+				if(0 < emmc_pre_eol_max_count){
+					emmc_pre_eol_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+
+#ifdef CONFIG_HUAWEI_EMMC_DSM_DEBUG
+			case DSM_SYSTEM_W_ERR:
+				if(0 < system_w_err_max_count){
+					system_w_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_ERASE_ERR:
+				if(0 < erase_err_max_count){
+					erase_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_SEND_CXD_ERR:
+				if(0 < send_cxd_err_max_count){
+					send_cxd_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_READ_ERR:
+				if(0 < emmc_read_err_max_count){
+					emmc_read_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_WRITE_ERR:
+				if(0 < emmc_write_err_max_count){
+					emmc_write_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_SET_BUS_WIDTH_ERR:
+				if(0 < emmc_set_width_err_max_count){
+					emmc_set_width_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_VDET_ERR:
+				if(0 < vdet_err_max_count){
+					vdet_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+
+			case DSM_EMMC_TUNING_ERROR:
+				if(0 < emmc_tuning_err_max_count){
+					emmc_tuning_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_PACKED_FAILURE:
+				if(0 < emmc_packed_command_err_max_count){
+					emmc_packed_command_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_RSP_ERR:
+				if(0 < emmc_rsp_err_max_count){
+					emmc_rsp_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_HOST_TIMEOUT_ERR:
+				if(0 < emmc_host_timeout_max_count){
+					emmc_host_timeout_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_HOST_ERR:
+				if(0 < emmc_host_err_max_count){
+					emmc_host_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_URGENT_BKOPS:
+				if(0 < emmc_urgent_bkops_max_count){
+					emmc_urgent_bkops_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_DYNCAP_NEEDED:
+				if(0 < emmc_dyncap_needed_max_count){
+					emmc_dyncap_needed_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_SYSPOOL_EXHAUSTED:
+				if(0 < emmc_syspool_exhausted_max_count){
+					emmc_syspool_exhausted_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_CACHE_TIMEOUT:
+				if(0 < emmc_cache_timeout_max_count){
+					emmc_cache_timeout_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+			case DSM_EMMC_CACHE_ERR:
+				if(0 < emmc_cache_err_max_count){
+					emmc_cache_err_max_count--;
+					ret = 1;
+				}else{
+					ret = 0;
+				}
+				break;
+#endif
+			default:
+				ret = 0;
+				break;
+		}
+	}
+
+	return ret;
+}
+
+/*
+ * Put error message into buffer.
+ * @code: error number
+ * @err_msg: error message
+ * @return: 0:no buffer to report, 1: report
+ */
+int dsm_emmc_get_log(void *card, int code, char *err_msg)
+{
+	int ret = 0;
+	int buff_size = sizeof(g_emmc_dsm_log.emmc_dsm_log);
+	char *dsm_log_buff = g_emmc_dsm_log.emmc_dsm_log;
+	struct mmc_card * card_dev=(struct mmc_card * )card;
+	unsigned int last_msg_code = g_last_msg_code;
+	unsigned int last_msg_count = g_last_msg_count;
+
+	int i=1;
+	u8 *ext_csd=NULL;
+
+	if(dsm_emmc_process_log(code, err_msg)){
+		/*clear global buffer*/
+		memset(g_emmc_dsm_log.emmc_dsm_log,0,buff_size);
+		/*print duplicated code and its count */
+		if((0 < last_msg_count) && (0 == g_last_msg_count)){
+			ret = snprintf(dsm_log_buff,buff_size,"last Err num: %d, the times: %d\n",last_msg_code, last_msg_count + 1);
+			dsm_log_buff += ret;
+			buff_size -= ret;
+			last_msg_code = 0;
+			last_msg_count = 0;
+		}
+
+		ret = snprintf(dsm_log_buff,buff_size,"Err num: %d, %s\n",code, err_msg);
+		dsm_log_buff += ret;
+		buff_size -= ret;
+		pr_info("Err num: %d, %s\n",code, err_msg);
+
+		if(NULL != card_dev){
+			/*print card CID info*/
+			if(sizeof(struct mmc_cid) < buff_size){
+				ret = snprintf(dsm_log_buff,buff_size,
+					"Card's cid:%08x%08x%08x%08x\n\n", card_dev->raw_cid[0], card_dev->raw_cid[1],
+					card_dev->raw_cid[2], card_dev->raw_cid[3]);
+				dsm_log_buff += ret;
+				buff_size -= ret;
+				pr_info("Card's cid:%08x%08x%08x%08x\n\n", card_dev->raw_cid[0], card_dev->raw_cid[1],
+					card_dev->raw_cid[2], card_dev->raw_cid[3]);
+			}else{
+				printk(KERN_ERR "%s:g_emmc_dsm_log Buff size is not enough\n", __FUNCTION__);
+				printk(KERN_ERR "%s:eMMC error message is: %s\n", __FUNCTION__, err_msg);
+			}
+
+			/*print card ios info*/
+			if(sizeof(card_dev->host->ios)< buff_size){
+				if(NULL != card_dev->host){
+					ret = snprintf(dsm_log_buff,buff_size,
+						"Card's ios.clock:%uHz, ios.old_rate:%uHz, ios.power_mode:%u, ios.timing:%u, ios.bus_mode:%u, ios.bus_width:%u\n",
+						card_dev->host->ios.clock, card_dev->host->ios.old_rate, card_dev->host->ios.power_mode, card_dev->host->ios.timing,
+						card_dev->host->ios.bus_mode, card_dev->host->ios.bus_width);
+					dsm_log_buff += ret;
+					buff_size -= ret;
+					pr_info("Card's ios.clock:%uHz, ios.old_rate:%uHz, ios.power_mode:%u, ios.timing:%u, ios.bus_mode:%u, ios.bus_width:%u\n",
+						card_dev->host->ios.clock, card_dev->host->ios.old_rate, card_dev->host->ios.power_mode, card_dev->host->ios.timing,
+						card_dev->host->ios.bus_mode, card_dev->host->ios.bus_width);
+				}
+			}else{
+				printk(KERN_ERR "%s:g_emmc_dsm_log Buff size is not enough\n", __FUNCTION__);
+				printk(KERN_ERR "%s:eMMC error message is: %s\n", __FUNCTION__, err_msg);
+			}
+
+			/*print card ext_csd info*/
+			if(EMMC_EXT_CSD_LENGHT < buff_size){
+				if(NULL != card_dev->cached_ext_csd){
+					ret = snprintf(dsm_log_buff,buff_size,"eMMC ext_csd(Note: just static slice data is believable):\n");
+					dsm_log_buff += ret;
+					buff_size -= ret;
+
+					ext_csd = card_dev->cached_ext_csd;
+					for (i = 0; i < EMMC_EXT_CSD_LENGHT; i++){
+						ret = snprintf(dsm_log_buff,buff_size,"%02x", ext_csd[i]);
+						dsm_log_buff += ret;
+						buff_size -= ret;
+					}
+					ret = snprintf(dsm_log_buff,buff_size,"\n\n");
+					dsm_log_buff += ret;
+					buff_size -= ret;
+				}
+			}else{
+				printk(KERN_ERR "%s:g_emmc_dsm_log Buff size is not enough\n", __FUNCTION__);
+				printk(KERN_ERR "%s:eMMC error message is: %s\n", __FUNCTION__, err_msg);
+			}
+		}
+		/*get size of used buffer*/
+		emmc_dsm_real_upload_size = sizeof(g_emmc_dsm_log.emmc_dsm_log) - buff_size;
+
+		pr_debug("DSM_DEBUG %s\n",g_emmc_dsm_log.emmc_dsm_log);
+
+		return 1;
+	}else{
+		printk("%s:Err num: %d, %s\n",__FUNCTION__, code, err_msg);
+		if(NULL != card_dev){
+			pr_info("Card's cid:%08x%08x%08x%08x\n\n", card_dev->raw_cid[0], card_dev->raw_cid[1],
+					card_dev->raw_cid[2], card_dev->raw_cid[3]);
+			pr_info("Card's ios.clock:%uHz, ios.old_rate:%uHz, ios.power_mode:%u, ios.timing:%u, ios.bus_mode:%u, ios.bus_width:%u\n",
+					card_dev->host->ios.clock, card_dev->host->ios.old_rate, card_dev->host->ios.power_mode, card_dev->host->ios.timing,
+					card_dev->host->ios.bus_mode, card_dev->host->ios.bus_width);
+		}
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(dsm_emmc_get_log);
+#endif

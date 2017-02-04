@@ -497,12 +497,7 @@ static void sci_apc_agent_configure_ports(struct isci_host *ihost,
 		else
 			apc_activity = SCIC_SDS_APC_SKIP_PHY;
 	} else {
-		/*
-		 * There is no matching Port for this PHY so lets search through the
-		 * Ports and see if we can add the PHY to its own port or maybe start
-		 * the timer and wait to see if a wider port can be made.
-		 *
-		 * Note the break when we reach the condition of the port id == phy id */
+		
 		for (port_index = port_agent->phy_valid_port_range[iphy->phy_index].min_index;
 		     port_index <= port_agent->phy_valid_port_range[iphy->phy_index].max_index;
 		     port_index++) {
@@ -520,10 +515,7 @@ static void sci_apc_agent_configure_ports(struct isci_host *ihost,
 					break;
 				}
 
-				/*
-				 * We have reached the end of our Port list and have not found
-				 * any reason why we should not either add the PHY to the port
-				 * or wait for more phys to become active. */
+				
 				if (iport->physical_port_index == iphy->phy_index) {
 					/*
 					 * The Port either has no active PHYs.
@@ -554,13 +546,7 @@ static void sci_apc_agent_configure_ports(struct isci_host *ihost,
 		}
 	}
 
-	/*
-	 * Check to see if the start timer operations should instead map to an
-	 * add phy operation.  This is caused because we have been waiting to
-	 * add a phy to a port but could not becuase the automatic port
-	 * configuration engine had a choice of possible ports for the phy.
-	 * Since we have gone through a timeout we are going to restrict the
-	 * choice to the smallest possible port. */
+	
 	if (
 		(start_timer == false)
 		&& (apc_activity == SCIC_SDS_APC_START_TIMER)

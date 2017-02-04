@@ -620,7 +620,7 @@ dbl_fmpyfadd(
 				resultp4);
 	    		result_exponent++;
 		} /* end if hiddenoverflow... */
-	} /* end else ...add magnitudes... */
+	}
 
 	/* Round the result.  If the extension and lower two words are
 	 * all zeros, then the result is exact.  Otherwise round in the
@@ -1280,7 +1280,7 @@ unsigned int *status;
 				resultp4);
 	    		result_exponent++;
 		} /* end if hiddenoverflow... */
-	} /* end else ...add magnitudes... */
+	}
 
 	/* Round the result.  If the extension and lower two words are
 	 * all zeros, then the result is exact.  Otherwise round in the
@@ -1924,7 +1924,7 @@ unsigned int *status;
 	    		Sglext_arithrightshiftby1(resultp1,resultp2);
 	    		result_exponent++;
 		} /* end if hiddenoverflow... */
-	} /* end else ...add magnitudes... */
+	}
 
 	/* Round the result.  If the extension and lower two words are
 	 * all zeros, then the result is exact.  Otherwise round in the
@@ -2566,7 +2566,7 @@ unsigned int *status;
 	    		Sglext_arithrightshiftby1(resultp1,resultp2);
 	    		result_exponent++;
 		} /* end if hiddenoverflow... */
-	} /* end else ...add magnitudes... */
+	}
 
 	/* Round the result.  If the extension and lower two words are
 	 * all zeros, then the result is exact.  Otherwise round in the

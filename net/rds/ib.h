@@ -56,7 +56,6 @@ struct rds_ib_refill_cache {
 };
 
 struct rds_ib_connect_private {
-	/* Add new fields at the end, and don't permute existing fields. */
 	__be32			dp_saddr;
 	__be32			dp_daddr;
 	u8			dp_protocol_major;

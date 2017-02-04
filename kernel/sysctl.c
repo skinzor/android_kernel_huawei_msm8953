@@ -66,7 +66,10 @@
 
 #include <asm/uaccess.h>
 #include <asm/processor.h>
-
+#ifdef CONFIG_HUAWEI_KERNEL
+#include <linux/qpnp/power-on.h>
+extern int huawei_pon_regs[MAX_REG_TYPE];
+#endif
 #ifdef CONFIG_X86
 #include <asm/nmi.h>
 #include <asm/stacktrace.h>
@@ -276,6 +279,10 @@ static int max_sched_tunable_scaling = SCHED_TUNABLESCALING_END-1;
 #ifdef CONFIG_COMPACTION
 static int min_extfrag_threshold;
 static int max_extfrag_threshold = 1000;
+#endif
+#ifdef CONFIG_SHRINK_MEMORY
+static int min_shrink_memory = 1;
+static int max_shrink_memory = 100;
 #endif
 
 static struct ctl_table kern_table[] = {
@@ -1606,6 +1613,17 @@ static struct ctl_table vm_table[] = {
 	},
 
 #endif /* CONFIG_COMPACTION */
+#ifdef CONFIG_SHRINK_MEMORY
+       {
+       .procname    = "shrink_memory",
+       .data        = &sysctl_shrink_memory,
+       .maxlen      = sizeof(int),
+       .mode        = 0200,
+       .proc_handler = sysctl_shrinkmem_handler,
+       .extra1      = &min_shrink_memory,
+       .extra2      = &max_shrink_memory,
+       },
+#endif
 	{
 		.procname	= "min_free_kbytes",
 		.data		= &min_free_kbytes,
@@ -2038,6 +2056,15 @@ static struct ctl_table debug_table[] = {
 		.proc_handler	= proc_kprobes_optimization_handler,
 		.extra1		= &zero,
 		.extra2		= &one,
+	},
+#endif
+#ifdef CONFIG_HUAWEI_KERNEL
+	{
+		.procname   = "poweronoff_reason",
+		.data       = huawei_pon_regs,
+		.maxlen     = sizeof(huawei_pon_regs),
+		.mode       = 0644,
+		.proc_handler   = proc_dointvec,
 	},
 #endif
 	{ }

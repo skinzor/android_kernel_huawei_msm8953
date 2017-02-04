@@ -26,6 +26,10 @@
  *          0: tell VFS to invalidate dentry
  *          1: dentry is valid
  */
+<<<<<<< HEAD
+=======
+//static int sdcardfs_d_revalidate(struct dentry *dentry, struct nameidata *nd)
+>>>>>>> afd1784a008... Import huawei
 static int sdcardfs_d_revalidate(struct dentry *dentry, unsigned int flags)
 {
 	int err = 1;
@@ -35,6 +39,10 @@ static int sdcardfs_d_revalidate(struct dentry *dentry, unsigned int flags)
 	struct dentry *lower_cur_parent_dentry = NULL;
 	struct dentry *lower_dentry = NULL;
 
+<<<<<<< HEAD
+=======
+//	if (nd && nd->flags & LOOKUP_RCU)
+>>>>>>> afd1784a008... Import huawei
 	if (flags & LOOKUP_RCU)
 		return -ECHILD;
 
@@ -74,6 +82,15 @@ static int sdcardfs_d_revalidate(struct dentry *dentry, unsigned int flags)
 		goto out;
 	}
 
+<<<<<<< HEAD
+=======
+	if (dentry == lower_dentry) {
+		err = 0;
+		panic("sdcardfs: dentry is equal to lower_dentry\n");
+		goto out;
+	}
+
+>>>>>>> afd1784a008... Import huawei
 	if (dentry < lower_dentry) {
 		spin_lock(&dentry->d_lock);
 		spin_lock(&lower_dentry->d_lock);
@@ -118,8 +135,12 @@ static void sdcardfs_d_release(struct dentry *dentry)
 	return;
 }
 
+<<<<<<< HEAD
 static int sdcardfs_hash_ci(const struct dentry *dentry,
 				struct qstr *qstr)
+=======
+static int sdcardfs_hash_ci(const struct dentry *dentry, struct qstr *qstr)
+>>>>>>> afd1784a008... Import huawei
 {
 	/*
 	 * This function is copy of vfat_hashi.
@@ -147,9 +168,14 @@ static int sdcardfs_hash_ci(const struct dentry *dentry,
 /*
  * Case insensitive compare of two vfat names.
  */
+<<<<<<< HEAD
 static int sdcardfs_cmp_ci(const struct dentry *parent,
 		const struct dentry *dentry,
 		unsigned int len, const char *str, const struct qstr *name)
+=======
+static int sdcardfs_cmp_ci(const struct dentry *parent, 
+		const struct dentry *dentry, unsigned int len, const char *str, const struct qstr *name)
+>>>>>>> afd1784a008... Import huawei
 {
 	/* This function is copy of vfat_cmpi */
 	// FIXME Should we support national language?
@@ -177,6 +203,10 @@ const struct dentry_operations sdcardfs_ci_dops = {
 	.d_release	= sdcardfs_d_release,
 	.d_hash 	= sdcardfs_hash_ci,
 	.d_compare	= sdcardfs_cmp_ci,
+<<<<<<< HEAD
 	.d_canonical_path = sdcardfs_get_real_lower,
 };
 
+=======
+};
+>>>>>>> afd1784a008... Import huawei

@@ -364,7 +364,6 @@ vCommandTimer(
 			s_bCommandComplete(pDevice);
 
 		} else {
-//2008-8-4 <add> by chester
 			if (!is_channel_valid(pMgmt->uScanChannel)) {
 				pr_debug("Invalid channel pMgmt->uScanChannel = %d\n",
 					 pMgmt->uScanChannel);
@@ -395,7 +394,6 @@ vCommandTimer(
 
 			CARDbSetBSSID(pMgmt->pAdapter, pMgmt->abyCurrBSSID, NL80211_IFTYPE_UNSPECIFIED);
 			pMgmt->uScanChannel++;
-//2008-8-4 <modify> by chester
 			if (!is_channel_valid(pMgmt->uScanChannel) &&
 			    pMgmt->uScanChannel <= pDevice->byMaxChannel) {
 				pMgmt->uScanChannel = pDevice->byMaxChannel + 1;
@@ -433,7 +431,6 @@ vCommandTimer(
 
 		pMgmt->eScanState = WMAC_NO_SCANNING;
 		vAdHocBeaconRestart(pDevice);
-//2008-0409-07, <Add> by Einsn Liu
 #ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
 		if (pMgmt->eScanType == WMAC_SCAN_PASSIVE) {
 			//send scan event to wpa_Supplicant

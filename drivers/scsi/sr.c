@@ -465,9 +465,7 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
 		}
 	}
 
-	/*
-	 * request doesn't start on hw block boundary, add scatter pads
-	 */
+	
 	if (((unsigned int)blk_rq_pos(rq) % (s_size >> 9)) ||
 	    (scsi_bufflen(SCpnt) % s_size)) {
 		scmd_printk(KERN_NOTICE, SCpnt, "unaligned transfer\n");

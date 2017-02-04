@@ -1,7 +1,11 @@
 config SDCARD_FS
 	tristate "sdcard file system"
+<<<<<<< HEAD
 	depends on CONFIGFS_FS
 	default n
+=======
+	default y
+>>>>>>> afd1784a008... Import huawei
 	help
 	  Sdcardfs is based on Wrapfs file system.
 
@@ -11,3 +15,18 @@ config SDCARD_FS_FADV_NOACTIVE
 	default y
 	help
 	  Sdcardfs supports fadvise noactive mode.
+<<<<<<< HEAD
+=======
+
+config SDCARD_FS_CI_SEARCH
+	tristate "sdcardfs case-insensitive search support"
+	depends on SDCARD_FS
+	default y
+
+config SDCARD_FS_XATTR
+	bool "Sdcardfs extended attribute"
+	default n
+	depends on SDCARD_FS
+	help
+	  Modification of sdcard file system for xattr
+>>>>>>> afd1784a008... Import huawei

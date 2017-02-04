@@ -382,6 +382,15 @@ CFLAGS_KERNEL	=
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
+# Define macro to control the high low temperature compile
+ifeq ($(HLTHERM_RUNTEST),true)
+	CFLAGS_KERNEL += -DCONFIG_HLTHERM_RUNTEST
+endif
+
+# Define macro to control long time test with usb insert
+ifeq ($(LONG_TIME_TEST_WITH_USB),true)
+	CFLAGS_KERNEL += -DCONFIG_LONG_TIME_TEST_WITH_USB
+endif
 
 # Use USERINCLUDE when you must reference the UAPI directories only.
 USERINCLUDE    := \

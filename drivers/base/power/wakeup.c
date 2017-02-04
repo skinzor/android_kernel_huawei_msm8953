@@ -954,6 +954,13 @@ static int wakeup_sources_stats_show(struct seq_file *m, void *unused)
 	rcu_read_lock();
 	list_for_each_entry_rcu(ws, &wakeup_sources, entry)
 		print_wakeup_source_stats(m, ws);
+
+	seq_puts(m,"active wakeup source-----------------------------------\n");
+	list_for_each_entry_rcu(ws, &wakeup_sources, entry)
+		if(ws->active)
+			print_wakeup_source_stats(m, ws);
+	seq_puts(m,"-------------------------------------------------------\n");
+
 	rcu_read_unlock();
 
 	return 0;

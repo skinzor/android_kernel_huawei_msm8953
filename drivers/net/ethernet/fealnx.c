@@ -1,28 +1,4 @@
-/*
-	Written 1998-2000 by Donald Becker.
 
-	This software may be used and distributed according to the terms of
-	the GNU General Public License (GPL), incorporated herein by reference.
-	Drivers based on or derived from this code fall under the GPL and must
-	retain the authorship, copyright and license notice.  This file is not
-	a complete program and may only be used when the entire operating
-	system is licensed under the GPL.
-
-	The author may be reached as becker@scyld.com, or C/O
-	Scyld Computing Corporation
-	410 Severn Ave., Suite 210
-	Annapolis MD 21403
-
-	Support information and updates available at
-	http://www.scyld.com/network/pci-skeleton.html
-
-	Linux kernel updates:
-
-	Version 2.51, Nov 17, 2001 (jgarzik):
-	- Add ethtool support
-	- Replace some MII-related magic numbers with constants
-
-*/
 
 #define DRV_NAME	"fealnx"
 #define DRV_VERSION	"2.52"
@@ -311,12 +287,10 @@ enum tx_desc_control_bits {
 /*      Constants for Myson PHY                                              */
 /* ------------------------------------------------------------------------- */
 #define MysonPHYID      0xd0000302
-/* 89-7-27 add, (begin) */
 #define MysonPHYID0     0x0302
 #define StatusRegister  18
 #define SPEED100        0x0400	// bit10
 #define FULLMODE        0x0800	// bit11
-/* 89-7-27 add, (end) */
 
 /* ------------------------------------------------------------------------- */
 /*      Constants for Seeq 80225 PHY                                         */
@@ -359,11 +333,9 @@ enum tx_desc_control_bits {
 #define Speed_10M       0
 #define Full_Duplex     0x2000
 
-// 89/12/29 add, for phy specific status register, levelone phy, (begin)
 #define LXT1000_100M    0x08000
 #define LXT1000_1000M   0x0c000
 #define LXT1000_Full    0x200
-// 89/12/29 add, for phy specific status register, levelone phy, (end)
 
 /* for 3-in-1 case, BMCRSR register */
 #define LinkIsUp2	0x00040000
@@ -615,7 +587,6 @@ static int fealnx_init_one(struct pci_dev *pdev,
 			       "not operate correctly.\n");
 	} else {
 		np->phys[0] = 32;
-/* 89/6/23 add, (begin) */
 		/* get phy type */
 		if (ioread32(ioaddr + PHYIDENTIFIER) == MysonPHYID)
 			np->PHYType = MysonPHY;
@@ -639,7 +610,6 @@ static int fealnx_init_one(struct pci_dev *pdev,
 
 	if (np->mii.full_duplex) {
 		dev_info(&pdev->dev, "Media type forced to Full Duplex.\n");
-/* 89/6/13 add, (begin) */
 //      if (np->PHYType==MarvellPHY)
 		if ((np->PHYType == MarvellPHY) || (np->PHYType == LevelOnePHY)) {
 			unsigned int data;
@@ -648,7 +618,6 @@ static int fealnx_init_one(struct pci_dev *pdev,
 			data = (data & 0xfcff) | 0x0200;
 			mdio_write(dev, np->phys[0], 9, data);
 		}
-/* 89/6/13 add, (end) */
 		if (np->flags == HAS_MII_XCVR)
 			mdio_write(dev, np->phys[0], MII_ADVERTISE, ADVERTISE_FULL);
 		else
@@ -995,7 +964,6 @@ static void getlinktype(struct net_device *dev)
 			else
 				np->duplexmode = 1;	/* half duplex mode */
 		}
-/* 89/6/13 add, (begin) */
 		else if (np->PHYType == MarvellPHY) {
 			unsigned int data;
 
@@ -1012,8 +980,6 @@ static void getlinktype(struct net_device *dev)
 			else
 				np->line_speed = 1;	/* 10M */
 		}
-/* 89/6/13 add, (end) */
-/* 89/7/27 add, (begin) */
 		else if (np->PHYType == Myson981) {
 			unsigned int data;
 
@@ -1029,7 +995,6 @@ static void getlinktype(struct net_device *dev)
 			else
 				np->duplexmode = 1;
 		}
-/* 89/7/27 add, (end) */
 /* 89/12/29 add */
 		else if (np->PHYType == LevelOnePHY) {
 			unsigned int data;

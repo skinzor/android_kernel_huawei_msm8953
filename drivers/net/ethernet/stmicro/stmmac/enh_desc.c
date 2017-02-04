@@ -1,26 +1,4 @@
-/*******************************************************************************
-  This contains the functions to handle the enhanced descriptors.
 
-  Copyright (C) 2007-2009  STMicroelectronics Ltd
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms and conditions of the GNU General Public License,
-  version 2, as published by the Free Software Foundation.
-
-  This program is distributed in the hope it will be useful, but WITHOUT
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  more details.
-
-  You should have received a copy of the GNU General Public License along with
-  this program; if not, write to the Free Software Foundation, Inc.,
-  51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-
-  The full GNU General Public License is included in this distribution in
-  the file called "COPYING".
-
-  Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
-*******************************************************************************/
 
 #include <linux/stmmac.h>
 #include "common.h"
@@ -325,11 +303,7 @@ static void enh_desc_close_tx_desc(struct dma_desc *p)
 
 static int enh_desc_get_rx_frame_len(struct dma_desc *p, int rx_coe_type)
 {
-	/* The type-1 checksum offload engines append the checksum at
-	 * the end of frame and the two bytes of checksum are added in
-	 * the length.
-	 * Adjust for that in the framelen for type-1 checksum offload
-	 * engines. */
+	
 	if (rx_coe_type == STMMAC_RX_COE_TYPE1)
 		return p->des01.erx.frame_length - 2;
 	else

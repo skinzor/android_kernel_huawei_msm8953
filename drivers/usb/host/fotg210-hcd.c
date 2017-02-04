@@ -3214,7 +3214,6 @@ static void single_unlink_async(struct fotg210_hcd *fotg210,
 {
 	struct fotg210_qh		*prev;
 
-	/* Add to the end of the list of QHs waiting for the next IAAD */
 	qh->qh_state = QH_STATE_UNLINK;
 	if (fotg210->async_unlink)
 		fotg210->async_unlink_last->unlink_next = qh;
@@ -4727,7 +4726,6 @@ static bool itd_complete(struct fotg210_hcd *fotg210, struct fotg210_itd *itd)
 done:
 	itd->urb = NULL;
 
-	/* Add to the end of the free list for later reuse */
 	list_move_tail(&itd->itd_list, &stream->free_list);
 
 	/* Recycle the iTDs when the pipeline is empty (ep no longer in use) */

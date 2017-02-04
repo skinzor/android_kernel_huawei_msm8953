@@ -76,7 +76,6 @@ struct LED_871x {
 
 	u8 bSWLedCtrl;
 
-	/*  ALPHA, added by chiyoko, 20090106 */
 	u8 bLedNoLinkBlinkInProgress;
 	u8 bLedLinkBlinkInProgress;
 	u8 bLedStartToLinkBlinkInProgress;

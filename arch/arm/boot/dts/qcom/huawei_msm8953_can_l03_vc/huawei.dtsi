@@ -1,0 +1,31 @@
+
+
+/*belong to the component group, according to the order of i2c lcd tp camera sensors compass tricolors vibrator begin*/
+#include "huawei-i2c-detect-va.dtsi"
+#include "huawei-lcd.dtsi"
+#include "huawei-tp.dtsi"
+#include "huawei-camera.dtsi"
+#include "huawei-sensors.dtsi"
+#include "huawei-vibrator.dtsi"
+#include "huawei-fingerprint.dtsi"
+/*belong to the component group, according to the order of i2c lcd tp camera sensors compass tricolors vibrator end*/
+
+/*belong to the wireless component group, according to the order of wifi bt fm audio begin*/
+#include "huawei-wifi.dtsi"
+#include "huawei-bt.dtsi"
+#include "huawei-audio.dtsi"
+#include "huawei-nfc.dtsi"
+/*belong to the wireless component group, according to the order of wifi bt fm audio end*/
+
+/*belong to the factory group, according to the order of fac begin*/
+#include "huawei-fac.dtsi"
+#include "huawei-antenna.dtsi"
+/*belong to the factory group, according to the order of fac end*/
+
+/*belong to the OS group, according to the order of battery memery begin*/
+#include "huawei-battery.dtsi"
+#include "huawei-sdcard.dtsi"
+#include "huawei-usb.dtsi"
+#include "gpio-led.dtsi"
+#include "huawei-power.dtsi"
+/*belong to the OS group, according to the order of battery memery end*/

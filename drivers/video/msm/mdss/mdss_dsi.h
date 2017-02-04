@@ -507,6 +507,11 @@ struct mdss_dsi_ctrl_pdata {
 
 	struct dsi_buf tx_buf;
 	struct dsi_buf rx_buf;
+#ifdef CONFIG_HUAWEI_KERNEL_LCD
+	u32 esd_check_enable;
+	struct dsi_panel_cmds esd_cmds;
+#endif
+
 	struct dsi_buf status_buf;
 	int status_mode;
 	int rx_len;
@@ -549,6 +554,22 @@ struct mdss_dsi_ctrl_pdata {
 	bool update_phy_timing; /* flag to recalculate PHY timings */
 
 	bool phy_power_off;
+
+#ifdef CONFIG_HUAWEI_KERNEL_LCD
+	struct dsi_panel_cmds dot_inversion_cmds;
+	struct dsi_panel_cmds column_inversion_cmds;
+	u32 long_read_flag;
+	u32 skip_reg_read;
+	char reg_expect_value;
+	u32 reg_expect_count;
+	bool frame_checksum_support;
+	u32 panel_checksum_cmd_len;
+	struct dsi_panel_cmds dsi_frame_crc_enable_cmds;
+	struct dsi_panel_cmds dsi_frame_crc_disable_cmds;
+	u32 frame_crc_read_cmds[8];
+	u32 frame_crc_read_cmds_value[24];
+#endif
+
 };
 
 struct dsi_status_data {
@@ -823,6 +844,10 @@ static inline bool mdss_dsi_is_ctrl_clk_master(struct mdss_dsi_ctrl_pdata *ctrl)
 	return mdss_dsi_is_hw_config_split(ctrl->shared_data) &&
 		(ctrl->ndx == DSI_CTRL_CLK_MASTER);
 }
+
+#ifdef CONFIG_HUAWEI_KERNEL_LCD
+int panel_check_live_status(struct mdss_dsi_ctrl_pdata *ctrl);
+#endif
 
 static inline bool mdss_dsi_is_ctrl_clk_slave(struct mdss_dsi_ctrl_pdata *ctrl)
 {

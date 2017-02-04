@@ -1,20 +1,4 @@
-/*
- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
- * All Rights Reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it would be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write the Free Software Foundation,
- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
+
 #include "xfs.h"
 #include "xfs_fs.h"
 #include "xfs_shared.h"
@@ -353,7 +337,6 @@ static void
 xlog_tic_add_region(xlog_ticket_t *tic, uint len, uint type)
 {
 	if (tic->t_res_num == XLOG_TIC_LEN_MAX) {
-		/* add to overflow and start again */
 		tic->t_res_o_flow += tic->t_res_arr_sum;
 		tic->t_res_num = 0;
 		tic->t_res_arr_sum = 0;
@@ -1008,23 +991,7 @@ xfs_log_space_wake(
 	}
 }
 
-/*
- * Determine if we have a transaction that has gone to disk that needs to be
- * covered. To begin the transition to the idle state firstly the log needs to
- * be idle. That means the CIL, the AIL and the iclogs needs to be empty before
- * we start attempting to cover the log.
- *
- * Only if we are then in a state where covering is needed, the caller is
- * informed that dummy transactions are required to move the log into the idle
- * state.
- *
- * If there are any items in the AIl or CIL, then we do not want to attempt to
- * cover the log as we may be in a situation where there isn't log space
- * available to run a dummy transaction and this can lead to deadlocks when the
- * tail of the log is pinned by an item that is modified in the CIL.  Hence
- * there's no point in running a dummy transaction at this point because we
- * can't start trying to idle the log until both the CIL and AIL are empty.
- */
+
 int
 xfs_log_need_covered(xfs_mount_t *mp)
 {
@@ -1692,30 +1659,7 @@ xlog_bdstrat(
 	return 0;
 }
 
-/*
- * Flush out the in-core log (iclog) to the on-disk log in an asynchronous 
- * fashion.  Previously, we should have moved the current iclog
- * ptr in the log to point to the next available iclog.  This allows further
- * write to continue while this code syncs out an iclog ready to go.
- * Before an in-core log can be written out, the data section must be scanned
- * to save away the 1st word of each BBSIZE block into the header.  We replace
- * it with the current cycle count.  Each BBSIZE block is tagged with the
- * cycle count because there in an implicit assumption that drives will
- * guarantee that entire 512 byte blocks get written at once.  In other words,
- * we can't have part of a 512 byte block written and part not written.  By
- * tagging each block, we will know which blocks are valid when recovering
- * after an unclean shutdown.
- *
- * This routine is single threaded on the iclog.  No other thread can be in
- * this routine with the same iclog.  Changing contents of iclog can there-
- * fore be done without grabbing the state machine lock.  Updating the global
- * log will require grabbing the lock though.
- *
- * The entire log manager uses a logical block numbering scheme.  Only
- * log_sync (and then only bwrite()) know about the fact that the log may
- * not start with block zero on a given device.  The log block start offset
- * is added immediately before calling bwrite().
- */
+
 
 STATIC int
 xlog_sync(
@@ -3510,36 +3454,7 @@ xfs_log_calc_unit_res(
 	int			iclog_space;
 	uint			num_headers;
 
-	/*
-	 * Permanent reservations have up to 'cnt'-1 active log operations
-	 * in the log.  A unit in this case is the amount of space for one
-	 * of these log operations.  Normal reservations have a cnt of 1
-	 * and their unit amount is the total amount of space required.
-	 *
-	 * The following lines of code account for non-transaction data
-	 * which occupy space in the on-disk log.
-	 *
-	 * Normal form of a transaction is:
-	 * <oph><trans-hdr><start-oph><reg1-oph><reg1><reg2-oph>...<commit-oph>
-	 * and then there are LR hdrs, split-recs and roundoff at end of syncs.
-	 *
-	 * We need to account for all the leadup data and trailer data
-	 * around the transaction data.
-	 * And then we need to account for the worst case in terms of using
-	 * more space.
-	 * The worst case will happen if:
-	 * - the placement of the transaction happens to be such that the
-	 *   roundoff is at its maximum
-	 * - the transaction data is synced before the commit record is synced
-	 *   i.e. <transaction-data><roundoff> | <commit-rec><roundoff>
-	 *   Therefore the commit record is in its own Log Record.
-	 *   This can happen as the commit record is called with its
-	 *   own region to xlog_write().
-	 *   This then means that in the worst case, roundoff can happen for
-	 *   the commit-rec as well.
-	 *   The commit-rec is smaller than padding in this scenario and so it is
-	 *   not added separately.
-	 */
+	
 
 	/* for trans header */
 	unit_bytes += sizeof(xlog_op_header_t);

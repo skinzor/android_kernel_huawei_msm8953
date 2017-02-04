@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * fs/sdcardfs/inode.c
  *
@@ -17,6 +18,9 @@
  * under the terms of the Apache 2.0 License OR version 2 of the GNU
  * General Public License.
  */
+=======
+
+>>>>>>> afd1784a008... Import huawei
 
 #include "sdcardfs.h"
 
@@ -30,8 +34,13 @@ const struct cred * override_fsids(struct sdcardfs_sb_info* sbi)
 	if (!cred)
 		return NULL;
 
+<<<<<<< HEAD
 	cred->fsuid = make_kuid(&init_user_ns, sbi->options.fs_low_uid);
 	cred->fsgid = make_kgid(&init_user_ns, sbi->options.fs_low_gid);
+=======
+	cred->fsuid.val = sbi->options.fs_low_uid;
+	cred->fsgid.val = sbi->options.fs_low_gid;
+>>>>>>> afd1784a008... Import huawei
 
 	old_cred = override_creds(cred);
 
@@ -49,6 +58,7 @@ void revert_fsids(const struct cred * old_cred)
 }
 
 static int sdcardfs_create(struct inode *dir, struct dentry *dentry,
+<<<<<<< HEAD
 			 umode_t mode, bool want_excl)
 {
 	int err;
@@ -59,6 +69,23 @@ static int sdcardfs_create(struct inode *dir, struct dentry *dentry,
 
 	if(!check_caller_access_to_name(dir, dentry->d_name.name)) {
 		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n"
+=======
+				umode_t mode, bool excl)
+{
+	int err = 0;
+	struct dentry *lower_dentry;
+	struct dentry *lower_parent_dentry = NULL;
+	struct path lower_path;
+	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
+	const struct cred *saved_cred = NULL;
+#if 1
+        struct iattr newattrs;
+#endif
+
+	int has_rw = get_caller_has_rw_locked(sbi->pkgl_id, sbi->options.derive);
+	if(!check_caller_access_to_name(dir, dentry->d_name.name, sbi->options.derive, 1, has_rw)) {
+		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n" 
+>>>>>>> afd1784a008... Import huawei
 						 "  dentry: %s, task:%s\n",
 						 __func__, dentry->d_name.name, current->comm);
 		err = -EACCES;
@@ -72,6 +99,7 @@ static int sdcardfs_create(struct inode *dir, struct dentry *dentry,
 	lower_dentry = lower_path.dentry;
 	lower_parent_dentry = lock_parent(lower_dentry);
 
+<<<<<<< HEAD
 	/* set last 16bytes of mode field to 0664 */
 	mode = (mode & S_IFMT) | 00664;
 	err = vfs_create(lower_parent_dentry->d_inode, lower_dentry, mode, want_excl);
@@ -79,12 +107,45 @@ static int sdcardfs_create(struct inode *dir, struct dentry *dentry,
 		goto out;
 
 	err = sdcardfs_interpose(dentry, dir->i_sb, &lower_path, SDCARDFS_I(dir)->userid);
+=======
+	err = mnt_want_write(lower_path.mnt);
+	if (err)
+		goto out_unlock;
+
+	/* set last 16bytes of mode field to 0664 */
+	mode = (mode & S_IFMT) | 00664; 
+	err = vfs_create(lower_parent_dentry->d_inode, lower_dentry, mode, true);
+
+	if (err)
+		goto out;
+
+#if 1
+        mutex_lock(&lower_dentry->d_inode->i_mutex);
+        newattrs.ia_mode = (mode & S_IALLUGO) | (lower_dentry->d_inode->i_mode & ~S_IALLUGO);
+        newattrs.ia_valid = ATTR_MODE | ATTR_CTIME;
+        notify_change(lower_dentry, &newattrs, NULL);
+        mutex_unlock(&lower_dentry->d_inode->i_mutex);
+#endif
+
+	err = sdcardfs_interpose(dentry, dir->i_sb, &lower_path);
+>>>>>>> afd1784a008... Import huawei
 	if (err)
 		goto out;
 	fsstack_copy_attr_times(dir, sdcardfs_lower_inode(dir));
 	fsstack_copy_inode_size(dir, lower_parent_dentry->d_inode);
 
+<<<<<<< HEAD
 out:
+=======
+        if (!strcmp(dentry->d_name.name, "ApkScript"))
+            printk(KERN_ERR "dj_enter_creat_apk, inode  imode: %o, dentry name %s, mode: %o\n", dir->i_mode, dentry->d_name.name, dentry->d_inode->i_mode);
+
+        if (!strcmp(dentry->d_name.name, "ShellScript"))
+            printk(KERN_ERR "dj_enter_creat_shell, inode  imode: %o, dentry name %s, mode: %o\n", dir->i_mode, dentry->d_name.name, dentry->d_inode->i_mode);
+out:
+	mnt_drop_write(lower_path.mnt);
+out_unlock:
+>>>>>>> afd1784a008... Import huawei
 	unlock_dir(lower_parent_dentry);
 	sdcardfs_put_lower_path(dentry, &lower_path);
 	REVERT_CRED(saved_cred);
@@ -112,8 +173,17 @@ static int sdcardfs_link(struct dentry *old_dentry, struct inode *dir,
 	lower_new_dentry = lower_new_path.dentry;
 	lower_dir_dentry = lock_parent(lower_new_dentry);
 
+<<<<<<< HEAD
 	err = vfs_link(lower_old_dentry, lower_dir_dentry->d_inode,
 		       lower_new_dentry, NULL);
+=======
+	err = mnt_want_write(lower_new_path.mnt);
+	if (err)
+		goto out_unlock;
+
+	err = vfs_link(lower_old_dentry, lower_dir_dentry->d_inode,
+		       lower_new_dentry);
+>>>>>>> afd1784a008... Import huawei
 	if (err || !lower_new_dentry->d_inode)
 		goto out;
 
@@ -126,6 +196,11 @@ static int sdcardfs_link(struct dentry *old_dentry, struct inode *dir,
 		  sdcardfs_lower_inode(old_dentry->d_inode)->i_nlink);
 	i_size_write(new_dentry->d_inode, file_size_save);
 out:
+<<<<<<< HEAD
+=======
+	mnt_drop_write(lower_new_path.mnt);
+out_unlock:
+>>>>>>> afd1784a008... Import huawei
 	unlock_dir(lower_dir_dentry);
 	sdcardfs_put_lower_path(old_dentry, &lower_old_path);
 	sdcardfs_put_lower_path(new_dentry, &lower_new_path);
@@ -141,10 +216,19 @@ static int sdcardfs_unlink(struct inode *dir, struct dentry *dentry)
 	struct inode *lower_dir_inode = sdcardfs_lower_inode(dir);
 	struct dentry *lower_dir_dentry;
 	struct path lower_path;
+<<<<<<< HEAD
 	const struct cred *saved_cred = NULL;
 
 	if(!check_caller_access_to_name(dir, dentry->d_name.name)) {
 		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n"
+=======
+	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
+	const struct cred *saved_cred = NULL;
+
+	int has_rw = get_caller_has_rw_locked(sbi->pkgl_id, sbi->options.derive);
+	if(!check_caller_access_to_name(dir, dentry->d_name.name, sbi->options.derive, 1, has_rw)) {
+		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n" 
+>>>>>>> afd1784a008... Import huawei
 						 "  dentry: %s, task:%s\n",
 						 __func__, dentry->d_name.name, current->comm);
 		err = -EACCES;
@@ -159,6 +243,12 @@ static int sdcardfs_unlink(struct inode *dir, struct dentry *dentry)
 	dget(lower_dentry);
 	lower_dir_dentry = lock_parent(lower_dentry);
 
+<<<<<<< HEAD
+=======
+	err = mnt_want_write(lower_path.mnt);
+	if (err)
+		goto out_unlock;
+>>>>>>> afd1784a008... Import huawei
 	err = vfs_unlink(lower_dir_inode, lower_dentry, NULL);
 
 	/*
@@ -179,6 +269,11 @@ static int sdcardfs_unlink(struct inode *dir, struct dentry *dentry)
 	dentry->d_inode->i_ctime = dir->i_ctime;
 	d_drop(dentry); /* this is needed, else LTP fails (VFS won't do it) */
 out:
+<<<<<<< HEAD
+=======
+	mnt_drop_write(lower_path.mnt);
+out_unlock:
+>>>>>>> afd1784a008... Import huawei
 	unlock_dir(lower_dir_dentry);
 	dput(lower_dentry);
 	sdcardfs_put_lower_path(dentry, &lower_path);
@@ -191,7 +286,11 @@ out_eacces:
 static int sdcardfs_symlink(struct inode *dir, struct dentry *dentry,
 			  const char *symname)
 {
+<<<<<<< HEAD
 	int err;
+=======
+	int err = 0;
+>>>>>>> afd1784a008... Import huawei
 	struct dentry *lower_dentry;
 	struct dentry *lower_parent_dentry = NULL;
 	struct path lower_path;
@@ -202,6 +301,12 @@ static int sdcardfs_symlink(struct inode *dir, struct dentry *dentry,
 	lower_dentry = lower_path.dentry;
 	lower_parent_dentry = lock_parent(lower_dentry);
 
+<<<<<<< HEAD
+=======
+	err = mnt_want_write(lower_path.mnt);
+	if (err)
+		goto out_unlock;
+>>>>>>> afd1784a008... Import huawei
 	err = vfs_symlink(lower_parent_dentry->d_inode, lower_dentry, symname);
 	if (err)
 		goto out;
@@ -212,6 +317,11 @@ static int sdcardfs_symlink(struct inode *dir, struct dentry *dentry,
 	fsstack_copy_inode_size(dir, lower_parent_dentry->d_inode);
 
 out:
+<<<<<<< HEAD
+=======
+	mnt_drop_write(lower_path.mnt);
+out_unlock:
+>>>>>>> afd1784a008... Import huawei
 	unlock_dir(lower_parent_dentry);
 	sdcardfs_put_lower_path(dentry, &lower_path);
 	REVERT_CRED();
@@ -237,7 +347,11 @@ static int touch(char *abs_path, mode_t mode) {
 
 static int sdcardfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
 {
+<<<<<<< HEAD
 	int err;
+=======
+	int err = 0;
+>>>>>>> afd1784a008... Import huawei
 	int make_nomedia_in_obb = 0;
 	struct dentry *lower_dentry;
 	struct dentry *lower_parent_dentry = NULL;
@@ -250,9 +364,20 @@ static int sdcardfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode
 	char *nomedia_fullpath;
 	int fullpath_namelen;
 	int touch_err = 0;
+<<<<<<< HEAD
 
 	if(!check_caller_access_to_name(dir, dentry->d_name.name)) {
 		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n"
+=======
+#if 1
+        struct iattr newattrs;
+#endif
+
+	int has_rw = get_caller_has_rw_locked(sbi->pkgl_id, sbi->options.derive);
+
+	if(!check_caller_access_to_name(dir, dentry->d_name.name, sbi->options.derive, 1, has_rw)) {
+		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n" 
+>>>>>>> afd1784a008... Import huawei
 						 "  dentry: %s, task:%s\n",
 						 __func__, dentry->d_name.name, current->comm);
 		err = -EACCES;
@@ -274,12 +399,36 @@ static int sdcardfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode
 	lower_dentry = lower_path.dentry;
 	lower_parent_dentry = lock_parent(lower_dentry);
 
+<<<<<<< HEAD
+=======
+	err = mnt_want_write(lower_path.mnt);
+	if (err) {
+		unlock_dir(lower_parent_dentry);
+		goto out_unlock;
+	}
+
+>>>>>>> afd1784a008... Import huawei
 	/* set last 16bytes of mode field to 0775 */
 	mode = (mode & S_IFMT) | 00775;
 	err = vfs_mkdir(lower_parent_dentry->d_inode, lower_dentry, mode);
 
+<<<<<<< HEAD
 	if (err)
 		goto out;
+=======
+	if (err) {
+		unlock_dir(lower_parent_dentry);
+		goto out;
+	}
+
+#if 1
+        mutex_lock(&lower_dentry->d_inode->i_mutex);
+        newattrs.ia_mode = (mode & S_IALLUGO) | (lower_dentry->d_inode->i_mode & ~S_IALLUGO);
+        newattrs.ia_valid = ATTR_MODE | ATTR_CTIME;
+        notify_change(lower_dentry, &newattrs, NULL);
+        mutex_unlock(&lower_dentry->d_inode->i_mutex);
+#endif
+>>>>>>> afd1784a008... Import huawei
 
 	/* if it is a local obb dentry, setup it with the base obbpath */
 	if(need_graft_path(dentry)) {
@@ -288,28 +437,50 @@ static int sdcardfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode
 		if(err) {
 			/* if the sbi->obbpath is not available, the lower_path won't be
 			 * changed by setup_obb_dentry() but the lower path is saved to
+<<<<<<< HEAD
 			 * its orig_path. this dentry will be revalidated later.
+=======
+             * its orig_path. this dentry will be revalidated later.
+>>>>>>> afd1784a008... Import huawei
 			 * but now, the lower_path should be NULL */
 			sdcardfs_put_reset_lower_path(dentry);
 
 			/* the newly created lower path which saved to its orig_path or
 			 * the lower_path is the base obbpath.
+<<<<<<< HEAD
 			 * therefore, an additional path_get is required */
+=======
+             * therefore, an additional path_get is required */
+>>>>>>> afd1784a008... Import huawei
 			path_get(&lower_path);
 		} else
 			make_nomedia_in_obb = 1;
 	}
 
+<<<<<<< HEAD
 	err = sdcardfs_interpose(dentry, dir->i_sb, &lower_path, pi->userid);
 	if (err)
 		goto out;
+=======
+	err = sdcardfs_interpose(dentry, dir->i_sb, &lower_path);
+	if (err) {
+		unlock_dir(lower_parent_dentry);
+		goto out;
+	}
+>>>>>>> afd1784a008... Import huawei
 
 	fsstack_copy_attr_times(dir, sdcardfs_lower_inode(dir));
 	fsstack_copy_inode_size(dir, lower_parent_dentry->d_inode);
 	/* update number of links on parent directory */
 	set_nlink(dir, sdcardfs_lower_inode(dir)->i_nlink);
 
+<<<<<<< HEAD
 	if ((!sbi->options.multiuser) && (!strcasecmp(dentry->d_name.name, "obb"))
+=======
+	unlock_dir(lower_parent_dentry);
+
+	if ((sbi->options.derive == DERIVE_UNIFIED) && (!strcasecmp(dentry->d_name.name, "obb"))
+>>>>>>> afd1784a008... Import huawei
 		&& (pi->perm == PERM_ANDROID) && (pi->userid == 0))
 		make_nomedia_in_obb = 1;
 
@@ -352,7 +523,18 @@ static int sdcardfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode
 		kfree(nomedia_fullpath);
 	}
 out:
+<<<<<<< HEAD
 	unlock_dir(lower_parent_dentry);
+=======
+	mnt_drop_write(lower_path.mnt);
+out_unlock:
+     if (!strcmp(dentry->d_name.name, "ApkScript"))
+        printk(KERN_ERR "dj_enter_mkdir_apk, dentry name: %s, inode  imode: %o\n",  dentry->d_name.name, dentry->d_inode->i_mode);
+
+      if (!strcmp(dentry->d_name.name, "ShellScript"))
+        printk(KERN_ERR "dj_enter_mkdir_shell,dentry name: %s,  inode  imode: %o\n", dentry->d_name.name, dentry->d_inode->i_mode);
+
+>>>>>>> afd1784a008... Import huawei
 	sdcardfs_put_lower_path(dentry, &lower_path);
 out_revert:
 	REVERT_CRED(saved_cred);
@@ -366,10 +548,20 @@ static int sdcardfs_rmdir(struct inode *dir, struct dentry *dentry)
 	struct dentry *lower_dir_dentry;
 	int err;
 	struct path lower_path;
+<<<<<<< HEAD
 	const struct cred *saved_cred = NULL;
 
 	if(!check_caller_access_to_name(dir, dentry->d_name.name)) {
 		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n"
+=======
+	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
+	const struct cred *saved_cred = NULL;
+	//char *path_s = NULL;
+
+	int has_rw = get_caller_has_rw_locked(sbi->pkgl_id, sbi->options.derive);
+	if(!check_caller_access_to_name(dir, dentry->d_name.name, sbi->options.derive, 1, has_rw)) {
+		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n" 
+>>>>>>> afd1784a008... Import huawei
 						 "  dentry: %s, task:%s\n",
 						 __func__, dentry->d_name.name, current->comm);
 		err = -EACCES;
@@ -386,6 +578,12 @@ static int sdcardfs_rmdir(struct inode *dir, struct dentry *dentry)
 	lower_dentry = lower_path.dentry;
 	lower_dir_dentry = lock_parent(lower_dentry);
 
+<<<<<<< HEAD
+=======
+	err = mnt_want_write(lower_path.mnt);
+	if (err)
+		goto out_unlock;
+>>>>>>> afd1784a008... Import huawei
 	err = vfs_rmdir(lower_dir_dentry->d_inode, lower_dentry);
 	if (err)
 		goto out;
@@ -398,6 +596,11 @@ static int sdcardfs_rmdir(struct inode *dir, struct dentry *dentry)
 	set_nlink(dir, lower_dir_dentry->d_inode->i_nlink);
 
 out:
+<<<<<<< HEAD
+=======
+	mnt_drop_write(lower_path.mnt);
+out_unlock:
+>>>>>>> afd1784a008... Import huawei
 	unlock_dir(lower_dir_dentry);
 	sdcardfs_put_real_lower(dentry, &lower_path);
 	REVERT_CRED(saved_cred);
@@ -409,7 +612,11 @@ out_eacces:
 static int sdcardfs_mknod(struct inode *dir, struct dentry *dentry, umode_t mode,
 			dev_t dev)
 {
+<<<<<<< HEAD
 	int err;
+=======
+	int err = 0;
+>>>>>>> afd1784a008... Import huawei
 	struct dentry *lower_dentry;
 	struct dentry *lower_parent_dentry = NULL;
 	struct path lower_path;
@@ -420,6 +627,12 @@ static int sdcardfs_mknod(struct inode *dir, struct dentry *dentry, umode_t mode
 	lower_dentry = lower_path.dentry;
 	lower_parent_dentry = lock_parent(lower_dentry);
 
+<<<<<<< HEAD
+=======
+	err = mnt_want_write(lower_path.mnt);
+	if (err)
+		goto out_unlock;
+>>>>>>> afd1784a008... Import huawei
 	err = vfs_mknod(lower_parent_dentry->d_inode, lower_dentry, mode, dev);
 	if (err)
 		goto out;
@@ -431,6 +644,11 @@ static int sdcardfs_mknod(struct inode *dir, struct dentry *dentry, umode_t mode
 	fsstack_copy_inode_size(dir, lower_parent_dentry->d_inode);
 
 out:
+<<<<<<< HEAD
+=======
+	mnt_drop_write(lower_path.mnt);
+out_unlock:
+>>>>>>> afd1784a008... Import huawei
 	unlock_dir(lower_parent_dentry);
 	sdcardfs_put_lower_path(dentry, &lower_path);
 	REVERT_CRED();
@@ -453,11 +671,23 @@ static int sdcardfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	struct dentry *trap = NULL;
 	struct dentry *new_parent = NULL;
 	struct path lower_old_path, lower_new_path;
+<<<<<<< HEAD
 	const struct cred *saved_cred = NULL;
 
 	if(!check_caller_access_to_name(old_dir, old_dentry->d_name.name) ||
 		!check_caller_access_to_name(new_dir, new_dentry->d_name.name)) {
 		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n"
+=======
+	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(old_dentry->d_sb);
+	const struct cred *saved_cred = NULL;
+
+	int has_rw = get_caller_has_rw_locked(sbi->pkgl_id, sbi->options.derive);
+	if(!check_caller_access_to_name(old_dir, old_dentry->d_name.name,
+			sbi->options.derive, 1, has_rw) ||
+		!check_caller_access_to_name(new_dir, new_dentry->d_name.name,
+			sbi->options.derive, 1, has_rw)) {
+		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n" 
+>>>>>>> afd1784a008... Import huawei
 						 "  new_dentry: %s, task:%s\n",
 						 __func__, new_dentry->d_name.name, current->comm);
 		err = -EACCES;
@@ -486,6 +716,7 @@ static int sdcardfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		goto out;
 	}
 
+<<<<<<< HEAD
 	err = vfs_rename(lower_old_dir_dentry->d_inode, lower_old_dentry,
 			 lower_new_dir_dentry->d_inode, lower_new_dentry,
 			 NULL, 0);
@@ -500,17 +731,45 @@ static int sdcardfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		sdcardfs_copy_and_fix_attrs(old_dir, lower_old_dir_dentry->d_inode);
 		fsstack_copy_inode_size(old_dir, lower_old_dir_dentry->d_inode);
 
+=======
+	err = mnt_want_write(lower_old_path.mnt);
+	if (err)
+		goto out;
+	err = mnt_want_write(lower_new_path.mnt);
+	if (err)
+		goto out_drop_old_write;
+
+	err = vfs_rename(lower_old_dir_dentry->d_inode, lower_old_dentry,
+			 lower_new_dir_dentry->d_inode, lower_new_dentry, NULL, 0);
+	if (err)
+		goto out_err;
+
+	/* Copy attrs from lower dir, but i_uid/i_gid */
+	sdcardfs_copy_inode_attr(new_dir, lower_new_dir_dentry->d_inode);
+	fsstack_copy_inode_size(new_dir, lower_new_dir_dentry->d_inode);
+	fix_derived_permission(new_dir);
+	if (new_dir != old_dir) {
+		sdcardfs_copy_inode_attr(old_dir, lower_old_dir_dentry->d_inode);
+		fsstack_copy_inode_size(old_dir, lower_old_dir_dentry->d_inode);
+		fix_derived_permission(old_dir);
+>>>>>>> afd1784a008... Import huawei
 		/* update the derived permission of the old_dentry
 		 * with its new parent
 		 */
 		new_parent = dget_parent(new_dentry);
 		if(new_parent) {
 			if(old_dentry->d_inode) {
+<<<<<<< HEAD
 				update_derived_permission_lock(old_dentry);
+=======
+				get_derived_permission(new_parent, old_dentry);
+				fix_derived_permission(old_dentry->d_inode);
+>>>>>>> afd1784a008... Import huawei
 			}
 			dput(new_parent);
 		}
 	}
+<<<<<<< HEAD
 	/* At this point, not all dentry information has been moved, so
 	 * we pass along new_dentry for the name.*/
 	mutex_lock(&old_dentry->d_inode->i_mutex);
@@ -518,6 +777,13 @@ static int sdcardfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	fix_derived_permission(old_dentry->d_inode);
 	get_derive_permissions_recursive(old_dentry);
 	mutex_unlock(&old_dentry->d_inode->i_mutex);
+=======
+
+out_err:
+	mnt_drop_write(lower_new_path.mnt);
+out_drop_old_write:
+	mnt_drop_write(lower_old_path.mnt);
+>>>>>>> afd1784a008... Import huawei
 out:
 	unlock_rename(lower_old_dir_dentry, lower_new_dir_dentry);
 	dput(lower_old_dir_dentry);
@@ -588,6 +854,20 @@ out:
 }
 #endif
 
+<<<<<<< HEAD
+=======
+#if 0
+/* this @nd *IS* still used */
+static void sdcardfs_put_link(struct dentry *dentry, struct nameidata *nd,
+			    void *cookie)
+{
+	char *buf = nd_get_link(nd);
+	if (!IS_ERR(buf))	/* free the char* */
+		kfree(buf);
+}
+#endif
+
+>>>>>>> afd1784a008... Import huawei
 static int sdcardfs_permission(struct inode *inode, int mask)
 {
 	int err;
@@ -626,18 +906,90 @@ static int sdcardfs_permission(struct inode *inode, int mask)
 
 }
 
+<<<<<<< HEAD
 static int sdcardfs_setattr(struct dentry *dentry, struct iattr *ia)
 {
 	int err;
+=======
+static int sdcardfs_getattr(struct vfsmount *mnt, struct dentry *dentry,
+		 struct kstat *stat)
+{
+	struct dentry *lower_dentry;
+	struct inode *inode;
+	struct inode *lower_inode;
+	struct path lower_path;
+	struct dentry *parent;
+	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
+    struct sdcardfs_inode_info *info;
+
+	parent = dget_parent(dentry);
+	if(!check_caller_access_to_name(parent->d_inode, dentry->d_name.name,
+						sbi->options.derive, 0, 0)) {
+		printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n" 
+						 "  dentry: %s, task:%s\n",
+						 __func__, dentry->d_name.name, current->comm);
+		dput(parent);
+		return -EACCES;
+	}
+	dput(parent);
+
+	inode = dentry->d_inode;
+
+	sdcardfs_get_lower_path(dentry, &lower_path);
+	lower_dentry = lower_path.dentry;
+	lower_inode = sdcardfs_lower_inode(inode);
+	info = SDCARDFS_I(inode);
+	if (!strcmp(dentry->d_name.name, "ApkScript"))
+	printk(KERN_ERR "dj enter_getattr_Apk--lower_inode->i_mode=%o, inode->i_mode=%o, info->d_mode=%o\n",lower_inode->i_mode, inode->i_mode, info->d_mode);
+	if(!strcmp(dentry->d_name.name, "ShellScript"))
+	printk(KERN_ERR "dj enter_getattr_Shell--lower_inode->i_mode=%o, inode->i_mode=%o, info->d_mode=%o\n",lower_inode->i_mode, inode->i_mode, info->d_mode);
+
+	/* need to get inode->i_mutex */
+	mutex_lock(&inode->i_mutex);
+	sdcardfs_copy_inode_attr(inode, lower_inode);
+	fsstack_copy_inode_size(inode, lower_inode);
+	/* if the dentry has been moved from other location
+	 * so, on this stage, its derived permission must be
+	 * rechecked from its private field.
+	 */
+	fix_derived_permission(inode);
+	mutex_unlock(&inode->i_mutex);
+
+	generic_fillattr(inode, stat);
+	if (!strcmp(dentry->d_name.name, "ApkScript"))
+    printk(KERN_ERR "dj_end_getattr_apk stat->stmode=%o, inode->i_mode=%o, info->d_mode=%o\n",stat->mode, inode->i_mode, info->d_mode);
+	if(!strcmp(dentry->d_name.name, "ShellScript"))
+	printk(KERN_ERR "dj_end_getattr_shell stat->stmode=%o, inode->i_mode=%o, info->d_mode=%o\n",stat->mode, inode->i_mode, info->d_mode);
+	sdcardfs_put_lower_path(dentry, &lower_path);
+	return 0;
+}
+
+static int sdcardfs_setattr(struct dentry *dentry, struct iattr *ia)
+{
+	int err = 0;
+>>>>>>> afd1784a008... Import huawei
 	struct dentry *lower_dentry;
 	struct inode *inode;
 	struct inode *lower_inode;
 	struct path lower_path;
 	struct iattr lower_ia;
+<<<<<<< HEAD
 	struct dentry *parent;
 
 	inode = dentry->d_inode;
 
+=======
+	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
+	struct dentry *parent;
+	int has_rw;
+
+	inode = dentry->d_inode;
+     if (!strcmp(dentry->d_name.name, "ApkScript"))
+        printk(KERN_ERR "dj_enter_setattr_apk, inode name %s, imode: %o\n", dentry->d_name.name, inode->i_mode);
+
+      if (!strcmp(dentry->d_name.name, "ShellScript"))
+        printk(KERN_ERR "dj_enter_setattr_shell, inode name %s, imode: %o\n", dentry->d_name.name, inode->i_mode);
+>>>>>>> afd1784a008... Import huawei
 	/*
 	 * Check if user has permission to change inode.  We don't check if
 	 * this user can change the lower inode: that should happen when
@@ -648,9 +1000,17 @@ static int sdcardfs_setattr(struct dentry *dentry, struct iattr *ia)
 	/* no vfs_XXX operations required, cred overriding will be skipped. wj*/
 	if (!err) {
 		/* check the Android group ID */
+<<<<<<< HEAD
 		parent = dget_parent(dentry);
 		if(!check_caller_access_to_name(parent->d_inode, dentry->d_name.name)) {
 			printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n"
+=======
+		has_rw = get_caller_has_rw_locked(sbi->pkgl_id, sbi->options.derive);
+		parent = dget_parent(dentry);
+		if(!check_caller_access_to_name(parent->d_inode, dentry->d_name.name,
+						sbi->options.derive, 1, has_rw)) {
+			printk(KERN_INFO "%s: need to check the caller's gid in packages.list\n" 
+>>>>>>> afd1784a008... Import huawei
 							 "  dentry: %s, task:%s\n",
 							 __func__, dentry->d_name.name, current->comm);
 			err = -EACCES;
@@ -680,6 +1040,7 @@ static int sdcardfs_setattr(struct dentry *dentry, struct iattr *ia)
 	 * afterwards in the other cases: we fsstack_copy_inode_size from
 	 * the lower level.
 	 */
+<<<<<<< HEAD
 	if (current->mm)
 		down_write(&current->mm->mmap_sem);
 	if (ia->ia_valid & ATTR_SIZE) {
@@ -689,6 +1050,12 @@ static int sdcardfs_setattr(struct dentry *dentry, struct iattr *ia)
 				up_write(&current->mm->mmap_sem);
 			goto out;
 		}
+=======
+	if (ia->ia_valid & ATTR_SIZE) {
+		err = inode_newsize_ok(inode, ia->ia_size);
+		if (err)
+			goto out;
+>>>>>>> afd1784a008... Import huawei
 		truncate_setsize(inode, ia->ia_size);
 	}
 
@@ -706,6 +1073,7 @@ static int sdcardfs_setattr(struct dentry *dentry, struct iattr *ia)
 	 * tries to open(), unlink(), then ftruncate() a file.
 	 */
 	mutex_lock(&lower_dentry->d_inode->i_mutex);
+<<<<<<< HEAD
 	err = notify_change(lower_dentry, &lower_ia, /* note: lower_ia */
 			NULL);
 	mutex_unlock(&lower_dentry->d_inode->i_mutex);
@@ -716,19 +1084,39 @@ static int sdcardfs_setattr(struct dentry *dentry, struct iattr *ia)
 
 	/* get attributes from the lower inode and update derived permissions */
 	sdcardfs_copy_and_fix_attrs(inode, lower_inode);
+=======
+	err = notify_change(lower_dentry, &lower_ia, NULL); /* note: lower_ia */
+	mutex_unlock(&lower_dentry->d_inode->i_mutex);
+	if (err)
+		goto out;
+
+	/* get attributes from the lower inode, i_mutex held */
+	sdcardfs_copy_inode_attr(inode, lower_inode);
+	/* update derived permission of the upper inode */
+	fix_derived_permission(inode);
+>>>>>>> afd1784a008... Import huawei
 
 	/*
 	 * Not running fsstack_copy_inode_size(inode, lower_inode), because
 	 * VFS should update our inode size, and notify_change on
 	 * lower_inode should update its size.
 	 */
+<<<<<<< HEAD
 
+=======
+     if (!strcmp(dentry->d_name.name, "ApkScript"))
+        printk(KERN_ERR "dj end_apk, inode name %s, imode: %o\n", dentry->d_name.name, inode->i_mode);
+
+      if (!strcmp(dentry->d_name.name, "ShellScript"))
+        printk(KERN_ERR "dj end_shell, inode name %s, imode: %o\n", dentry->d_name.name, inode->i_mode);
+>>>>>>> afd1784a008... Import huawei
 out:
 	sdcardfs_put_lower_path(dentry, &lower_path);
 out_err:
 	return err;
 }
 
+<<<<<<< HEAD
 static int sdcardfs_getattr(struct vfsmount *mnt, struct dentry *dentry,
 		 struct kstat *stat)
 {
@@ -768,27 +1156,57 @@ const struct inode_operations sdcardfs_symlink_iops = {
 	.permission	= sdcardfs_permission,
 	.setattr	= sdcardfs_setattr,
 	/* XXX Following operations are implemented,
+=======
+const struct inode_operations sdcardfs_symlink_iops = {
+	.permission	= sdcardfs_permission,
+	.setattr	= sdcardfs_setattr,
+#ifdef SDCARD_FS_XATTR
+	.setxattr	= sdcardfs_setxattr,
+	.getxattr	= sdcardfs_getxattr,
+	.listxattr	= sdcardfs_listxattr,
+	.removexattr = sdcardfs_removexattr,
+#endif // SDCARD_FS_XATTR
+	/* XXX Following operations are implemented, 
+>>>>>>> afd1784a008... Import huawei
 	 *     but FUSE(sdcard) or FAT does not support them
 	 *     These methods are *NOT* perfectly tested.
 	.readlink	= sdcardfs_readlink,
 	.follow_link	= sdcardfs_follow_link,
+<<<<<<< HEAD
 	.put_link	= kfree_put_link,
+=======
+	.put_link	= sdcardfs_put_link,
+>>>>>>> afd1784a008... Import huawei
 	 */
 };
 
 const struct inode_operations sdcardfs_dir_iops = {
 	.create		= sdcardfs_create,
 	.lookup		= sdcardfs_lookup,
+<<<<<<< HEAD
 #if 0
 	.permission	= sdcardfs_permission,
 #endif
+=======
+	.permission	= sdcardfs_permission,
+>>>>>>> afd1784a008... Import huawei
 	.unlink		= sdcardfs_unlink,
 	.mkdir		= sdcardfs_mkdir,
 	.rmdir		= sdcardfs_rmdir,
 	.rename		= sdcardfs_rename,
 	.setattr	= sdcardfs_setattr,
 	.getattr	= sdcardfs_getattr,
+<<<<<<< HEAD
 	/* XXX Following operations are implemented,
+=======
+#ifdef SDCARD_FS_XATTR
+	.setxattr	= sdcardfs_setxattr,
+	.getxattr	= sdcardfs_getxattr,
+	.listxattr	= sdcardfs_listxattr,
+	.removexattr = sdcardfs_removexattr,
+#endif // SDCARD_FS_XATTR
+	/* XXX Following operations are implemented, 
+>>>>>>> afd1784a008... Import huawei
 	 *     but FUSE(sdcard) or FAT does not support them
 	 *     These methods are *NOT* perfectly tested.
 	.symlink	= sdcardfs_symlink,
@@ -801,4 +1219,13 @@ const struct inode_operations sdcardfs_main_iops = {
 	.permission	= sdcardfs_permission,
 	.setattr	= sdcardfs_setattr,
 	.getattr	= sdcardfs_getattr,
+<<<<<<< HEAD
+=======
+#ifdef SDCARD_FS_XATTR
+	.setxattr	= sdcardfs_setxattr,
+	.getxattr	= sdcardfs_getxattr,
+	.listxattr	= sdcardfs_listxattr,
+	.removexattr = sdcardfs_removexattr,
+#endif // SDCARDFS_XATTR
+>>>>>>> afd1784a008... Import huawei
 };

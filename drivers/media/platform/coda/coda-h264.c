@@ -30,7 +30,6 @@ int coda_h264_padding(int size, char *p)
 	nal_size = coda_filler_size[diff];
 	memcpy(p, coda_filler_nal, nal_size);
 
-	/* Add rbsp stop bit and trailing at the end */
 	*(p + nal_size - 1) = 0x80;
 
 	return nal_size;

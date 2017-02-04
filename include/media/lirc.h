@@ -1,7 +1,4 @@
-/*
- * lirc.h - linux infrared remote control header file
- * last modified 2010/07/13 by Jarod Wilson
- */
+
 
 #ifndef _LINUX_LIRC_H
 #define _LINUX_LIRC_H

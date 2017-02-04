@@ -1,31 +1,4 @@
-/******************************************************************************
- *
- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- * The full GNU General Public License is included in this distribution in the
- * file called LICENSE.
- *
- * Contact Information:
- * wlanfae <wlanfae@realtek.com>
- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
- * Hsinchu 300, Taiwan.
- *
- * Larry Finger <Larry.Finger@lwfinger.net>
- *
- *****************************************************************************/
+
 
 #include "../wifi.h"
 #include "../efuse.h"
@@ -1491,13 +1464,7 @@ void rtl92cu_set_beacon_related_registers(struct ieee80211_hw *hw)
 	rtl_write_word(rtlpriv, REG_BCN_INTERVAL, bcn_interval);
 	_InitBeaconParameters(hw);
 	rtl_write_byte(rtlpriv, REG_SLOT, 0x09);
-	/*
-	 * Force beacon frame transmission even after receiving beacon frame
-	 * from other ad hoc STA
-	 *
-	 *
-	 * Reset TSF Timer to zero, added by Roger. 2008.06.24
-	 */
+	
 	value32 = rtl_read_dword(rtlpriv, REG_TCR);
 	value32 &= ~TSFRST;
 	rtl_write_dword(rtlpriv, REG_TCR, value32);

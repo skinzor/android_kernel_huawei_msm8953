@@ -357,9 +357,7 @@ struct add_vbus_guestpart {
 
 struct del_vbus_guestpart {
 	u32 bus_no;		/* bus number to be deleted */
-	/* once we start using the bus's channel, add can dump busNo
-	* into the channel header and then delete will need only one
-	* parameter, chanptr. */
+	
 };
 
 struct add_virt_guestpart {

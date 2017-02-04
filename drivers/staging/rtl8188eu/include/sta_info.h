@@ -191,7 +191,6 @@ struct sta_info {
 	/*  ================ODM Relative Info======================= */
 	/*  Please be careful, don't declare too much structure here.
 	 *  It will cost memory * STA support num. */
-	/*  2011/10/20 MH Add for ODM STA info. */
 	/*  Driver Write */
 	u8	bValid;		/*  record the sta status link or not? */
 	u8	IOTPeer;	/*  Enum value.	HT_IOT_PEER_E */

@@ -27,6 +27,7 @@
 #include <sound/audio_cal_utils.h>
 #include <sound/adsp_err.h>
 #include <linux/qdsp6v2/apr_tal.h>
+#include <sound/hw_audio_info.h>
 
 #define WAKELOCK_TIMEOUT	5000
 enum {
@@ -52,6 +53,12 @@ enum fbsp_state {
 	FBSP_FAILED,
 	MAX_FBSP_STATE
 };
+
+/*when MI2S changed, these macro must modified according to port no.*/
+#ifdef CONFIG_SND_SOC_MAX98925
+#define DSM_MI2S_PORT_TOKEN IDX_AFE_PORT_ID_QUINARY_MI2S_RX
+#define DSM_MI2S_PORT_ID    AFE_PORT_ID_QUINARY_MI2S_RX
+#endif
 
 static char fbsp_state[MAX_FBSP_STATE][50] = {
 	[FBSP_INCORRECT_OP_MODE] = "incorrect operation mode",
@@ -96,6 +103,9 @@ struct afe_ctl {
 		uint32_t token, uint32_t *payload, void *priv);
 	void *tx_private_data;
 	void *rx_private_data;
+#ifdef CONFIG_SND_SOC_MAX98925
+	void *dsm_resp_buf;
+#endif
 	uint32_t mmap_handle;
 
 	int	topology[AFE_MAX_PORTS];
@@ -250,6 +260,20 @@ static int32_t sp_make_afe_callback(uint32_t *payload, uint32_t payload_size)
 		}
 	}
 
+#ifdef CONFIG_SND_SOC_MAX98925
+	if ((param_id == AFE_PARAM_ID_DSM_RX_CFG) && (resp->pdata.module_id == AFE_MODULE_DSM_RX)) {
+		/* We dont have the dsm_resp_buf size for size validation.*/
+		if (this_afe.dsm_resp_buf) {
+			memcpy(this_afe.dsm_resp_buf,
+					((void*)payload + sizeof(struct afe_port_param_data_v2) +
+						sizeof(uint32_t)),
+					resp->pdata.param_size);
+
+			atomic_set(&this_afe.state, 0);
+		}
+	}
+#endif
+
 	return 0;
 }
 
@@ -333,6 +357,12 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 				atomic_set(&this_afe.status, payload[1]);
 				pr_err("%s: cmd = 0x%x returned error = 0x%x\n",
 					__func__, payload[0], payload[1]);
+				audio_dsm_report_num(DSM_AUDIO_ADSP_SETUP_FAIL_ERROR_NO,
+								DSM_AUDIO_MESG_DSP_CMD_ERROR);
+#ifdef CONFIG_HUAWEI_KERNEL_DEBUG
+				/*this is added for factory*/
+				panic("adsp_cmd_errors: when send cmd error, force to enter dump to get logs!!");
+#endif
 			}
 			switch (payload[0]) {
 			case AFE_PORT_CMD_SET_PARAM_V2:
@@ -2639,8 +2669,9 @@ int afe_port_start(u16 port_id, union afe_port_config *afe_config,
 	if (!(this_afe.afe_cal_mode[port_index] == AFE_CAL_MODE_NONE)) {
 		/* One time call: only for first time */
 		afe_send_custom_topology();
-		afe_send_port_topology_id(port_id);
-		afe_send_cal(port_id);
+                /* No need to proceed to send calibration if cal_block is not found. */
+		if(!afe_send_port_topology_id(port_id))
+		    afe_send_cal(port_id);
 		afe_send_hw_delay(port_id, rate);
 	}
 
@@ -4383,6 +4414,100 @@ static void config_debug_fs_exit(void)
 }
 #endif
 
+#ifdef CONFIG_SND_SOC_MAX98925
+/* This function is used for maxim smartpa to get parameters from adsp
+ * and set parameters for adsp.
+ */
+int afe_dsm_param_ctrl(uint32_t dir, uint32_t size, uint8_t *payload)
+{
+	int ret = -EINVAL;
+	struct afe_dsm_set_command *set_cfg = NULL;
+	struct afe_dsm_get_command *get_cfg = NULL;
+
+	if (!payload) {
+		pr_err("%s: Invalid params\n", __func__);
+		goto fail_cmd;
+	}
+
+	if (dir) {
+		set_cfg = (struct afe_dsm_set_command *)
+					(payload - sizeof(struct afe_dsm_set_command));
+		memset(set_cfg, 0 , sizeof(struct afe_dsm_set_command));
+
+		set_cfg->hdr.hdr_field = APR_HDR_FIELD(APR_MSG_TYPE_SEQ_CMD,
+					APR_HDR_LEN(APR_HDR_SIZE), APR_PKT_VER);
+		set_cfg->hdr.pkt_size = sizeof(struct afe_dsm_set_command) + size;
+		set_cfg->hdr.src_port = 0;
+		set_cfg->hdr.dest_port = 0;
+		set_cfg->hdr.token = DSM_MI2S_PORT_TOKEN;
+		set_cfg->hdr.opcode = AFE_PORT_CMD_SET_PARAM_V2;
+		set_cfg->param.port_id = DSM_MI2S_PORT_ID;
+		set_cfg->param.payload_size = sizeof(struct afe_port_param_data_v2)
+										+ size;
+
+		set_cfg->pdata.module_id = AFE_MODULE_DSM_RX;
+		set_cfg->pdata.param_id = AFE_PARAM_ID_DSM_RX_CFG;
+		set_cfg->pdata.param_size = size;
+	} else {
+		size = 258 << 2;
+		get_cfg = (struct afe_dsm_get_command *)(payload -
+							sizeof(struct afe_dsm_get_command));
+		memset(get_cfg, 0 , sizeof(struct afe_dsm_get_command));
+
+		get_cfg->hdr.hdr_field = APR_HDR_FIELD(APR_MSG_TYPE_SEQ_CMD,
+					APR_HDR_LEN(APR_HDR_SIZE), APR_PKT_VER);
+		get_cfg->hdr.pkt_size = sizeof(struct afe_dsm_get_command) + size;
+		get_cfg->hdr.src_port = 0;
+		get_cfg->hdr.dest_port = 0;
+		get_cfg->hdr.token = DSM_MI2S_PORT_TOKEN;
+		get_cfg->hdr.opcode = AFE_PORT_CMD_GET_PARAM_V2;
+		get_cfg->param.port_id = DSM_MI2S_PORT_ID;
+		get_cfg->param.module_id = AFE_MODULE_DSM_RX;
+		get_cfg->param.param_id = AFE_PARAM_ID_DSM_RX_CFG;
+		get_cfg->param.payload_size = sizeof(struct afe_port_param_data_v2)
+										 + size;
+
+		get_cfg->pdata.module_id = AFE_MODULE_DSM_RX;
+		get_cfg->pdata.param_id = AFE_PARAM_ID_DSM_RX_CFG;
+		get_cfg->pdata.param_size = size;
+
+		this_afe.dsm_resp_buf = payload;
+	}
+
+	atomic_set(&this_afe.state, 1);
+	ret = apr_send_pkt(this_afe.apr,
+					(dir) ? (uint32_t *) (set_cfg) : (uint32_t *)(get_cfg));
+	if (ret < 0) {
+		audio_dsm_report_info(DSM_AUDIO_ADSP_SETUP_FAIL_ERROR_NO,
+			 "%s: maxim dsm apr_send_pkt(%d) failed\n", __func__, ret);
+		pr_err("%s: failed %d\n", __func__,  ret);
+		goto fail_cmd;
+	}
+	ret =
+		wait_event_timeout(this_afe.wait[DSM_MI2S_PORT_TOKEN],
+		0 == (atomic_read(&this_afe.state)),
+		msecs_to_jiffies(TIMEOUT_MS));
+	if (!ret) {
+		audio_dsm_report_info(DSM_AUDIO_ADSP_SETUP_FAIL_ERROR_NO,
+			 "%s: maxim dsm wait timeout\n", __func__);
+		pr_err("%s: wait_event timeout\n", __func__);
+		ret = -EINVAL;
+		goto fail_cmd;
+	}
+	if (atomic_read(&this_afe.status) != 0) {
+		pr_err("%s: config cmd failed\n", __func__);
+		ret = -EINVAL;
+		goto fail_cmd;
+	}
+
+	ret = 0;
+fail_cmd:
+	pr_debug("%s: status %d\n", __func__, ret);
+	this_afe.dsm_resp_buf = NULL;
+	return ret;
+}
+#endif
+
 void afe_set_dtmf_gen_rx_portid(u16 port_id, int set)
 {
 	if (set)
@@ -4900,6 +5025,9 @@ int afe_set_digital_codec_core_clock(u16 port_id,
 			(atomic_read(&this_afe.state) == 0),
 			msecs_to_jiffies(TIMEOUT_MS));
 	if (!ret) {
+		audio_dsm_report_info(DSM_AUDIO_ADSP_SETUP_FAIL_ERROR_NO,
+			 "%s ret = %d, freq = %d MHz, root = %d",
+			 __func__, ret, clk_cfg.clk_cfg.clk_val, clk_cfg.clk_cfg.clk_root);
 		pr_err("%s: wait_event timeout\n", __func__);
 		ret = -EINVAL;
 		goto fail_cmd;
@@ -4990,6 +5118,8 @@ int afe_set_lpass_clock(u16 port_id, struct afe_clk_cfg *cfg)
 			(atomic_read(&this_afe.state) == 0),
 			msecs_to_jiffies(TIMEOUT_MS));
 	if (!ret) {
+		audio_dsm_report_num(DSM_AUDIO_ADSP_SETUP_FAIL_ERROR_NO,
+								DSM_AUDIO_MESG_SET_LPASSCLK_FAIL);
 		pr_err("%s: wait_event timeout\n", __func__);
 		ret = -EINVAL;
 		goto fail_cmd;

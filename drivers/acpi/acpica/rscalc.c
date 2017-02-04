@@ -708,10 +708,7 @@ acpi_rs_get_pci_routing_table_length(union acpi_operand_object *package_object,
 		top_object_list++;
 	}
 
-	/*
-	 * Add an extra element to the end of the list, essentially a
-	 * NULL terminator
-	 */
+	
 	*buffer_size_needed =
 	    temp_size_needed + sizeof(struct acpi_pci_routing_table);
 	return_ACPI_STATUS(AE_OK);

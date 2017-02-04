@@ -48,6 +48,7 @@ static int sdcardfs_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 	return err;
 }
 
+<<<<<<< HEAD
 static ssize_t sdcardfs_direct_IO(int rw, struct kiocb *iocb,
 		struct iov_iter *iter, loff_t pos)
 {
@@ -61,6 +62,39 @@ static ssize_t sdcardfs_direct_IO(int rw, struct kiocb *iocb,
 	 *
      * NOTE: exceptionally, on the recent kernels (since Linux 3.8.x),
      * swap_writepage invokes this function directly.
+=======
+static int sdcardfs_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+{
+	int err;
+	struct file *file, *lower_file;
+	const struct vm_operations_struct *lower_vm_ops;
+	struct vm_area_struct lower_vma;
+
+	memcpy(&lower_vma, vma, sizeof(struct vm_area_struct));
+	file = lower_vma.vm_file;
+	lower_vm_ops = SDCARDFS_F(file)->lower_vm_ops;
+	BUG_ON(!lower_vm_ops);
+
+	lower_file = sdcardfs_lower_file(file);
+	lower_vma.vm_file = lower_file;
+	err = lower_vm_ops->page_mkwrite(&lower_vma, vmf);
+	return err;
+}
+
+static ssize_t sdcardfs_direct_IO(int rw, struct kiocb *iocb,
+							struct iov_iter *iov, loff_t offset)
+{
+	/*
+	 * This function returns zero on purpose in order to support direct IO.
+	 * __dentry_open checks a_ops->direct_IO and returns EINVAL if it is null.
+	 *
+	 * However, this function won't be called by certain file operations
+	 * including generic fs functions.  * reads and writes are delivered to
+	 * the lower file systems and the direct IOs will be handled by them.
+	 *
+	 * NOTE: exceptionally, on the recent kernels (since Linux 3.8.x),
+	 * swap_writepage invokes this function directly.
+>>>>>>> afd1784a008... Import huawei
 	 */
 	printk(KERN_INFO "%s, operation is not supported\n", __func__);
 	return 0;
@@ -78,4 +112,8 @@ const struct address_space_operations sdcardfs_aops = {
 
 const struct vm_operations_struct sdcardfs_vm_ops = {
 	.fault		= sdcardfs_fault,
+<<<<<<< HEAD
+=======
+	.page_mkwrite	= sdcardfs_page_mkwrite,
+>>>>>>> afd1784a008... Import huawei
 };

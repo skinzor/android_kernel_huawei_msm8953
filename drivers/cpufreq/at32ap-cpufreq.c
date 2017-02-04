@@ -1,13 +1,4 @@
-/*
- * Copyright (C) 2004-2007 Atmel Corporation
- *
- * Based on MIPS implementation arch/mips/kernel/time.c
- *   Copyright 2001 MontaVista Software Inc.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- */
+
 
 /*#define DEBUG*/
 
@@ -69,13 +60,7 @@ static int at32_cpufreq_driver_init(struct cpufreq_policy *policy)
 	frequency = (clk_round_rate(cpuclk, ~0UL) + 500) / 1000;
 	policy->cpuinfo.transition_latency = 0;
 
-	/*
-	 * AVR32 CPU frequency rate scales in power of two between maximum and
-	 * minimum, also add space for the table end marker.
-	 *
-	 * Further validate that the frequency is usable, and append it to the
-	 * frequency table.
-	 */
+	
 	steps = fls(frequency / min_freq) + 1;
 	freq_table = kzalloc(steps * sizeof(struct cpufreq_frequency_table),
 			GFP_KERNEL);

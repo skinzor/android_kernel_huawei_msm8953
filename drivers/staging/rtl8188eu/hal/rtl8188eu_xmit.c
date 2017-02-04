@@ -330,7 +330,6 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 	/*  --> default enable non-Qos data sequense number. 2010.06.23. by tynli. */
 	/*  (2) Enable HW SEQ control for beacon packet, because we use Hw beacon. */
 	/*  (3) Use HW Qos SEQ to control the seq num of Ext port non-Qos packets. */
-	/*  2010.06.23. Added by tynli. */
 	if (!pattrib->qos_en) {
 		ptxdesc->txdw3 |= cpu_to_le32(EN_HWSEQ); /*  Hw set sequence number */
 		ptxdesc->txdw4 |= cpu_to_le32(HW_SSN);	/*  Hw set sequence number */

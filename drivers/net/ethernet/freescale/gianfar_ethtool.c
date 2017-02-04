@@ -1279,9 +1279,7 @@ static void gfar_copy_filer_entries(struct gfar_filer_entry dst[0],
 	}
 }
 
-/* Delete the contents of the filer-table between start and end
- * and collapse them
- */
+
 static int gfar_trim_filer_entries(u32 begin, u32 end, struct filer_table *tab)
 {
 	int length;

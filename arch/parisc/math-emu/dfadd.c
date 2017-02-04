@@ -449,7 +449,7 @@ dbl_fadd(
 	    Dbl_arithrightshiftby1(resultp1,resultp2);
 	    result_exponent++;
 	    } /* end if hiddenoverflow... */
-	} /* end else ...add magnitudes... */
+	}
     
     /* Round the result.  If the extension is all zeros,then the result is
      * exact.  Otherwise round in the correct direction.  No underflow is

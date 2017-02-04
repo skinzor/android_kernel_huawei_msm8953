@@ -1,24 +1,4 @@
-/*
- * Original code based Host AP (software wireless LAN access point) driver
- * for Intersil Prism2/2.5/3 - hostap.o module, common routines
- *
- * Copyright (c) 2001-2002, SSH Communications Security Corp and Jouni Malinen
- * <jkmaline@cc.hut.fi>
- * Copyright (c) 2002-2003, Jouni Malinen <jkmaline@cc.hut.fi>
- * Copyright (c) 2004, Intel Corporation
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation. See README and COPYING for
- * more details.
- ******************************************************************************
 
-  Few modifications for Realtek's Wi-Fi drivers by
-  Andrea Merello <andrea.merello@gmail.com>
-
-  A special thanks goes to Realtek for their support !
-
-******************************************************************************/
 
 
 #include <linux/compiler.h>
@@ -1136,7 +1116,7 @@ int ieee80211_rx(struct ieee80211_device *ieee, struct sk_buff *skb,
 	    stype != IEEE80211_STYPE_DATA_CFACK &&
 	    stype != IEEE80211_STYPE_DATA_CFPOLL &&
 	    stype != IEEE80211_STYPE_DATA_CFACKPOLL&&
-	    stype != IEEE80211_STYPE_QOS_DATA//add by David,2006.8.4
+	    stype != IEEE80211_STYPE_QOS_DATA
 	    ) {
 		if (stype != IEEE80211_STYPE_NULLFUNC)
 			IEEE80211_DEBUG_DROP(
@@ -2591,7 +2571,6 @@ static inline void ieee80211_process_probe_response(
 		 * net and call the new_net handler
 		 */
 		renew = !time_after(target->last_scanned + ieee->scan_age, jiffies);
-		//YJ,add,080819,for hidden ap
 		if(is_beacon(beacon->header.frame_ctl) == 0)
 			network.flags = (~NETWORK_EMPTY_ESSID & network.flags)|(NETWORK_EMPTY_ESSID & target->flags);
 		//if(strncmp(network.ssid, "linksys-c",9) == 0)
@@ -2600,7 +2579,6 @@ static inline void ieee80211_process_probe_response(
 		    && (((network.ssid_len > 0) && (strncmp(target->ssid, network.ssid, network.ssid_len)))\
 		    ||((ieee->current_network.ssid_len == network.ssid_len)&&(strncmp(ieee->current_network.ssid, network.ssid, network.ssid_len) == 0)&&(ieee->state == IEEE80211_NOLINK))))
 			renew = 1;
-		//YJ,add,080819,for hidden ap,end
 
 		update_network(target, &network);
 		if(renew && (ieee->softmac_features & IEEE_SOFTMAC_ASSOCIATE))

@@ -353,10 +353,7 @@ static INT ValidateHWParmStructure(struct bcm_mini_adapter *Adapter,
 
 	INT Status = STATUS_SUCCESS;
 	USHORT HwParamLen = 0;
-	/*
-	 * Add DSD start offset to the hwParamOffset to get
-	 * the actual address.
-	 */
+	
 	ulHwParamOffset += DSD_START_OFFSET;
 
 	/* Read the Length of HW_PARAM structure */
@@ -433,11 +430,7 @@ static int ReadLEDInformationFromEEPROM(struct bcm_mini_adapter *Adapter,
 	if (Status)
 		return Status;
 
-	/*
-	 * Add DSD_START_OFFSET to the offset read from the EEPROM.
-	 * This will give the actual start HW Parameters start address.
-	 * To read GPIO section, add GPIO offset further.
-	 */
+	
 
 	dwReadValue += DSD_START_OFFSET;
 			/* = start address of hw param section. */

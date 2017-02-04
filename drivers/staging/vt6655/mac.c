@@ -72,7 +72,7 @@
 #include "tether.h"
 #include "mac.h"
 
-unsigned short TxRate_iwconfig;//2008-5-8 <add> by chester
+unsigned short TxRate_iwconfig;
 /*---------------------  Static Classes  ----------------------------*/
 
 /*---------------------  Static Variables  --------------------------*/

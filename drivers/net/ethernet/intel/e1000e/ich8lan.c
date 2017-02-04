@@ -3743,7 +3743,6 @@ static s32 e1000_erase_flash_bank_ich8lan(struct e1000_hw *hw, u32 bank)
 		return -E1000_ERR_NVM;
 	}
 
-	/* Start with the base address, then add the sector offset. */
 	flash_linear_addr = hw->nvm.flash_base_addr;
 	flash_linear_addr += (bank) ? flash_bank_size : 0;
 

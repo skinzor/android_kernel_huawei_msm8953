@@ -1,20 +1,4 @@
-/*
- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
- * All Rights Reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it would be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write the Free Software Foundation,
- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
+
 #include <linux/log2.h>
 
 #include "xfs.h"
@@ -1085,12 +1069,7 @@ xfs_iext_add_indirect_multi(
 		memset(&erp->er_extbuf[idx], 0, byte_diff);
 	}
 
-	/*
-	 * Add the new extents to the end of the target
-	 * list, then allocate new irec record(s) and
-	 * extent buffer(s) as needed to store the rest
-	 * of the new extents.
-	 */
+	
 	ext_cnt = count;
 	ext_diff = MIN(ext_cnt, (int)XFS_LINEAR_EXTS - erp->er_extcount);
 	if (ext_diff) {
@@ -1882,13 +1861,7 @@ xfs_iext_irec_compact_pages(
 	}
 }
 
-/*
- * This is called to update the er_extoff field in the indirection
- * array when extents have been added or removed from one of the
- * extent lists. erp_idx contains the irec index to begin updating
- * at and ext_diff contains the number of extents that were added
- * or removed.
- */
+
 void
 xfs_iext_irec_update_extoffs(
 	xfs_ifork_t	*ifp,		/* inode fork pointer */

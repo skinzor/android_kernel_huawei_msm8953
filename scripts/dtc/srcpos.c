@@ -189,7 +189,6 @@ void srcfile_add_search_path(const char *dirname)
 	node->next = NULL;
 	node->dirname = xstrdup(dirname);
 
-	/* Add to the end of our list */
 	if (search_path_tail)
 		*search_path_tail = node;
 	else

@@ -807,7 +807,7 @@ static struct sk_buff *ieee80211_probe_resp(struct ieee80211_device *ieee, u8 *d
 	u16 val16;
 		*(tag++) = MFIE_TYPE_IBSS_SET;
 		*(tag++) = 2;
-		//*((u16*)(tag)) = cpu_to_le16(ieee->current_network.atim_window);
+// *((u16*)(tag)) = cpu_to_le16(ieee->current_network.atim_window);
 		 val16 = cpu_to_le16(ieee->current_network.atim_window);
 		memcpy((u8 *)tag, (u8 *)&val16, 2);
 		tag+=2;
@@ -1117,7 +1117,6 @@ inline struct sk_buff *ieee80211_association_req(struct ieee80211_network *beaco
 
 	ieee80211_MFIE_Brate(ieee, &tag);
 	ieee80211_MFIE_Grate(ieee, &tag);
-	// For CCX 1 S13, CKIP. Added by Annie, 2006-08-14.
 	if( beacon->bCkipSupported )
 	{
 		static u8	AironetIeOui[] = {0x00, 0x01, 0x66}; // "4500-client"

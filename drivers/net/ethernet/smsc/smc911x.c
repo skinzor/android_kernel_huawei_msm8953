@@ -291,7 +291,6 @@ static void smc911x_enable(struct net_device *dev)
 	SMC_SET_MAC_CR(lp, cr);
 	SMC_SET_TX_CFG(lp, TX_CFG_TX_ON_);
 
-	/* Add 2 byte padding to start of packets */
 	SMC_SET_RX_CFG(lp, (2<<8) & RX_CFG_RXDOFF_);
 
 	/* Turn on receiver and enable RX */
@@ -409,10 +408,7 @@ static inline void	 smc911x_rcv(struct net_device *dev)
 			smc911x_drop_pkt(dev);
 			return;
 		}
-		/* Align IP header to 32 bits
-		 * Note that the device is configured to add a 2
-		 * byte padding to the packet start, so we really
-		 * want to write to the orignal data pointer */
+		
 		data = skb->data;
 		skb_reserve(skb, 2);
 		skb_put(skb,pkt_len-4);

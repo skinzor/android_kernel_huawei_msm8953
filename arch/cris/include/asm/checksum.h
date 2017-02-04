@@ -37,8 +37,8 @@ __wsum csum_partial_copy_nocheck(const void *src, void *dst,
 static inline __sum16 csum_fold(__wsum csum)
 {
 	u32 sum = (__force u32)csum;
-	sum = (sum & 0xffff) + (sum >> 16); /* add in end-around carry */
-	sum = (sum & 0xffff) + (sum >> 16); /* add in end-around carry */
+	sum = (sum & 0xffff) + (sum >> 16);
+	sum = (sum & 0xffff) + (sum >> 16);
 	return (__force __sum16)~sum;
 }
 

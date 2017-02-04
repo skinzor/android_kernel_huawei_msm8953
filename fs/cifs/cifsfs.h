@@ -31,6 +31,7 @@
  * so that it will fit. We use hash_64 to convert the value to 31 bits, and
  * then add 1, to ensure that we don't end up with a 0 as the value.
  */
+
 static inline ino_t
 cifs_uniqueid_to_ino_t(u64 fileid)
 {

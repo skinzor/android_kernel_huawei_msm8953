@@ -862,6 +862,7 @@ extern struct adreno_gpudev adreno_a5xx_gpudev;
 extern int adreno_wake_nice;
 extern unsigned int adreno_wake_timeout;
 
+void adreno_force_waking_gpu(void);
 long adreno_ioctl(struct kgsl_device_private *dev_priv,
 		unsigned int cmd, unsigned long arg);
 

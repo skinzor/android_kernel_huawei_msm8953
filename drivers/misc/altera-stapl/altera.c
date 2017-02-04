@@ -1,27 +1,4 @@
-/*
- * altera.c
- *
- * altera FPGA driver
- *
- * Copyright (C) Altera Corporation 1998-2001
- * Copyright (C) 2010,2011 NetUP Inc.
- * Copyright (C) 2010,2011 Igor M. Liplianin <liplianin@netup.ru>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
+
 
 #include <asm/unaligned.h>
 #include <linux/ctype.h>
@@ -2396,7 +2373,6 @@ static int altera_get_act_info(u8 *p,
 			procptr->attrs = act_proc_attribute;
 			procptr->next = NULL;
 
-			/* add record to end of linked list */
 			if (*proc_list == NULL)
 				*proc_list = procptr;
 			else {

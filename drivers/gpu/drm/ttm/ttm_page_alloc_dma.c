@@ -813,7 +813,6 @@ static int ttm_dma_page_pool_fill_locked(struct dma_pool *pool,
 
 		spin_lock_irqsave(&pool->lock, *irq_flags);
 		if (!r) {
-			/* Add the fresh to the end.. */
 			list_splice(&d_pages, &pool->free_list);
 			++pool->nrefills;
 			pool->npages_free += count;

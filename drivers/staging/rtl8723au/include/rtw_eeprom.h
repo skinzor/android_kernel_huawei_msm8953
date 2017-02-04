@@ -50,7 +50,7 @@
 #define	EEPROM_CID_CAMEO1				0xF
 #define	EEPROM_CID_WNC_COREGA		0x12
 #define	EEPROM_CID_CLEVO				0x13
-#define	EEPROM_CID_WHQL				0xFE /*  added by chiyoko for dtm, 20090108 */
+#define	EEPROM_CID_WHQL				0xFE
 
 /*  */
 /*  Customer ID, note that: */

@@ -1115,7 +1115,6 @@ static int rtw_wx_set_scan(struct net_device *dev, struct iw_request_info *a,
 
 	/*  When Busy Traffic, driver do not site survey. So driver return success. */
 	/*  wpa_supplicant will not issue SIOCSIWSCAN cmd again after scan timeout. */
-	/*  modify by thomas 2011-02-22. */
 	if (pmlmepriv->LinkDetectInfo.bBusyTraffic) {
 		indicate_wx_scan_complete_event(padapter);
 		goto exit;
@@ -2975,7 +2974,6 @@ static int rtw_wx_set_priv(struct net_device *dev,
 		return -EFAULT;
 	}
 
-	/* added for wps2.0 @20110524 */
 	if (dwrq->flags == 0x8766 && len > 8) {
 		u32 cp_sz;
 		struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
