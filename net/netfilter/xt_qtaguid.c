@@ -1232,11 +1232,10 @@ static void iface_stat_update_from_skb(const struct sk_buff *skb,
 		 par->hooknum, __func__, el_dev->name, el_dev->type,
 		 par->family, proto, direction);
 #ifdef CONFIG_HW_WIFIPRO
-		if(direction == IFS_TX){
-		    wifipro_update_tcp_statistics(WIFIPRO_TCP_MIB_OUTSEGS, skb, NULL);
-		}
-#endif
+	if (direction == IFS_TX){
+		wifipro_update_tcp_statistics(WIFIPRO_TCP_MIB_OUTSEGS, skb, NULL);
 	}
+#endif
 
 	spin_lock_bh(&iface_stat_list_lock);
 	entry = get_iface_entry(el_dev->name);

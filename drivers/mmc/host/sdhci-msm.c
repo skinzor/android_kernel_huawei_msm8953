@@ -197,7 +197,7 @@
 #define MSM_AUTOSUSPEND_DELAY_MS 100
 
 /* Timeout value to avoid infinite waiting for pwr_irq */
-#define MSM_PWR_IRQ_TIMEOUT_MS 10000
+#define MSM_PWR_IRQ_TIMEOUT_MS 5000
 
 static const u32 tuning_block_64[] = {
 	0x00FF0FFF, 0xCCC3CCFF, 0xFFCC3CC3, 0xEFFEFFFE,
