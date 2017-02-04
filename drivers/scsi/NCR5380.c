@@ -26,47 +26,7 @@
  * 1+ (800) 334-5454
  */
 
-/*
- * Revision 1.10 1998/9/2	Alan Cox
- *				(alan@lxorguk.ukuu.org.uk)
- * Fixed up the timer lockups reported so far. Things still suck. Looking 
- * forward to 2.3 and per device request queues. Then it'll be possible to
- * SMP thread this beast and improve life no end.
- 
- * Revision 1.9  1997/7/27	Ronald van Cuijlenborg
- *				(ronald.van.cuijlenborg@tip.nl or nutty@dds.nl)
- * (hopefully) fixed and enhanced USLEEP
- * added support for DTC3181E card (for Mustek scanner)
- *
 
- * Revision 1.8			Ingmar Baumgart
- *				(ingmar@gonzo.schwaben.de)
- * added support for NCR53C400a card
- *
-
- * Revision 1.7  1996/3/2       Ray Van Tassle (rayvt@comm.mot.com)
- * added proc_info
- * added support needed for DTC 3180/3280
- * fixed a couple of bugs
- *
-
- * Revision 1.5  1994/01/19  09:14:57  drew
- * Fixed udelay() hack that was being used on DATAOUT phases
- * instead of a proper wait for the final handshake.
- *
- * Revision 1.4  1994/01/19  06:44:25  drew
- * *** empty log message ***
- *
- * Revision 1.3  1994/01/19  05:24:40  drew
- * Added support for TCR LAST_BYTE_SENT bit.
- *
- * Revision 1.2  1994/01/15  06:14:11  drew
- * REAL DMA support, bug fixes.
- *
- * Revision 1.1  1994/01/15  06:00:54  drew
- * Initial revision
- *
- */
 
 /*
  * Further development / testing that should be done : 

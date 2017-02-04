@@ -1,26 +1,10 @@
-/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+
 
 #include <linux/types.h>
 #include <linux/uaccess.h>
 #include <linux/debugfs.h>
 
-/*
- * Subsequent patches should add an entry to end of this string.
- * Format is incrementing sequence number followed by text of
- * patch commit title with newline.
- * Note trailing ';' is on its own line to simplify addition of
- * future strings.
- */
+
 static char *descriptions =
 	" 0 arm64: perf: add debug patch logging framework\n"
 	" 1 Perf: arm64: Add L1 counters to tracepoints\n"

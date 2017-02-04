@@ -1,26 +1,4 @@
-/*
- * Merged with mainline rtllib.h in Aug 2004.  Original ieee802_11
- * remains copyright by the original authors
- *
- * Portions of the merged code are based on Host AP (software wireless
- * LAN access point) driver for Intersil Prism2/2.5/3.
- *
- * Copyright (c) 2001-2002, SSH Communications Security Corp and Jouni Malinen
- * <jkmaline@cc.hut.fi>
- * Copyright (c) 2002-2003, Jouni Malinen <jkmaline@cc.hut.fi>
- *
- * Adaption to a generic IEEE 802.11 stack by James Ketrenos
- * <jketreno@linux.intel.com>
- * Copyright (c) 2004, Intel Corporation
- *
- * Modified for Realtek's wi-fi cards by Andrea Merello
- * <andrea.merello@gmail.com>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation. See README and COPYING for
- * more details.
- */
+
 #ifndef RTLLIB_H
 #define RTLLIB_H
 #include <linux/if_ether.h> /* ETH_ALEN */
@@ -784,7 +762,6 @@ do {								\
 #define RTLLIB_DEBUG_RX(f, a...)  RTLLIB_DEBUG(RTLLIB_DL_RX, f, ## a)
 #define RTLLIB_DEBUG_QOS(f, a...)  RTLLIB_DEBUG(RTLLIB_DL_QOS, f, ## a)
 
-/* Added by Annie, 2005-11-22. */
 #define MAX_STR_LEN     64
 /* I want to see ASCII 33 to 126 only. Otherwise, I print '?'. */
 #define PRINTABLE(_ch)  (_ch > '!' && _ch < '~')

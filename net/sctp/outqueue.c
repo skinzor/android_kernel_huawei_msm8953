@@ -1,43 +1,4 @@
-/* SCTP kernel implementation
- * (C) Copyright IBM Corp. 2001, 2004
- * Copyright (c) 1999-2000 Cisco, Inc.
- * Copyright (c) 1999-2001 Motorola, Inc.
- * Copyright (c) 2001-2003 Intel Corp.
- *
- * This file is part of the SCTP kernel implementation
- *
- * These functions implement the sctp_outq class.   The outqueue handles
- * bundling and queueing of outgoing SCTP chunks.
- *
- * This SCTP implementation is free software;
- * you can redistribute it and/or modify it under the terms of
- * the GNU General Public License as published by
- * the Free Software Foundation; either version 2, or (at your option)
- * any later version.
- *
- * This SCTP implementation is distributed in the hope that it
- * will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *                 ************************
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU CC; see the file COPYING.  If not, see
- * <http://www.gnu.org/licenses/>.
- *
- * Please send any bug reports or fixes you make to the
- * email address(es):
- *    lksctp developers <linux-sctp@vger.kernel.org>
- *
- * Written or modified by:
- *    La Monte H.P. Yarroll <piggy@acm.org>
- *    Karl Knutson          <karl@athena.chicago.il.us>
- *    Perry Melange         <pmelange@null.cc.uic.edu>
- *    Xingang Guo           <xingang.guo@intel.com>
- *    Hui Huang 	    <hui.huang@nokia.com>
- *    Sridhar Samudrala     <sri@us.ibm.com>
- *    Jon Grimm             <jgrimm@us.ibm.com>
- */
+
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
@@ -92,7 +53,6 @@ static inline struct sctp_chunk *sctp_outq_dequeue_data(struct sctp_outq *q)
 	}
 	return ch;
 }
-/* Add data chunk to the end of the queue. */
 static inline void sctp_outq_tail_data(struct sctp_outq *q,
 				       struct sctp_chunk *ch)
 {

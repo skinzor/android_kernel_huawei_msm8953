@@ -27,7 +27,18 @@
 #define NETLINK_RDMA		20
 #define NETLINK_CRYPTO		21	/* Crypto layer */
 #define NETLINK_SOCKEV		22	/* Socket Administrative Events */
+#ifdef CONFIG_HW_WIFIPRO
+#define NETLINK_WIFIPRO_EVENT_NL  24
+#endif
+#ifdef CONFIG_HW_WIFI
+#define NETLINK_WIFI_EVENT_NL 25
+#endif
+
 #define NETLINK_INET_DIAG	NETLINK_SOCK_DIAG
+
+#ifdef CONFIG_HUAWEI_KSTATE
+#define NETLINK_HW_KSTATE	30	/* kstate send event to user */
+#endif
 
 #define MAX_LINKS 32		
 
@@ -64,7 +75,7 @@ struct nlmsghdr {
 #define NLM_F_REPLACE	0x100	/* Override existing		*/
 #define NLM_F_EXCL	0x200	/* Do not touch, if it exists	*/
 #define NLM_F_CREATE	0x400	/* Create, if it does not exist	*/
-#define NLM_F_APPEND	0x800	/* Add to end of list		*/
+#define NLM_F_APPEND	0x800
 
 /*
    4.4BSD ADD		NLM_F_CREATE|NLM_F_EXCL

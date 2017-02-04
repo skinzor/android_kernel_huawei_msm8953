@@ -1,10 +1,7 @@
 #ifndef _ASM_IA64_CURRENT_H
 #define _ASM_IA64_CURRENT_H
 
-/*
- * Modified 1998-2000
- *	David Mosberger-Tang <davidm@hpl.hp.com>, Hewlett-Packard Co
- */
+
 
 #include <asm/intrinsics.h>
 

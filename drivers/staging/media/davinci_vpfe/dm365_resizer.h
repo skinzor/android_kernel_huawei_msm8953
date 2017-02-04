@@ -108,9 +108,7 @@ struct rsz_ext_mem_param {
 	unsigned int rsz_sdr_oft_c;
 	unsigned int rsz_sdr_ptr_s_c;
 	unsigned int rsz_sdr_ptr_e_c;
-	/* offset to be added to buffer start when flipping for y/ycbcr */
 	unsigned int flip_ofst_y;
-	/* offset to be added to buffer start when flipping for c */
 	unsigned int flip_ofst_c;
 	/* c offset for YUV 420SP */
 	unsigned int c_offset;

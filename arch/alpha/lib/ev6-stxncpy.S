@@ -133,7 +133,6 @@ $a_eos:
 	nop
 	nop
 
-	/* Add the end-of-count bit to the eos detection bitmask.  */
 $a_eoc:
 	or	t10, t8, t8	# E :
 	br	$a_eos		# L0 : Latency=3

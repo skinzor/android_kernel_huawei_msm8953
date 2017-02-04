@@ -1,20 +1,4 @@
-/*
- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
- * All Rights Reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it would be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write the Free Software Foundation,
- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
+
 #include "xfs.h"
 #include "xfs_fs.h"
 #include "xfs_format.h"
@@ -358,9 +342,7 @@ xfs_dir2_sf_addname(
 	 */
 	if (args->op_flags & XFS_DA_OP_JUSTCHECK)
 		return 0;
-	/*
-	 * Do it the easy way - just add it at the end.
-	 */
+	
 	if (pick == 1)
 		xfs_dir2_sf_addname_easy(args, sfep, offset, new_isize);
 	/*
@@ -377,13 +359,7 @@ xfs_dir2_sf_addname(
 	return 0;
 }
 
-/*
- * Add the new entry the "easy" way.
- * This is copying the old directory and adding the new entry at the end.
- * Since it's sorted by "offset" we need room after the last offset
- * that's already there, and then room to convert to a block directory.
- * This is already checked by the pick routine.
- */
+
 static void
 xfs_dir2_sf_addname_easy(
 	xfs_da_args_t		*args,		/* operation arguments */

@@ -174,7 +174,6 @@ BSSpSearchBSSList(
 		/* ignore BSSID */
 		for (ii = 0; ii < MAX_BSS_NUM; ii++) {
 			pCurrBSS = &(pMgmt->sBSSList[ii]);
-			/* 2007-0721-01<Add>by MikeLiu */
 			pCurrBSS->bSelected = false;
 			if (pCurrBSS->bActive) {
 				if (pSSID != NULL) {

@@ -245,7 +245,6 @@ static int wcnss_notif_cb(struct notifier_block *this, unsigned long code,
 static struct notifier_block wnb = {
 	.notifier_call = wcnss_notif_cb,
 };
-
 #define NVBIN_FILE "wlan/prima/WCNSS_qcom_wlan_nv.bin"
 
 /* On SMD channel 4K of maximum data can be transferred, including message
@@ -423,6 +422,93 @@ static struct {
 	struct delayed_work wcnss_pm_qos_del_req;
 	struct mutex pm_qos_mutex;
 } *penv = NULL;
+
+#ifdef CONFIG_HUAWEI_DSM
+static struct dsm_dev wifi_dsm_info = {
+    .name = DSM_WIFI_MOD_NAME,
+    .fops = NULL,
+    .buff_size = DSM_WIFI_BUF_SIZE,
+};
+
+static struct dsm_client *wifi_dclient = NULL;
+
+int wifi_dsm_register(void)
+{
+    if (NULL != wifi_dclient) {
+        pr_debug("wifi_dclient had been register!\n");
+        return 0;
+    }
+
+    wifi_dclient = dsm_register_client(&wifi_dsm_info);
+    if (NULL == wifi_dclient) {
+        pr_err("wifi_dclient register failed!\n");
+    }
+
+    return 0;
+}
+EXPORT_SYMBOL(wifi_dsm_register);
+
+int wifi_dsm_report_num(int dsm_err_no, char *err_msg, int err_code)
+{
+    int err = 0;
+
+    if (NULL == wifi_dclient) {
+        pr_err("%s wifi_dclient did not register!\n", __func__);
+        return 0;
+    }
+
+    err = dsm_client_ocuppy(wifi_dclient);
+    if (0 != err) {
+        pr_err("%s user buffer is busy!\n", __func__);
+        return 0;
+    }
+
+    pr_err("%s user buffer apply successed, dsm_err_no=%d, err_code=%d!\n",
+        __func__, dsm_err_no, err_code);
+
+    err = dsm_client_record(wifi_dclient, "err_msg:%s;err_code:%d;\n",err_msg,err_code);
+    dsm_client_notify(wifi_dclient, dsm_err_no);
+
+    return 0;
+}
+EXPORT_SYMBOL(wifi_dsm_report_num);
+
+int wifi_dsm_report_info(int error_no, void *log, int size)
+{
+    int err = 0;
+    int rsize = 0;
+
+    if (NULL == wifi_dclient) {
+        pr_err("%s wifi_dclient did not register!\n", __func__);
+        return 0;
+    }
+
+    if ((error_no < DSM_WIFI_ERR) || (error_no > DSM_WIFI_ROOT_NOT_RIGHT_ERR)
+	    || (NULL == log) || (size < 0)) {
+        pr_err("%s input param error!\n", __func__);
+        return 0;
+    }
+
+    err = dsm_client_ocuppy(wifi_dclient);
+    if (0 != err) {
+        pr_err("%s user buffer is busy!\n", __func__);
+        return 0;
+    }
+
+    if (size > DSM_WIFI_BUF_SIZE) {
+        rsize = DSM_WIFI_BUF_SIZE;
+    } else {
+        rsize = size;
+    }
+    err = dsm_client_copy(wifi_dclient, log, rsize);
+
+    dsm_client_notify(wifi_dclient, error_no);
+
+    return 0;
+}
+EXPORT_SYMBOL(wifi_dsm_report_info);
+
+#endif
 
 static ssize_t wcnss_wlan_macaddr_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
@@ -1128,7 +1214,7 @@ void wcnss_log_debug_regs_on_bite(void)
 			pr_err("clock frequency is zero, cannot access PMU or other registers\n");
 			wcnss_log_iris_regs();
 		}
-
+		WARN_ON(1);
 		clk_disable_unprepare(measure);
 	}
 }
@@ -1425,7 +1511,6 @@ wcnss_gpios_config(struct resource *gpios_5wire, bool enable)
 		} else
 			gpio_free(i);
 	}
-
 	return rc;
 
 fail:
@@ -2380,7 +2465,6 @@ static void wcnss_nvbin_dnld(void)
 	down_read(&wcnss_pm_sem);
 
 	ret = request_firmware(&nv, NVBIN_FILE, dev);
-
 	if (ret || !nv || !nv->data || !nv->size) {
 		pr_err("wcnss: %s: request_firmware failed for %s (ret = %d)\n",
 			__func__, NVBIN_FILE, ret);
@@ -2865,6 +2949,7 @@ wcnss_trigger_config(struct platform_device *pdev)
 			has_48mhz_xo = pdata->has_48mhz_xo;
 		}
 	}
+
 	penv->wcnss_hw_type = (has_pronto_hw) ? WCNSS_PRONTO_HW : WCNSS_RIVA_HW;
 	penv->wlan_config.use_48mhz_xo = has_48mhz_xo;
 	penv->wlan_config.is_pronto_vadc = is_pronto_vadc;
@@ -3188,6 +3273,14 @@ wcnss_trigger_config(struct platform_device *pdev)
 			ret = PTR_ERR(penv->pil);
 			wcnss_disable_pc_add_req();
 			wcnss_pronto_dump_regs();
+#ifdef CONFIG_HUAWEI_DSM
+			/*inorder to avoid the abnormity raise frequently,we just raise the abnormity at the
+			first time when it occurs*/
+			if (pil_retry == 0) {
+				 dev_err(&pdev->dev, "The wcnss load failed at the first time.\n");
+				 wifi_dsm_report_num(DSM_WIFI_FAIL_LOADFIRMWARE_ERR,"firmware load failed",ret);
+			}
+#endif
 		}
 	} while (pil_retry++ < WCNSS_MAX_PIL_RETRY && IS_ERR(penv->pil));
 
@@ -3558,6 +3651,9 @@ static struct platform_driver wcnss_wlan_driver = {
 
 static int __init wcnss_wlan_init(void)
 {
+#ifdef CONFIG_HUAWEI_DSM
+	wifi_dsm_register();
+#endif
 	platform_driver_register(&wcnss_wlan_driver);
 	platform_driver_register(&wcnss_wlan_ctrl_driver);
 	platform_driver_register(&wcnss_ctrl_driver);
@@ -3568,6 +3664,9 @@ static int __init wcnss_wlan_init(void)
 
 static void __exit wcnss_wlan_exit(void)
 {
+#ifdef CONFIG_HUAWEI_DSM
+	dsm_unregister_client(wifi_dclient,&wifi_dsm_info);
+#endif
 	if (penv) {
 		if (penv->pil)
 			subsystem_put(penv->pil);

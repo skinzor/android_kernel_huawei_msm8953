@@ -1,28 +1,4 @@
-/* -*- mode: c; c-basic-offset: 8; -*-
- * vim: noexpandtab sw=8 ts=8 sts=0:
- *
- * dlmdomain.c
- *
- * defines domain join / leave apis
- *
- * Copyright (C) 2004 Oracle.  All rights reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 021110-1307, USA.
- *
- */
+
 
 #include <linux/module.h>
 #include <linux/types.h>
@@ -121,18 +97,7 @@ DEFINE_SPINLOCK(dlm_domain_lock);
 LIST_HEAD(dlm_domains);
 static DECLARE_WAIT_QUEUE_HEAD(dlm_domain_events);
 
-/*
- * The supported protocol version for DLM communication.  Running domains
- * will have a negotiated version with the same major number and a minor
- * number equal or smaller.  The dlm_ctxt->dlm_locking_proto field should
- * be used to determine what a running domain is actually using.
- *
- * New in version 1.1:
- *	- Message DLM_QUERY_REGION added to support global heartbeat
- *	- Message DLM_QUERY_NODEINFO added to allow online node removes
- * New in version 1.2:
- * 	- Message DLM_BEGIN_EXIT_DOMAIN_MSG added to mark start of exit domain
- */
+
 static const struct dlm_protocol_version dlm_protocol = {
 	.pv_major = 1,
 	.pv_minor = 2,
@@ -601,7 +566,6 @@ static void dlm_begin_exit_domain(struct dlm_ctxt *dlm)
 {
 	int node = -1;
 
-	/* Support for begin exit domain was added in 1.2 */
 	if (dlm->dlm_locking_proto.pv_major == 1 &&
 	    dlm->dlm_locking_proto.pv_minor < 2)
 		return;

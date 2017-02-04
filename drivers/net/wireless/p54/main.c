@@ -1,20 +1,4 @@
-/*
- * mac80211 glue code for mac80211 Prism54 drivers
- *
- * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
- * Copyright (c) 2007-2009, Christian Lamparter <chunkeey@web.de>
- * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
- *
- * Based on:
- * - the islsm (softmac prism54) driver, which is:
- *   Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
- * - stlc45xx driver
- *   Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- */
+
 
 #include <linux/slab.h>
 #include <linux/firmware.h>
@@ -122,7 +106,6 @@ static int p54_beacon_format_ie_tim(struct sk_buff *skb)
 	memmove(tim, next, skb_tail_pointer(skb) - next);
 	tim = skb_tail_pointer(skb) - (dtim_len + 2);
 
-	/* add the dummy at the end */
 	tim[0] = WLAN_EID_TIM;
 	tim[1] = 3;
 	tim[2] = 0;

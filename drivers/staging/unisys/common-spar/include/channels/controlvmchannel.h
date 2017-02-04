@@ -38,11 +38,7 @@ static const uuid_le UltraControlvmChannelProtocolGuid =
 	ULTRA_CHANNEL_PROTOCOL_SIGNATURE
 #define CONTROLVM_MESSAGE_MAX     64
 
-/* Must increment this whenever you insert or delete fields within
-* this channel struct.  Also increment whenever you change the meaning
-* of fields within this channel struct so as to break pre-existing
-* software.  Note that you can usually add fields to the END of the
-* channel struct withOUT needing to increment this. */
+
 #define ULTRA_CONTROLVM_CHANNEL_PROTOCOL_VERSIONID  1
 
 #define ULTRA_CONTROLVM_CHANNEL_OK_CLIENT(pChannel, logCtx)           \

@@ -2918,11 +2918,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_errata);
 DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_errata);
 
 
-/*
- * Ivytown NTB BAR sizes are misreported by the hardware due to an erratum.  To
- * work around this, query the size it should be configured to by the device and
- * modify the resource end to correspond to this new size.
- */
+
 static void quirk_intel_ntb(struct pci_dev *dev)
 {
 	int rc;

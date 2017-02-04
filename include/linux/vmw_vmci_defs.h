@@ -401,45 +401,7 @@ enum {
 #define IOCTL_VMCI_SET_NOTIFY			_IO(7, 0xcb)	/* 1995 */
 /*IOCTL_VMMON_START				_IO(7, 0xd1)*/	/* 2001 */
 
-/*
- * struct vmci_queue_header - VMCI Queue Header information.
- *
- * A Queue cannot stand by itself as designed.  Each Queue's header
- * contains a pointer into itself (the producer_tail) and into its peer
- * (consumer_head).  The reason for the separation is one of
- * accessibility: Each end-point can modify two things: where the next
- * location to enqueue is within its produce_q (producer_tail); and
- * where the next dequeue location is in its consume_q (consumer_head).
- *
- * An end-point cannot modify the pointers of its peer (guest to
- * guest; NOTE that in the host both queue headers are mapped r/w).
- * But, each end-point needs read access to both Queue header
- * structures in order to determine how much space is used (or left)
- * in the Queue.  This is because for an end-point to know how full
- * its produce_q is, it needs to use the consumer_head that points into
- * the produce_q but -that- consumer_head is in the Queue header for
- * that end-points consume_q.
- *
- * Thoroughly confused?  Sorry.
- *
- * producer_tail: the point to enqueue new entrants.  When you approach
- * a line in a store, for example, you walk up to the tail.
- *
- * consumer_head: the point in the queue from which the next element is
- * dequeued.  In other words, who is next in line is he who is at the
- * head of the line.
- *
- * Also, producer_tail points to an empty byte in the Queue, whereas
- * consumer_head points to a valid byte of data (unless producer_tail ==
- * consumer_head in which case consumer_head does not point to a valid
- * byte of data).
- *
- * For a queue of buffer 'size' bytes, the tail and head pointers will be in
- * the range [0, size-1].
- *
- * If produce_q_header->producer_tail == consume_q_header->consumer_head
- * then the produce_q is empty.
- */
+
 struct vmci_queue_header {
 	/* All fields are 64bit and aligned. */
 	struct vmci_handle handle;	/* Identifier. */

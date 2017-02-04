@@ -1,27 +1,4 @@
-/* -*- mode: c; c-basic-offset: 8; -*-
- * vim: noexpandtab sw=8 ts=8 sts=0:
- *
- * localalloc.c
- *
- * Node local data allocation
- *
- * Copyright (C) 2002, 2004 Oracle.  All rights reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 021110-1307, USA.
- */
+
 
 #include <linux/fs.h>
 #include <linux/types.h>
@@ -617,13 +594,7 @@ out:
 	return status;
 }
 
-/*
- * make sure we've got at least bits_wanted contiguous bits in the
- * local alloc. You lose them when you drop i_mutex.
- *
- * We will add ourselves to the transaction passed in, but may start
- * our own in order to shift windows.
- */
+
 int ocfs2_reserve_local_alloc_bits(struct ocfs2_super *osb,
 				   u32 bits_wanted,
 				   struct ocfs2_alloc_context *ac)

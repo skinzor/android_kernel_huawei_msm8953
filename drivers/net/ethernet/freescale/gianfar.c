@@ -1,65 +1,4 @@
-/* drivers/net/ethernet/freescale/gianfar.c
- *
- * Gianfar Ethernet Driver
- * This driver is designed for the non-CPM ethernet controllers
- * on the 85xx and 83xx family of integrated processors
- * Based on 8260_io/fcc_enet.c
- *
- * Author: Andy Fleming
- * Maintainer: Kumar Gala
- * Modifier: Sandeep Gopalpet <sandeep.kumar@freescale.com>
- *
- * Copyright 2002-2009, 2011-2013 Freescale Semiconductor, Inc.
- * Copyright 2007 MontaVista Software, Inc.
- *
- * This program is free software; you can redistribute  it and/or modify it
- * under  the terms of  the GNU General  Public License as published by the
- * Free Software Foundation;  either version 2 of the  License, or (at your
- * option) any later version.
- *
- *  Gianfar:  AKA Lambda Draconis, "Dragon"
- *  RA 11 31 24.2
- *  Dec +69 19 52
- *  V 3.84
- *  B-V +1.62
- *
- *  Theory of operation
- *
- *  The driver is initialized through of_device. Configuration information
- *  is therefore conveyed through an OF-style device tree.
- *
- *  The Gianfar Ethernet Controller uses a ring of buffer
- *  descriptors.  The beginning is indicated by a register
- *  pointing to the physical address of the start of the ring.
- *  The end is determined by a "wrap" bit being set in the
- *  last descriptor of the ring.
- *
- *  When a packet is received, the RXF bit in the
- *  IEVENT register is set, triggering an interrupt when the
- *  corresponding bit in the IMASK register is also set (if
- *  interrupt coalescing is active, then the interrupt may not
- *  happen immediately, but will wait until either a set number
- *  of frames or amount of time have passed).  In NAPI, the
- *  interrupt handler will signal there is work to be done, and
- *  exit. This method will start at the last known empty
- *  descriptor, and process every subsequent descriptor until there
- *  are none left with data (NAPI will stop after a set number of
- *  packets to give time to other tasks, but will eventually
- *  process all the packets).  The data arrives inside a
- *  pre-allocated skb, and so after the skb is passed up to the
- *  stack, a new skb must be allocated, and the address field in
- *  the buffer descriptor must be updated to indicate this new
- *  skb.
- *
- *  When the kernel requests that a packet be transmitted, the
- *  driver starts where it left off last time, and points the
- *  descriptor at the buffer which was passed in.  The driver
- *  then informs the DMA engine that there are packets ready to
- *  be transmitted.  Once the controller is finished transmitting
- *  the packet, an interrupt may be triggered (under the same
- *  conditions as for reception, but depending on the TXF bit).
- *  The driver then cleans up the buffer.
- */
+
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 #define DEBUG
@@ -1227,9 +1166,7 @@ static void gfar_hw_init(struct gfar_private *priv)
 
 	gfar_write(&regs->attreli, attrs);
 
-	/* Start with defaults, and add stashing
-	 * depending on driver parameters
-	 */
+	
 	attrs = ATTR_INIT_SETTINGS;
 
 	if (priv->bd_stash_en)

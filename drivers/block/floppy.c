@@ -40,25 +40,9 @@
  * the floppy-change signal detection.
  */
 
-/*
- * 1992/7/22 -- Hennus Bergman: Added better error reporting, fixed
- * FDC data overrun bug, added some preliminary stuff for vertical
- * recording support.
- *
- * 1992/9/17: Added DMA allocation & DMA functions. -- hhb.
- *
- * TODO: Errors are still not counted properly.
- */
 
-/* 1992/9/20
- * Modifications for ``Sector Shifting'' by Rob Hooft (hooft@chem.ruu.nl)
- * modeled after the freeware MS-DOS program fdformat/88 V1.8 by
- * Christoph H. Hochst\"atter.
- * I have fixed the shift values to the ones I always use. Maybe a new
- * ioctl() should be created to be able to modify them.
- * There is a bug in the driver that makes it impossible to format a
- * floppy as the first thing after bootup.
- */
+
+
 
 /*
  * 1993/4/29 -- Linus -- cleaned up the timer handling in the kernel, and
@@ -66,32 +50,20 @@
  * work.
  */
 
-/* 1994/6/24 --bbroad-- added the floppy table entries and made
- * minor modifications to allow 2.88 floppies to be run.
- */
 
-/* 1994/7/13 -- Paul Vojta -- modified the probing code to allow three or more
- * disk types.
- */
+
+
 
 /*
  * 1994/8/8 -- Alain Knaff -- Switched to fdpatch driver: Support for bigger
  * format bug fixes, but unfortunately some new bugs too...
  */
 
-/* 1994/9/17 -- Koen Holtman -- added logging of physical floppy write
- * errors to allow safe writing by specialized programs.
- */
 
-/* 1995/4/24 -- Dan Fandrich -- added support for Commodore 1581 3.5" disks
- * by defining bit 1 of the "stretch" parameter to mean put sectors on the
- * opposite side of the disk, leaving the sector IDs alone (i.e. Commodore's
- * drives are "upside-down").
- */
 
-/*
- * 1995/8/26 -- Andreas Busse -- added Mips support.
- */
+
+
+
 
 /*
  * 1995/10/18 -- Ralf Baechle -- Portability cleanup; move machine dependent
@@ -113,9 +85,7 @@
  * failures.
  */
 
-/*
- * 1998/09/20 -- David Weinehall -- Added slow-down code for buggy PS/2-drives.
- */
+
 
 /*
  * 1999/08/13 -- Paul Slootman -- floppy stopped working on Alpha after 24

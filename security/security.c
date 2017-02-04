@@ -26,6 +26,7 @@
 #include <linux/personality.h>
 #include <linux/backing-dev.h>
 #include <net/flow.h>
+#include <linux/hwboot_fail.h>
 
 #define MAX_LSM_EVM_XATTR	2
 
@@ -50,6 +51,10 @@ static inline int __init verify(struct security_operations *ops)
 static void __init do_security_initcalls(void)
 {
 	initcall_t *call;
+
+	set_boot_stage(KERNEL_SECURITY_INITCALL);
+	printk(KERN_INFO "Boot_monitor set stage:KERNEL_SECURITY_INITCALL\n");
+
 	call = __security_initcall_start;
 	while (call < __security_initcall_end) {
 		(*call) ();

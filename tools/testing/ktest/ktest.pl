@@ -3702,7 +3702,6 @@ sub make_min_config {
 	@test_configs = sort  { $depcount{chomp_config($b)} <=> $depcount{chomp_config($a)} }
 			  @test_configs ;
 
-	# Put configs that did not modify the config at the end.
 	my $reset = 1;
 	for (my $i = 0; $i < $#test_configs; $i++) {
 	    if (!defined($nochange_config{$test_configs[0]})) {

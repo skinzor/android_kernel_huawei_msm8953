@@ -704,7 +704,6 @@ struct dm_odm_t {
 	struct sta_info *		pODM_StaInfo[ODM_ASSOCIATE_ENTRY_NUM];
 
 	/*  */
-	/*  2012/02/14 MH Add to share 88E ra with other SW team. */
 	/*  We need to colelct all support abilit to a proper area. */
 	/*  */
 	bool				RaSupport88E;
@@ -914,7 +913,6 @@ enum dm_swas {
 	Antenna_MAX = 3,
 };
 
-/*  Maximal number of antenna detection mechanism needs to perform, added by Roger, 2011.12.28. */
 #define	MAX_ANTENNA_DETECTION_CNT	10
 
 /*  */
@@ -930,7 +928,6 @@ extern	u8 CCKSwingTable_Ch1423A [CCK_TABLE_SIZE][8];
 
 
 
-/*  20100514 Joseph: Add definition for antenna switching test after link. */
 /*  This indicates two different the steps. */
 /*  In SWAW_STEP_PEAK, driver needs to switch antenna and listen to the signal on the air. */
 /*  In SWAW_STEP_DETERMINE, driver just compares the signal captured in SWAW_STEP_PEAK */

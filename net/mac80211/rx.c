@@ -1,14 +1,4 @@
-/*
- * Copyright 2002-2005, Instant802 Networks, Inc.
- * Copyright 2005-2006, Devicescape Software, Inc.
- * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
- * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
- * Copyright 2013-2014  Intel Mobile Communications GmbH
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- */
+
 
 #include <linux/jiffies.h>
 #include <linux/slab.h>
@@ -1717,9 +1707,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
 		return RX_QUEUED;
 	}
 
-	/* This is a fragment for a frame that should already be pending in
-	 * fragment cache. Add this fragment to the end of the pending entry.
-	 */
+	
 	entry = ieee80211_reassemble_find(rx->sdata, frag, seq,
 					  rx->seqno_idx, hdr);
 	if (!entry) {

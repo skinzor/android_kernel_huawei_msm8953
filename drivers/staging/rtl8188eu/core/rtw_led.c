@@ -236,7 +236,6 @@ static void SwLedBlink1(struct LED_871x *pLed)
 	}
 }
 
- /* ALPHA, added by chiyoko, 20090106 */
 static void SwLedControlMode1(struct adapter *padapter, enum LED_CTL_MODE LedAction)
 {
 	struct led_priv *ledpriv = &(padapter->ledpriv);

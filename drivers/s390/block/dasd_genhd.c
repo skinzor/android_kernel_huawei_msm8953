@@ -47,13 +47,7 @@ int dasd_gendisk_alloc(struct dasd_block *block)
 	gdp->fops = &dasd_device_operations;
 	gdp->driverfs_dev = &base->cdev->dev;
 
-	/*
-	 * Set device name.
-	 *   dasda - dasdz : 26 devices
-	 *   dasdaa - dasdzz : 676 devices, added up = 702
-	 *   dasdaaa - dasdzzz : 17576 devices, added up = 18278
-	 *   dasdaaaa - dasdzzzz : 456976 devices, added up = 475252
-	 */
+	
 	len = sprintf(gdp->disk_name, "dasd");
 	if (base->devindex > 25) {
 		if (base->devindex > 701) {

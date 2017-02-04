@@ -1,22 +1,4 @@
-/*
- * low-level functions for the SWIM floppy controller
- *
- * needs assembly language because is very timing dependent
- * this controller exists only on macintosh 680x0 based
- *
- * Copyright (C) 2004,2008 Laurent Vivier <Laurent@lvivier.info>
- *
- * based on Alastair Bridgewater SWIM analysis, 2001
- * based on netBSD IWM driver (c) 1997, 1998 Hauke Fath.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version
- * 2 of the License, or (at your option) any later version.
- *
- * 2004-08-21 (lv) - Initial implementation
- * 2008-11-05 (lv) - add get_swim_mode
- */
+
 
 	.equ	write_data,	0x0000
 	.equ	write_mark,	0x0200

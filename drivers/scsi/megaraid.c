@@ -1638,7 +1638,6 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
 
 		mega_free_scb(adapter, scb);
 
-		/* Add Scsi_Command to end of completed queue */
 		list_add_tail(SCSI_LIST(cmd), &adapter->completed_list);
 	}
 }

@@ -3,24 +3,7 @@
  *
  * The DMA buffer manager for digitized voice applications
  */
-/*
- * Copyright (C) by Hannu Savolainen 1993-1997
- *
- * OSS/Free for Linux is distributed under the GNU GENERAL PUBLIC LICENSE (GPL)
- * Version 2 (June 1991). See the "COPYING" file distributed with this software
- * for more info.
- *
- * Thomas Sailer   : moved several static variables into struct audio_operations
- *                   (which is grossly misnamed btw.) because they have the same
- *                   lifetime as the rest in there and dynamic allocation saves
- *                   12k or so
- * Thomas Sailer   : remove {in,out}_sleep_flag. It was used for the sleeper to
- *                   determine if it was woken up by the expiring timeout or by
- *                   an explicit wake_up. The return value from schedule_timeout
- *		     can be used instead; if 0, the wakeup was due to the timeout.
- *
- * Rob Riggs		Added persistent DMA buffers (1998/10/17)
- */
+
 
 #define BE_CONSERVATIVE
 #define SAMPLE_ROUNDUP 0

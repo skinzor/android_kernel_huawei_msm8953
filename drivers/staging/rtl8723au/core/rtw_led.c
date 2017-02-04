@@ -843,7 +843,6 @@ static void SwLedBlink6(struct led_8723a *pLed)
 	RT_TRACE(_module_rtl8712_led_c_, _drv_info_, ("<==== blink6\n"));
 }
 
-/* ALPHA, added by chiyoko, 20090106 */
 static void
 SwLedControlMode1(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 {
@@ -1078,7 +1077,6 @@ SwLedControlMode1(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 	RT_TRACE(_module_rtl8712_led_c_, _drv_info_, ("Led %d\n", pLed->CurrLedState));
 }
 
- /* Arcadyan/Sitecom , added by chiyoko, 20090216 */
 static void
 SwLedControlMode2(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 {
@@ -1219,7 +1217,6 @@ SwLedControlMode2(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 	RT_TRACE(_module_rtl8712_led_c_, _drv_info_, ("CurrLedState %d\n", pLed->CurrLedState));
 }
 
-  /* COREGA, added by chiyoko, 20090316 */
 static void
 SwLedControlMode3(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 {
@@ -1381,7 +1378,6 @@ SwLedControlMode3(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 	RT_TRACE(_module_rtl8712_led_c_, _drv_info_, ("CurrLedState %d\n", pLed->CurrLedState));
 }
 
- /* Edimax-Belkin, added by chiyoko, 20090413 */
 static void
 SwLedControlMode4(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 {
@@ -1687,7 +1683,6 @@ SwLedControlMode4(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 	RT_TRACE(_module_rtl8712_led_c_, _drv_info_, ("Led %d\n", pLed->CurrLedState));
 }
 
- /* Sercomm-Belkin, added by chiyoko, 20090415 */
 static void
 SwLedControlMode5(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 {
@@ -1767,7 +1762,6 @@ SwLedControlMode5(struct rtw_adapter *padapter, enum led_ctl_mode LedAction)
 	RT_TRACE(_module_rtl8712_led_c_, _drv_info_, ("Led %d\n", pLed->CurrLedState));
 }
 
- /* WNC-Corega, added by chiyoko, 20090902 */
 static void SwLedControlMode6(struct rtw_adapter *padapter,
 			      enum led_ctl_mode LedAction)
 {

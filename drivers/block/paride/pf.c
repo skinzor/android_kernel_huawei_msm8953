@@ -100,18 +100,7 @@
 
 */
 
-/* Changes:
 
-	1.01	GRG 1998.05.03  Changes for SMP.  Eliminate sti().
-				Fix for drives that don't clear STAT_ERR
-			        until after next CDB delivered.
-				Small change in pf_completion to round
-				up transfer size.
-	1.02    GRG 1998.06.16  Eliminated an Ugh
-	1.03    GRG 1998.08.16  Use HZ in loop timings, extra debugging
-	1.04    GRG 1998.09.24  Added jumbo support
-
-*/
 
 #define PF_VERSION      "1.04"
 #define PF_MAJOR	47

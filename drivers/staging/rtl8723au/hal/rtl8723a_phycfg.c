@@ -236,50 +236,7 @@ phy_RFSerialRead(struct rtw_adapter *Adapter, enum RF_RADIO_PATH eRFPath,
 	return retValue;
 }
 
-/**
-* Function:	phy_RFSerialWrite
-*
-* OverView:	Write data to RF register (page 8~)
-*
-* Input:
-*	struct rtw_adapter *		Adapter,
-*	enum RF_RADIO_PATH	eRFPath,	Radio path of A/B/C/D
-*	u32 Offset,			The target address to be read
-*	u32 Data			The new register Data in the target
-*					bit position of the target to be read
-*
-* Output:
-*	None
-* Return:
-*	None
-* Note:
-*	Threre are three types of serial operations:
-*		1. Software serial write
-*		2. Hardware LSSI-Low Speed Serial Interface
-*		3. Hardware HSSI-High speed
-*		serial write. Driver need to implement (1) and (2).
-*		This function is equal to the combination of RF_ReadReg() and
-*		RFLSSIRead()
-*
-* Note:	  For RF8256 only
-* The total count of RTL8256(Zebra4) register is around 36 bit it only employs
-* 4-bit RF address. RTL8256 uses "register mode control bit"
-* (Reg00[12], Reg00[10]) to access register address bigger than 0xf.
-* See "Appendix-4 in PHY Configuration programming guide" for more details.
-* Thus, we define a sub-finction for RTL8526 register address conversion
-* ===========================================================
-* Register Mode:	RegCTL[1]	RegCTL[0]	Note
-*			(Reg00[12])	(Reg00[10])
-* ===========================================================
-* Reg_Mode0		0		x		Reg 0 ~15(0x0 ~ 0xf)
-* ------------------------------------------------------------------
-* Reg_Mode1		1		0		Reg 16 ~30(0x1 ~ 0xf)
-* ------------------------------------------------------------------
-* Reg_Mode2		1		1		Reg 31 ~ 45(0x1 ~ 0xf)
-* ------------------------------------------------------------------
-*
-*	2008/09/02	MH	Add 92S RF definition
-*/
+
 static	void
 phy_RFSerialWrite(struct rtw_adapter *Adapter, enum RF_RADIO_PATH eRFPath,
 		  u32 Offset, u32 Data)
@@ -727,8 +684,7 @@ phy_BB8192C_Config_1T(struct rtw_adapter *Adapter)
 	PHY_SetBBReg(Adapter, rFPGA0_TxInfo, 0x3, 0x2);
 	PHY_SetBBReg(Adapter, rFPGA1_TxInfo, 0x300033, 0x200022);
 
-	/*  20100519 Joseph: Add for 1T2R config. Suggested by Kevin,
-	    Jenyu and Yunan. */
+	
 	PHY_SetBBReg(Adapter, rCCK0_AFESetting, bMaskByte3, 0x45);
 	PHY_SetBBReg(Adapter, rOFDM0_TRxPathEnable, bMaskByte0, 0x23);
 	/*  B path first AGC */
@@ -997,7 +953,6 @@ _PHY_SetBWMode23a92C(struct rtw_adapter *Adapter)
 	/* Skip over setting of J-mode in BB register here. Default value
 	   is "None J mode". Emily 20070315 */
 
-	/*  Added it for 20/40 mhz switch time evaluation by guangan 070531 */
 	/* NowL = PlatformEFIORead4Byte(Adapter, TSFR); */
 	/* NowH = PlatformEFIORead4Byte(Adapter, TSFR+4); */
 	/* EndTime = ((u64)NowH << 32) + NowL; */

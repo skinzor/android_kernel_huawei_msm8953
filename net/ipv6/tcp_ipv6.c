@@ -122,6 +122,7 @@ static int tcp_v6_connect(struct sock *sk, struct sockaddr *uaddr,
 	struct in6_addr *saddr = NULL, *final_p, final;
 	struct ipv6_txoptions *opt;
 	struct rt6_info *rt;
+	struct ipv6_txoptions *opt;
 	struct flowi6 fl6;
 	struct dst_entry *dst;
 	int addr_type;
@@ -1040,6 +1041,7 @@ static struct sock *tcp_v6_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 {
 	struct inet_request_sock *ireq;
 	struct ipv6_pinfo *newnp, *np = inet6_sk(sk);
+	struct ipv6_txoptions *opt;
 	struct tcp6_sock *newtcp6sk;
 	struct ipv6_txoptions *opt;
 	struct inet_sock *newinet;

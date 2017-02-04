@@ -73,7 +73,7 @@ static struct sun_floppy_ops sun_fdops;
 #define fd_cacheflush(addr, size) /* nothing... */
 #define fd_request_irq()          sun_fd_request_irq()
 #define fd_free_irq()             /* nothing... */
-#if 0  /* P3: added by Alain, these cause a MMU corruption. 19960524 XXX */
+#if 0
 #define fd_dma_mem_alloc(size)    ((unsigned long) vmalloc(size))
 #define fd_dma_mem_free(addr,size) (vfree((void *)(addr)))
 #endif

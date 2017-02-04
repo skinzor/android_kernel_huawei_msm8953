@@ -1,31 +1,4 @@
-/*********************************************************************
- *
- * Filename:      irlap.c
- * Version:       1.0
- * Description:   IrLAP implementation for Linux
- * Status:        Stable
- * Author:        Dag Brattli <dagb@cs.uit.no>
- * Created at:    Mon Aug  4 20:40:53 1997
- * Modified at:   Tue Dec 14 09:26:44 1999
- * Modified by:   Dag Brattli <dagb@cs.uit.no>
- *
- *     Copyright (c) 1998-1999 Dag Brattli, All Rights Reserved.
- *     Copyright (c) 2000-2003 Jean Tourrilhes <jt@hpl.hp.com>
- *
- *     This program is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU General Public License as
- *     published by the Free Software Foundation; either version 2 of
- *     the License, or (at your option) any later version.
- *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with this program; if not, see <http://www.gnu.org/licenses/>.
- *
- ********************************************************************/
+
 
 #include <linux/slab.h>
 #include <linux/string.h>
@@ -360,7 +333,6 @@ void irlap_data_request(struct irlap_cb *self, struct sk_buff *skb,
 	/* Don't forget to refcount it - see irlmp_connect_request(). */
 	skb_get(skb);
 
-	/* Add at the end of the queue (keep ordering) - Jean II */
 	skb_queue_tail(&self->txq, skb);
 
 	/*

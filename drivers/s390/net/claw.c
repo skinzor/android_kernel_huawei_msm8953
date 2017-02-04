@@ -1347,7 +1347,6 @@ claw_hw_tx(struct sk_buff *skb, struct net_device *dev, long linkid)
                         p_this_ccw->write.cmd_code+=MORE_to_COME_FLAG;
                 }
                 p_this_ccw->write.count=bytesInThisBuffer;
-                /*      now add to end of this chain    */
                 if (p_first_ccw==NULL)    {
                         p_first_ccw=p_this_ccw;
                 }

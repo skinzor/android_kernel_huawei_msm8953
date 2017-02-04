@@ -211,7 +211,6 @@ void HalSetBrateCfg23a(struct rtw_adapter *padapter, u8 *mBratesOS)
 	/*  For 8190, we select only 24M, 12M, 6M, 11M, 5.5M, 2M,
 	    and 1M from the Basic rate. */
 	/*  We do not use other rates. */
-	/* 2011.03.30 add by Luke Lee */
 	/* CCK 2M ACK should be disabled for some BCM and Atheros AP IOT */
 	/* because CCK 2M has poor TXEVM */
 	/* CCK 5.5M & 11M ACK should be enabled for better

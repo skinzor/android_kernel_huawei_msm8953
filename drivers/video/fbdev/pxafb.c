@@ -1,36 +1,4 @@
-/*
- *  linux/drivers/video/pxafb.c
- *
- *  Copyright (C) 1999 Eric A. Thomas.
- *  Copyright (C) 2004 Jean-Frederic Clere.
- *  Copyright (C) 2004 Ian Campbell.
- *  Copyright (C) 2004 Jeff Lackey.
- *   Based on sa1100fb.c Copyright (C) 1999 Eric A. Thomas
- *  which in turn is
- *   Based on acornfb.c Copyright (C) Russell King.
- *
- * This file is subject to the terms and conditions of the GNU General Public
- * License.  See the file COPYING in the main directory of this archive for
- * more details.
- *
- *	        Intel PXA250/210 LCD Controller Frame Buffer Driver
- *
- * Please direct your questions and comments on this driver to the following
- * email address:
- *
- *	linux-arm-kernel@lists.arm.linux.org.uk
- *
- * Add support for overlay1 and overlay2 based on pxafb_overlay.c:
- *
- *   Copyright (C) 2004, Intel Corporation
- *
- *     2003/08/27: <yu.tang@intel.com>
- *     2004/03/10: <stanley.cai@intel.com>
- *     2004/10/28: <yan.yin@intel.com>
- *
- *   Copyright (C) 2006-2008 Marvell International Ltd.
- *   All Rights Reserved
- */
+
 
 #include <linux/module.h>
 #include <linux/moduleparam.h>
@@ -1151,10 +1119,7 @@ int pxafb_smart_flush(struct fb_info *info)
 	/* disable controller until all registers are set up */
 	lcd_writel(fbi, LCCR0, fbi->reg_lccr0 & ~LCCR0_ENB);
 
-	/* 1. make it an even number of commands to align on 32-bit boundary
-	 * 2. add the interrupt command to the end of the chain so we can
-	 *    keep track of the end of the transfer
-	 */
+	
 
 	while (fbi->n_smart_cmds & 1)
 		fbi->smart_cmds[fbi->n_smart_cmds++] = SMART_CMD_NOOP;

@@ -184,8 +184,7 @@ void rtl8723a_set_FwPwrMode_cmd(struct rtw_adapter *padapter, u8 Mode)
 
 	/*  Forece leave RF low power mode for 1T1R to
 	    prevent conficting setting in Fw power */
-	/*  saving sequence. 2010.06.07. Added by tynli.
-	    Suggested by SD3 yschang. */
+	
 	if ((Mode != PS_MODE_ACTIVE) &&
 	    (!IS_92C_SERIAL(pHalData->VersionID))) {
 		ODM_RF_Saving23a(&pHalData->odmpriv, true);
@@ -610,7 +609,6 @@ void rtl8723a_set_FwJoinBssReport_cmd(struct rtw_adapter *padapter, u8 mstatus)
 
 		/*  Disable Hw protection for a time which revserd for Hw sending beacon. */
 		/*  Fix download reserved page packet fail that access collision with the protection time. */
-		/*  2010.05.11. Added by tynli. */
 /*			SetBcnCtrlReg23a(padapter, 0, BIT(3)); */
 /*			SetBcnCtrlReg23a(padapter, BIT(4), 0); */
 		SetBcnCtrlReg23a(padapter, BIT(4), BIT(3));
@@ -626,14 +624,12 @@ void rtl8723a_set_FwJoinBssReport_cmd(struct rtw_adapter *padapter, u8 mstatus)
 		pHalData->RegFwHwTxQCtrl &= ~BIT(6);
 		SetFwRsvdPagePkt(padapter, 0);
 
-		/*  2010.05.11. Added by tynli. */
 		SetBcnCtrlReg23a(padapter, BIT(3), BIT(4));
 
 		/*  To make sure that if there exists an adapter which would like to send beacon. */
 		/*  If exists, the origianl value of 0x422[6] will be 1, we should check this to */
 		/*  prevent from setting 0x422[6] to 0 after download reserved page, or it will cause */
 		/*  the beacon cannot be sent by HW. */
-		/*  2010.06.23. Added by tynli. */
 		if (bRecover) {
 			rtl8723au_write8(padapter, REG_FWHW_TXQ_CTRL + 2,
 					 pHalData->RegFwHwTxQCtrl | BIT(6));
@@ -765,7 +761,6 @@ void rtl8723a_set_BTCoex_AP_mode_FwRsvdPkt_cmd(struct rtw_adapter *padapter)
 	/*  If exists, the origianl value of 0x422[6] will be 1, we should check this to */
 	/*  prevent from setting 0x422[6] to 0 after download reserved page, or it will cause */
 	/*  the beacon cannot be sent by HW. */
-	/*  2010.06.23. Added by tynli. */
 	if (bRecover) {
 		pHalData->RegFwHwTxQCtrl |= BIT(6);
 		rtl8723au_write8(padapter, REG_FWHW_TXQ_CTRL + 2,

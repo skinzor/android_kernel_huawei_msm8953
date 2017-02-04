@@ -1,21 +1,4 @@
-/*
- * Copyright (c) 2001-2004 by David Brownell
- * Copyright (c) 2003 Michal Sojka, for high-speed iso transfers
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
+
 
 /* this file is part of ehci-hcd.c */
 
@@ -1921,7 +1904,6 @@ static bool itd_complete(struct ehci_hcd *ehci, struct ehci_itd *itd)
 done:
 	itd->urb = NULL;
 
-	/* Add to the end of the free list for later reuse */
 	list_move_tail(&itd->itd_list, &stream->free_list);
 
 	/* Recycle the iTDs when the pipeline is empty (ep no longer in use) */
@@ -2302,7 +2284,6 @@ static bool sitd_complete(struct ehci_hcd *ehci, struct ehci_sitd *sitd)
 done:
 	sitd->urb = NULL;
 
-	/* Add to the end of the free list for later reuse */
 	list_move_tail(&sitd->sitd_list, &stream->free_list);
 
 	/* Recycle the siTDs when the pipeline is empty (ep no longer in use) */

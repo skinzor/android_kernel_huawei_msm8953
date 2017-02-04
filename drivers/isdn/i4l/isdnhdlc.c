@@ -332,25 +332,7 @@ int isdnhdlc_decode(struct isdnhdlc_vars *hdlc, const u8 *src, int slen,
 	return 0;
 }
 EXPORT_SYMBOL(isdnhdlc_decode);
-/*
-  isdnhdlc_encode - encodes HDLC frames to a transparent bit stream.
 
-  The bit stream starts with a beginning flag (01111110). After
-  that each byte is added to the bit stream with bit stuffing added
-  (0 after 5 1's).
-  When the last byte has been removed from the source buffer, the
-  CRC (2 bytes is added) and the frame terminates with the ending flag.
-  For the dchannel, the idle character (all 1's) is also added at the end.
-  If this function is called with empty source buffer (slen=0), flags or
-  idle character will be generated.
-
-  src - source buffer
-  slen - source buffer length
-  count - number of bytes removed (encoded) from source buffer
-  dst _ destination buffer
-  dsize - destination buffer size
-  returns - number of encoded bytes in the destination buffer
-*/
 int isdnhdlc_encode(struct isdnhdlc_vars *hdlc, const u8 *src, u16 slen,
 		    int *count, u8 *dst, int dsize)
 {

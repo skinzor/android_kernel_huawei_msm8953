@@ -1,23 +1,4 @@
-/*
- *  linux/kernel/timer.c
- *
- *  Kernel internal timers
- *
- *  Copyright (C) 1991, 1992  Linus Torvalds
- *
- *  1997-01-28  Modified by Finn Arne Gangstad to make timers scale better.
- *
- *  1997-09-10  Updated NTP code according to technical memorandum Jan '96
- *              "A Kernel Model for Precision Timekeeping" by Dave Mills
- *  1998-12-24  Fixed a xtime SMP race (we need the xtime_lock rw spinlock to
- *              serialize accesses to xtime/lost_ticks).
- *                              Copyright (C) 1998  Andrea Arcangeli
- *  1999-03-10  Improved NTP compatibility by Ulrich Windl
- *  2002-05-31	Move sys_sysinfo here and make its locking sane, Robert Love
- *  2000-10-05  Implemented scalable SMP per-CPU timer handling.
- *                              Copyright (C) 2000, 2001, 2002  Ingo Molnar
- *              Designed by David S. Miller, Alexey Kuznetsov and Ingo Molnar
- */
+
 
 #include <linux/kernel_stat.h>
 #include <linux/export.h>
@@ -998,20 +979,7 @@ int mod_timer_pinned(struct timer_list *timer, unsigned long expires)
 }
 EXPORT_SYMBOL(mod_timer_pinned);
 
-/**
- * add_timer - start a timer
- * @timer: the timer to be added
- *
- * The kernel will do a ->function(->data) callback from the
- * timer interrupt at the ->expires point in the future. The
- * current time is 'jiffies'.
- *
- * The timer's ->expires, ->function (and if the handler uses it, ->data)
- * fields must be set prior calling this function.
- *
- * Timers with an ->expires field in the past will be executed in the next
- * timer tick.
- */
+
 void add_timer(struct timer_list *timer)
 {
 	BUG_ON(timer_pending(timer));
@@ -1019,13 +987,7 @@ void add_timer(struct timer_list *timer)
 }
 EXPORT_SYMBOL(add_timer);
 
-/**
- * add_timer_on - start a timer on a particular CPU
- * @timer: the timer to be added
- * @cpu: the CPU to start it on
- *
- * This is not very scalable on SMP. Double adds are not possible.
- */
+
 void add_timer_on(struct timer_list *timer, int cpu)
 {
 	struct tvec_base *base = per_cpu(tvec_bases, cpu);

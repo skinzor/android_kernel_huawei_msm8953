@@ -263,7 +263,6 @@ static int prism2_fwapply(const struct ihex_binrec *rfptr, wlandevice_t *wlandev
 	memset(&macid, 0, sizeof(macid));
 	memset(&priid, 0, sizeof(priid));
 
-	/* clear the pda and add an initial END record */
 	memset(&pda, 0, sizeof(pda));
 	pda.rec[0] = (hfa384x_pdrec_t *) pda.buf;
 	pda.rec[0]->len = cpu_to_le16(2);	/* len in words */

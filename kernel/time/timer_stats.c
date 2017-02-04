@@ -1,40 +1,4 @@
-/*
- * kernel/time/timer_stats.c
- *
- * Collect timer usage statistics.
- *
- * Copyright(C) 2006, Red Hat, Inc., Ingo Molnar
- * Copyright(C) 2006 Timesys Corp., Thomas Gleixner <tglx@timesys.com>
- *
- * timer_stats is based on timer_top, a similar functionality which was part of
- * Con Kolivas dyntick patch set. It was developed by Daniel Petrini at the
- * Instituto Nokia de Tecnologia - INdT - Manaus. timer_top's design was based
- * on dynamic allocation of the statistics entries and linear search based
- * lookup combined with a global lock, rather than the static array, hash
- * and per-CPU locking which is used by timer_stats. It was written for the
- * pre hrtimer kernel code and therefore did not take hrtimers into account.
- * Nevertheless it provided the base for the timer_stats implementation and
- * was a helpful source of inspiration. Kudos to Daniel and the Nokia folks
- * for this effort.
- *
- * timer_top.c is
- *	Copyright (C) 2005 Instituto Nokia de Tecnologia - INdT - Manaus
- *	Written by Daniel Petrini <d.pensator@gmail.com>
- *	timer_top.c was released under the GNU General Public License version 2
- *
- * We export the addresses and counting of timer functions being called,
- * the pid and cmdline from the owner process if applicable.
- *
- * Start/stop data collection:
- * # echo [1|0] >/proc/timer_stats
- *
- * Display the information collected so far:
- * # cat /proc/timer_stats
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- */
+
 
 #include <linux/proc_fs.h>
 #include <linux/module.h>

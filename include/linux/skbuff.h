@@ -34,94 +34,7 @@
 #include <linux/sched.h>
 #include <net/flow_keys.h>
 
-/* A. Checksumming of received packets by device.
- *
- * CHECKSUM_NONE:
- *
- *   Device failed to checksum this packet e.g. due to lack of capabilities.
- *   The packet contains full (though not verified) checksum in packet but
- *   not in skb->csum. Thus, skb->csum is undefined in this case.
- *
- * CHECKSUM_UNNECESSARY:
- *
- *   The hardware you're dealing with doesn't calculate the full checksum
- *   (as in CHECKSUM_COMPLETE), but it does parse headers and verify checksums
- *   for specific protocols. For such packets it will set CHECKSUM_UNNECESSARY
- *   if their checksums are okay. skb->csum is still undefined in this case
- *   though. It is a bad option, but, unfortunately, nowadays most vendors do
- *   this. Apparently with the secret goal to sell you new devices, when you
- *   will add new protocol to your host, f.e. IPv6 8)
- *
- *   CHECKSUM_UNNECESSARY is applicable to following protocols:
- *     TCP: IPv6 and IPv4.
- *     UDP: IPv4 and IPv6. A device may apply CHECKSUM_UNNECESSARY to a
- *       zero UDP checksum for either IPv4 or IPv6, the networking stack
- *       may perform further validation in this case.
- *     GRE: only if the checksum is present in the header.
- *     SCTP: indicates the CRC in SCTP header has been validated.
- *
- *   skb->csum_level indicates the number of consecutive checksums found in
- *   the packet minus one that have been verified as CHECKSUM_UNNECESSARY.
- *   For instance if a device receives an IPv6->UDP->GRE->IPv4->TCP packet
- *   and a device is able to verify the checksums for UDP (possibly zero),
- *   GRE (checksum flag is set), and TCP-- skb->csum_level would be set to
- *   two. If the device were only able to verify the UDP checksum and not
- *   GRE, either because it doesn't support GRE checksum of because GRE
- *   checksum is bad, skb->csum_level would be set to zero (TCP checksum is
- *   not considered in this case).
- *
- * CHECKSUM_COMPLETE:
- *
- *   This is the most generic way. The device supplied checksum of the _whole_
- *   packet as seen by netif_rx() and fills out in skb->csum. Meaning, the
- *   hardware doesn't need to parse L3/L4 headers to implement this.
- *
- *   Note: Even if device supports only some protocols, but is able to produce
- *   skb->csum, it MUST use CHECKSUM_COMPLETE, not CHECKSUM_UNNECESSARY.
- *
- * CHECKSUM_PARTIAL:
- *
- *   This is identical to the case for output below. This may occur on a packet
- *   received directly from another Linux OS, e.g., a virtualized Linux kernel
- *   on the same host. The packet can be treated in the same way as
- *   CHECKSUM_UNNECESSARY, except that on output (i.e., forwarding) the
- *   checksum must be filled in by the OS or the hardware.
- *
- * B. Checksumming on output.
- *
- * CHECKSUM_NONE:
- *
- *   The skb was already checksummed by the protocol, or a checksum is not
- *   required.
- *
- * CHECKSUM_PARTIAL:
- *
- *   The device is required to checksum the packet as seen by hard_start_xmit()
- *   from skb->csum_start up to the end, and to record/write the checksum at
- *   offset skb->csum_start + skb->csum_offset.
- *
- *   The device must show its capabilities in dev->features, set up at device
- *   setup time, e.g. netdev_features.h:
- *
- *	NETIF_F_HW_CSUM	- It's a clever device, it's able to checksum everything.
- *	NETIF_F_IP_CSUM - Device is dumb, it's able to checksum only TCP/UDP over
- *			  IPv4. Sigh. Vendors like this way for an unknown reason.
- *			  Though, see comment above about CHECKSUM_UNNECESSARY. 8)
- *	NETIF_F_IPV6_CSUM - About as dumb as the last one but does IPv6 instead.
- *	NETIF_F_...     - Well, you get the picture.
- *
- * CHECKSUM_UNNECESSARY:
- *
- *   Normally, the device will do per protocol specific checksumming. Protocol
- *   implementations that do not want the NIC to perform the checksum
- *   calculation should use this flag in their outgoing skbs.
- *
- *	NETIF_F_FCOE_CRC - This indicates that the device can do FCoE FC CRC
- *			   offload. Correspondingly, the FCoE protocol driver
- *			   stack should use CHECKSUM_UNNECESSARY.
- *
- * Any questions? No questions, good.		--ANK
- */
+
 
 /* Don't change this without changing skb_csum_unnecessary! */
 #define CHECKSUM_NONE		0
@@ -435,73 +348,7 @@ static inline u32 skb_mstamp_us_delta(const struct skb_mstamp *t1,
 }
 
 
-/** 
- *	struct sk_buff - socket buffer
- *	@next: Next buffer in list
- *	@prev: Previous buffer in list
- *	@tstamp: Time we arrived/left
- *	@sk: Socket we are owned by
- *	@dev: Device we arrived on/are leaving by
- *	@cb: Control buffer. Free for use by every layer. Put private vars here
- *	@_skb_refdst: destination entry (with norefcount bit)
- *	@sp: the security path, used for xfrm
- *	@len: Length of actual data
- *	@data_len: Data length
- *	@mac_len: Length of link layer header
- *	@hdr_len: writable header length of cloned skb
- *	@csum: Checksum (must include start/offset pair)
- *	@csum_start: Offset from skb->head where checksumming should start
- *	@csum_offset: Offset from csum_start where checksum should be stored
- *	@priority: Packet queueing priority
- *	@ignore_df: allow local fragmentation
- *	@cloned: Head may be cloned (check refcnt to be sure)
- *	@ip_summed: Driver fed us an IP checksum
- *	@nohdr: Payload reference only, must not modify header
- *	@nfctinfo: Relationship of this skb to the connection
- *	@pkt_type: Packet class
- *	@fclone: skbuff clone status
- *	@ipvs_property: skbuff is owned by ipvs
- *	@peeked: this packet has been seen already, so stats have been
- *		done for it, don't do them again
- *	@nf_trace: netfilter packet trace flag
- *	@protocol: Packet protocol from driver
- *	@destructor: Destruct function
- *	@nfct: Associated connection, if any
- *	@nf_bridge: Saved data about a bridged frame - see br_netfilter.c
- *	@skb_iif: ifindex of device we arrived on
- *	@tc_index: Traffic control index
- *	@tc_verd: traffic control verdict
- *	@hash: the packet hash
- *	@queue_mapping: Queue mapping for multiqueue devices
- *	@xmit_more: More SKBs are pending for this queue
- *	@ndisc_nodetype: router type (from link layer)
- *	@ooo_okay: allow the mapping of a socket to a queue to be changed
- *	@l4_hash: indicate hash is a canonical 4-tuple hash over transport
- *		ports.
- *	@sw_hash: indicates hash was computed in software stack
- *	@wifi_acked_valid: wifi_acked was set
- *	@wifi_acked: whether frame was acked on wifi or not
- *	@no_fcs:  Request NIC to treat last 4 bytes as Ethernet FCS
-  *	@napi_id: id of the NAPI struct this skb came from
- *	@secmark: security marking
- *	@mark: Generic packet mark
- *	@dropcount: total number of sk_receive_queue overflows
- *	@vlan_proto: vlan encapsulation protocol
- *	@vlan_tci: vlan tag control information
- *	@inner_protocol: Protocol (encapsulation)
- *	@inner_transport_header: Inner transport layer header (encapsulation)
- *	@inner_network_header: Network layer header (encapsulation)
- *	@inner_mac_header: Link layer header (encapsulation)
- *	@transport_header: Transport layer header
- *	@network_header: Network layer header
- *	@mac_header: Link layer header
- *	@tail: Tail pointer
- *	@end: End pointer
- *	@head: Head of buffer
- *	@data: Data head pointer
- *	@truesize: Buffer size
- *	@users: User count - see {datagram,tcp}.c
- */
+
 
 struct sk_buff {
 	/* These two members must be first. */
@@ -3255,14 +3102,7 @@ static inline int gso_pskb_expand_head(struct sk_buff *skb, int extra)
 	return 0;
 }
 
-/* Compute the checksum for a gso segment. First compute the checksum value
- * from the start of transport header to SKB_GSO_CB(skb)->csum_start, and
- * then add in skb->csum (checksum from csum_start to end of packet).
- * skb->csum and csum_start are then updated to reflect the checksum of the
- * resultant packet starting from the transport header-- the resultant checksum
- * is in the res argument (i.e. normally zero or ~ of checksum of a pseudo
- * header.
- */
+
 static inline __sum16 gso_make_checksum(struct sk_buff *skb, __wsum res)
 {
 	int plen = SKB_GSO_CB(skb)->csum_start - skb_headroom(skb) -

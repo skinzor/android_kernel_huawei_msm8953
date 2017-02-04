@@ -102,12 +102,11 @@ static	void dm_rxpath_sel_byrssi(struct net_device *dev);
 static void dm_init_fsync(struct net_device *dev);
 static void dm_deInit_fsync(struct net_device *dev);
 
-//Added by vivi, 20080522
 static	void	dm_check_txrateandretrycount(struct net_device *dev);
 
 /*---------------------Define local function prototype-----------------------*/
 
-/*---------------------Define of Tx Power Control For Near/Far Range --------*/   //Add by Jacken 2008/02/18
+/*---------------------Define of Tx Power Control For Near/Far Range --------*/
 static	void	dm_init_dynamic_txpower(struct net_device *dev);
 static	void	dm_dynamic_txpower(struct net_device *dev);
 
@@ -135,7 +134,6 @@ void init_hal_dm(struct net_device *dev)
 	// Undecorated Smoothed Signal Strength, it can utilized to dynamic mechanism.
 	priv->undecorated_smoothed_pwdb = -1;
 
-	//Initial TX Power Control for near/far range , add by amy 2008/05/15, porting from windows code.
 	dm_init_dynamic_txpower(dev);
 	init_rate_adaptive(dev);
 	//dm_initialize_txpower_tracking(dev);
@@ -219,7 +217,6 @@ void hal_dm_watchdog(struct net_device *dev)
 
 	//static u8	previous_bssid[6] ={0};
 
-	/*Add by amy 2008/05/15 ,porting from windows code.*/
 	dm_check_rate_adaptive(dev);
 	dm_dynamic_txpower(dev);
 	dm_check_txrateandretrycount(dev);
@@ -230,7 +227,6 @@ void hal_dm_watchdog(struct net_device *dev)
 	dm_check_rx_path_selection(dev);
 	dm_check_fsync(dev);
 
-	// Add by amy 2008-05-15 porting from windows code.
 	dm_check_pbc_gpio(dev);
 	dm_send_rssi_tofw(dev);
 	dm_ctstoself(dev);
@@ -271,7 +267,6 @@ void init_rate_adaptive(struct net_device *dev)
 	if (priv->rf_type == RF_2T4R)
 	{
 		// 07/10/08 MH Modify for RA smooth scheme.
-		/* 2008/01/11 MH Modify 2T RATR table for different RSSI. 080515 porting by amy from windows code.*/
 		pra->upper_rssi_threshold_ratr		=	0x8f0f0000;
 		pra->middle_rssi_threshold_ratr		=	0x8f0ff000;
 		pra->low_rssi_threshold_ratr		=	0x8f0ff001;
@@ -2205,7 +2200,6 @@ static void dm_ctrl_initgain_byrssi_highpwr(
 
 	/* 3. When RSSI >75% or <70%, it is a high power issue. We have to judge if
 		  it is larger than a threshold and then execute the step below.  */
-	// 2008/02/05 MH SD3-Jerry Modify PD_TH for high power issue.
 	if (priv->undecorated_smoothed_pwdb >= dm_digtable.rssi_high_power_highthresh)
 	{
 		if (dm_digtable.dig_highpwr_state == DM_STA_DIG_ON &&
@@ -3453,7 +3447,6 @@ static void dm_init_dynamic_txpower(struct net_device *dev)
 {
 	struct r8192_priv *priv = ieee80211_priv(dev);
 
-	//Initial TX Power Control for near/far range , add by amy 2008/05/15, porting from windows code.
 	priv->ieee80211->bdynamic_txpower_enable = true;    //Default to enable Tx Power Control
 	priv->bLastDTPFlag_High = false;
 	priv->bLastDTPFlag_Low = false;

@@ -84,9 +84,7 @@ struct Qdisc {
 
 	struct Qdisc		*next_sched;
 	struct sk_buff		*gso_skb;
-	/*
-	 * For performance sake on SMP, we put highly modified fields at the end
-	 */
+	
 	unsigned long		state;
 	struct sk_buff_head	q;
 	struct gnet_stats_basic_packed bstats;

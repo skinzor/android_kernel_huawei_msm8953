@@ -1,26 +1,4 @@
-/*
- * Copyright (C) 2007-2010 Texas Instruments Inc
- * Copyright (C) 2007 MontaVista Software, Inc.
- *
- * Andy Lowe (alowe@mvista.com), MontaVista Software
- * - Initial version
- * Murali Karicheri (mkaricheri@gmail.com), Texas Instruments Ltd.
- * - ported to sub device interface
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation version 2.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/interrupt.h>
@@ -124,21 +102,7 @@ static inline u32 osd_modify(struct osd_state *sd, u32 mask, u32 val,
 #define MAX_WIN_SIZE OSD_VIDWIN0XP_V0X
 #define MAX_LINE_LENGTH (OSD_VIDWIN0OFST_V0LO << 5)
 
-/**
- * _osd_dm6446_vid0_pingpong() - field inversion fix for DM6446
- * @sd - ptr to struct osd_state
- * @field_inversion - inversion flag
- * @fb_base_phys - frame buffer address
- * @lconfig - ptr to layer config
- *
- * This routine implements a workaround for the field signal inversion silicon
- * erratum described in Advisory 1.3.8 for the DM6446.  The fb_base_phys and
- * lconfig parameters apply to the vid0 window.  This routine should be called
- * whenever the vid0 layer configuration or start address is modified, or when
- * the OSD field inversion setting is modified.
- * Returns: 1 if the ping-pong buffers need to be toggled in the vsync isr, or
- *          0 otherwise
- */
+
 static int _osd_dm6446_vid0_pingpong(struct osd_state *sd,
 				     int field_inversion,
 				     unsigned long fb_base_phys,

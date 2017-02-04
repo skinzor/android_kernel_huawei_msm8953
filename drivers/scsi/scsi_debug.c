@@ -1,29 +1,4 @@
-/*
- * vvvvvvvvvvvvvvvvvvvvvvv Original vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
- *  Copyright (C) 1992  Eric Youngdale
- *  Simulate a host adapter with 2 disks attached.  Do a lot of checking
- *  to make sure that we are not getting blocks mixed up, and PANIC if
- *  anything out of the ordinary is seen.
- * ^^^^^^^^^^^^^^^^^^^^^^^ Original ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- *
- *  This version is more generic, simulating a variable number of disk
- *  (or disk like devices) sharing a common amount of RAM. To be more
- *  realistic, the simulated devices have the transport attributes of
- *  SAS disks.
- *
- *
- *  For documentation see http://sg.danny.cz/sg/sdebug26.html
- *
- *   D. Gilbert (dpg) work for Magneto-Optical device test [20010421]
- *   dpg: work for devfs large number of disks [20010809]
- *        forked for lk 2.5 series [20011216, 20020101]
- *        use vmalloc() more inquiry+mode_sense [20020302]
- *        add timers for delayed responses [20020721]
- *   Patrick Mansfield <patmans@us.ibm.com> max_luns+scsi_level [20021031]
- *   Mike Anderson <andmike@us.ibm.com> sysfs work [20021118]
- *   dpg: change style of boot options to "scsi_debug.num_tgts=2" and
- *        module options to "modprobe scsi_debug num_tgts=2" [20021221]
- */
+
 
 #include <linux/module.h>
 

@@ -162,33 +162,6 @@ static inline int tty_put_user(struct tty_struct *tty, unsigned char x,
 	return put_user(x, ptr);
 }
 
-static int receive_room(struct tty_struct *tty)
-{
-	struct n_tty_data *ldata = tty->disc_data;
-	int left;
-	size_t tail = smp_load_acquire(&ldata->read_tail);
-	size_t head = ldata->read_head;
-
-	if (I_PARMRK(tty)) {
-		/* Multiply read_cnt by 3, since each byte might take up to
-		 * three times as many spaces when PARMRK is set (depending on
-		 * its flags, e.g. parity error). */
-		left = N_TTY_BUF_SIZE - (head - tail) * 3 - 1;
-	} else
-		left = N_TTY_BUF_SIZE - (head - tail) - 1;
-
-	/*
-	 * If we are doing input canonicalization, and there are no
-	 * pending newlines, let characters through without limit, so
-	 * that erase characters will be handled.  Other excess
-	 * characters will be beeped.
-	 */
-	if (left <= 0)
-		left = ldata->icanon && ldata->canon_head == tail;
-
-	return left;
-}
-
 static inline int tty_copy_to_user(struct tty_struct *tty,
 					void __user *to,
 					const void *from,
@@ -201,10 +174,10 @@ static inline int tty_copy_to_user(struct tty_struct *tty,
 }
 
 /**
- *	n_tty_set_room	-	receive space
+ *	n_tty_kick_worker - start input worker (if required)
  *	@tty: terminal
  *
- *	Re-schedules the flip buffer work if space just became available.
+ *	Re-schedules the flip buffer work if it may have stopped
  *
  *	Caller holds exclusive termios_rwsem
  *	   or
@@ -212,12 +185,12 @@ static inline int tty_copy_to_user(struct tty_struct *tty,
  *		holds non-exclusive termios_rwsem
  */
 
-static void n_tty_set_room(struct tty_struct *tty)
+static void n_tty_kick_worker(struct tty_struct *tty)
 {
 	struct n_tty_data *ldata = tty->disc_data;
 
-	/* Did this open up the receive buffer? We may need to flip */
-	if (unlikely(ldata->no_room) && receive_room(tty)) {
+	/* Did the input worker stop? Restart it */
+	if (unlikely(ldata->no_room)) {
 		ldata->no_room = 0;
 
 		WARN_RATELIMIT(tty->port->itty == NULL,
@@ -261,15 +234,20 @@ static void n_tty_write_wakeup(struct tty_struct *tty)
 
 static void n_tty_check_throttle(struct tty_struct *tty)
 {
+	struct n_tty_data *ldata = tty->disc_data;
+
 	/*
 	 * Check the remaining room for the input canonicalization
 	 * mode.  We don't want to throttle the driver if we're in
 	 * canonical mode and don't have a newline yet!
 	 */
+	if (ldata->icanon && ldata->canon_head == ldata->read_tail)
+		return;
+
 	while (1) {
 		int throttled;
 		tty_set_flow_change(tty, TTY_THROTTLE_SAFE);
-		if (receive_room(tty) >= TTY_THRESHOLD_THROTTLE)
+		if (N_TTY_BUF_SIZE - read_cnt(ldata) >= TTY_THRESHOLD_THROTTLE)
 			break;
 		throttled = tty_throttle_safe(tty);
 		if (!throttled)
@@ -285,7 +263,7 @@ static void n_tty_check_unthrottle(struct tty_struct *tty)
 			return;
 		if (!tty->count)
 			return;
-		n_tty_set_room(tty);
+		n_tty_kick_worker(tty);
 		tty_wakeup(tty->link);
 		return;
 	}
@@ -305,7 +283,7 @@ static void n_tty_check_unthrottle(struct tty_struct *tty)
 			break;
 		if (!tty->count)
 			break;
-		n_tty_set_room(tty);
+		n_tty_kick_worker(tty);
 		unthrottled = tty_unthrottle_safe(tty);
 		if (!unthrottled)
 			break;
@@ -384,7 +362,7 @@ static void n_tty_flush_buffer(struct tty_struct *tty)
 {
 	down_write(&tty->termios_rwsem);
 	reset_buffer_flags(tty->disc_data);
-	n_tty_set_room(tty);
+	n_tty_kick_worker(tty);
 
 	if (tty->link)
 		n_tty_packet_mode_flush(tty);
@@ -1722,7 +1700,7 @@ n_tty_receive_buf_common(struct tty_struct *tty, const unsigned char *cp,
 		 * the consumer has loaded the data in read_buf up to the new
 		 * read_tail (so this producer will not overwrite unread data)
 		 */
-		size_t tail = ldata->read_tail;
+		size_t tail = smp_load_acquire(&ldata->read_tail);
 
 		room = N_TTY_BUF_SIZE - (ldata->read_head - tail);
 		if (I_PARMRK(tty))
@@ -1871,7 +1849,6 @@ static void n_tty_set_termios(struct tty_struct *tty, struct ktermios *old)
 		else
 			ldata->real_raw = 0;
 	}
-	n_tty_set_room(tty);
 	/*
 	 * Fix tty hang when I_IXON(tty) is cleared, but the tty
 	 * been stopped by STOP_CHAR(tty) before it.
@@ -2184,6 +2161,7 @@ static ssize_t n_tty_read(struct tty_struct *tty, struct file *file,
 	long timeout;
 	unsigned long flags;
 	int packet;
+	size_t tail;
 
 	c = job_control(tty, file);
 	if (c < 0)
@@ -2220,6 +2198,7 @@ static ssize_t n_tty_read(struct tty_struct *tty, struct file *file,
 	}
 
 	packet = tty->packet;
+	tail = ldata->read_tail;
 
 	add_wait_queue(&tty->read_wait, &wait);
 	while (nr) {
@@ -2271,7 +2250,6 @@ static ssize_t n_tty_read(struct tty_struct *tty, struct file *file,
 					retval = -ERESTARTSYS;
 					break;
 				}
-				n_tty_set_room(tty);
 				up_read(&tty->termios_rwsem);
 
 				timeout = schedule_timeout(timeout);
@@ -2318,7 +2296,8 @@ static ssize_t n_tty_read(struct tty_struct *tty, struct file *file,
 		if (time)
 			timeout = time;
 	}
-	n_tty_set_room(tty);
+	if (tail != ldata->read_tail)
+		n_tty_kick_worker(tty);
 	up_read(&tty->termios_rwsem);
 
 	remove_wait_queue(&tty->read_wait, &wait);

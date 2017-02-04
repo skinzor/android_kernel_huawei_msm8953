@@ -254,8 +254,7 @@ nextSGEset:
 	}
 
 	if (numSgeThisFrame == sges_left) {
-		/* Add last element, end of buffer and end of list flags.
-		 */
+		
 		sgflags |= MPT_SGE_FLAGS_LAST_ELEMENT |
 				MPT_SGE_FLAGS_END_OF_BUFFER |
 				MPT_SGE_FLAGS_END_OF_LIST;

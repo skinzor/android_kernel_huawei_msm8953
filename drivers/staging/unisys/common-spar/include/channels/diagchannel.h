@@ -51,11 +51,7 @@ static const uuid_le UltraDiagChannelProtocolGuid =
 
 #define ULTRA_DIAG_CHANNEL_PROTOCOL_SIGNATURE  ULTRA_CHANNEL_PROTOCOL_SIGNATURE
 
-/* Must increment this whenever you insert or delete fields within this channel
-* struct.  Also increment whenever you change the meaning of fields within this
-* channel struct so as to break pre-existing software.  Note that you can
-* usually add fields to the END of the channel struct withOUT needing to
-* increment this. */
+
 #define ULTRA_DIAG_CHANNEL_PROTOCOL_VERSIONID 2
 
 #define ULTRA_DIAG_CHANNEL_OK_CLIENT(pChannel, logCtx)			\

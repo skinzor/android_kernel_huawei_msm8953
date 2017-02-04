@@ -1,15 +1,6 @@
 #ifndef __NET_CFG80211_H
 #define __NET_CFG80211_H
-/*
- * 802.11 device and configuration interface
- *
- * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
- * Copyright 2013-2014 Intel Mobile Communications GmbH
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- */
+
 
 #include <linux/netdevice.h>
 #include <linux/debugfs.h>
@@ -1417,28 +1408,7 @@ struct ieee80211_txq_params {
 	u8 aifs;
 };
 
-/**
- * DOC: Scanning and BSS list handling
- *
- * The scanning process itself is fairly simple, but cfg80211 offers quite
- * a bit of helper functionality. To start a scan, the scan operation will
- * be invoked with a scan definition. This scan definition contains the
- * channels to scan, and the SSIDs to send probe requests for (including the
- * wildcard, if desired). A passive scan is indicated by having no SSIDs to
- * probe. Additionally, a scan request may contain extra information elements
- * that should be added to the probe request. The IEs are guaranteed to be
- * well-formed, and will not exceed the maximum length the driver advertised
- * in the wiphy structure.
- *
- * When scanning finds a BSS, cfg80211 needs to be notified of that, because
- * it is responsible for maintaining the BSS list; the driver should not
- * maintain a list itself. For this notification, various functions exist.
- *
- * Since drivers do not maintain a BSS list, there are also a number of
- * functions to search for a BSS and obtain information about it from the
- * BSS structure cfg80211 maintains. The BSS list is also made available
- * to userspace.
- */
+
 
 /**
  * struct cfg80211_ssid - SSID description
@@ -1506,31 +1476,6 @@ struct cfg80211_match_set {
 	s32 rssi_thold;
 };
 
-/**
- * struct cfg80211_sched_scan_request - scheduled scan request description
- *
- * @ssids: SSIDs to scan for (passed in the probe_reqs in active scans)
- * @n_ssids: number of SSIDs
- * @n_channels: total number of channels to scan
- * @scan_width: channel width for scanning
- * @interval: interval between each scheduled scan cycle
- * @ie: optional information element(s) to add into Probe Request or %NULL
- * @ie_len: length of ie in octets
- * @flags: bit field of flags controlling operation
- * @match_sets: sets of parameters to be matched for a scan result
- * 	entry to be considered valid and to be passed to the host
- * 	(others are filtered out).
- *	If ommited, all results are passed.
- * @n_match_sets: number of match sets
- * @wiphy: the wiphy this was for
- * @dev: the interface
- * @scan_start: start time of the scheduled scan
- * @channels: channels to scan
- * @min_rssi_thold: for drivers only supporting a single threshold, this
- *	contains the minimum over all matchsets
- * @owner_nlportid: netlink portid of owner (if this should is a request
- *	owned by a particular socket)
- */
 struct cfg80211_sched_scan_request {
 	struct cfg80211_ssid *ssids;
 	int n_ssids;
@@ -2147,264 +2092,7 @@ struct cfg80211_qos_map {
 	struct cfg80211_dscp_range up[8];
 };
 
-/**
- * struct cfg80211_ops - backend description for wireless configuration
- *
- * This struct is registered by fullmac card drivers and/or wireless stacks
- * in order to handle configuration requests on their interfaces.
- *
- * All callbacks except where otherwise noted should return 0
- * on success or a negative error code.
- *
- * All operations are currently invoked under rtnl for consistency with the
- * wireless extensions but this is subject to reevaluation as soon as this
- * code is used more widely and we have a first user without wext.
- *
- * @suspend: wiphy device needs to be suspended. The variable @wow will
- *	be %NULL or contain the enabled Wake-on-Wireless triggers that are
- *	configured for the device.
- * @resume: wiphy device needs to be resumed
- * @set_wakeup: Called when WoWLAN is enabled/disabled, use this callback
- *	to call device_set_wakeup_enable() to enable/disable wakeup from
- *	the device.
- *
- * @add_virtual_intf: create a new virtual interface with the given name,
- *	must set the struct wireless_dev's iftype. Beware: You must create
- *	the new netdev in the wiphy's network namespace! Returns the struct
- *	wireless_dev, or an ERR_PTR. For P2P device wdevs, the driver must
- *	also set the address member in the wdev.
- *
- * @del_virtual_intf: remove the virtual interface
- *
- * @change_virtual_intf: change type/configuration of virtual interface,
- *	keep the struct wireless_dev's iftype updated.
- *
- * @add_key: add a key with the given parameters. @mac_addr will be %NULL
- *	when adding a group key.
- *
- * @get_key: get information about the key with the given parameters.
- *	@mac_addr will be %NULL when requesting information for a group
- *	key. All pointers given to the @callback function need not be valid
- *	after it returns. This function should return an error if it is
- *	not possible to retrieve the key, -ENOENT if it doesn't exist.
- *
- * @del_key: remove a key given the @mac_addr (%NULL for a group key)
- *	and @key_index, return -ENOENT if the key doesn't exist.
- *
- * @set_default_key: set the default key on an interface
- *
- * @set_default_mgmt_key: set the default management frame key on an interface
- *
- * @set_rekey_data: give the data necessary for GTK rekeying to the driver
- *
- * @start_ap: Start acting in AP mode defined by the parameters.
- * @change_beacon: Change the beacon parameters for an access point mode
- *	interface. This should reject the call when AP mode wasn't started.
- * @stop_ap: Stop being an AP, including stopping beaconing.
- *
- * @add_station: Add a new station.
- * @del_station: Remove a station
- * @change_station: Modify a given station. Note that flags changes are not much
- *	validated in cfg80211, in particular the auth/assoc/authorized flags
- *	might come to the driver in invalid combinations -- make sure to check
- *	them, also against the existing state! Drivers must call
- *	cfg80211_check_station_change() to validate the information.
- * @get_station: get station information for the station identified by @mac
- * @dump_station: dump station callback -- resume dump at index @idx
- *
- * @add_mpath: add a fixed mesh path
- * @del_mpath: delete a given mesh path
- * @change_mpath: change a given mesh path
- * @get_mpath: get a mesh path for the given parameters
- * @dump_mpath: dump mesh path callback -- resume dump at index @idx
- * @join_mesh: join the mesh network with the specified parameters
- *	(invoked with the wireless_dev mutex held)
- * @leave_mesh: leave the current mesh network
- *	(invoked with the wireless_dev mutex held)
- *
- * @get_mesh_config: Get the current mesh configuration
- *
- * @update_mesh_config: Update mesh parameters on a running mesh.
- *	The mask is a bitfield which tells us which parameters to
- *	set, and which to leave alone.
- *
- * @change_bss: Modify parameters for a given BSS.
- *
- * @set_txq_params: Set TX queue parameters
- *
- * @libertas_set_mesh_channel: Only for backward compatibility for libertas,
- *	as it doesn't implement join_mesh and needs to set the channel to
- *	join the mesh instead.
- *
- * @set_monitor_channel: Set the monitor mode channel for the device. If other
- *	interfaces are active this callback should reject the configuration.
- *	If no interfaces are active or the device is down, the channel should
- *	be stored for when a monitor interface becomes active.
- *
- * @scan: Request to do a scan. If returning zero, the scan request is given
- *	the driver, and will be valid until passed to cfg80211_scan_done().
- *	For scan results, call cfg80211_inform_bss(); you can call this outside
- *	the scan/scan_done bracket too.
- * @abort_scan: Tell the driver to abort an ongoing scan. The driver shall
- *	indicate the status of the scan through cfg80211_scan_done().
- *
- * @auth: Request to authenticate with the specified peer
- *	(invoked with the wireless_dev mutex held)
- * @assoc: Request to (re)associate with the specified peer
- *	(invoked with the wireless_dev mutex held)
- * @deauth: Request to deauthenticate from the specified peer
- *	(invoked with the wireless_dev mutex held)
- * @disassoc: Request to disassociate from the specified peer
- *	(invoked with the wireless_dev mutex held)
- *
- * @connect: Connect to the ESS with the specified parameters. When connected,
- *	call cfg80211_connect_result() with status code %WLAN_STATUS_SUCCESS.
- *	If the connection fails for some reason, call cfg80211_connect_result()
- *	with the status from the AP.
- *	(invoked with the wireless_dev mutex held)
- * @disconnect: Disconnect from the BSS/ESS.
- *	(invoked with the wireless_dev mutex held)
- *
- * @join_ibss: Join the specified IBSS (or create if necessary). Once done, call
- *	cfg80211_ibss_joined(), also call that function when changing BSSID due
- *	to a merge.
- *	(invoked with the wireless_dev mutex held)
- * @leave_ibss: Leave the IBSS.
- *	(invoked with the wireless_dev mutex held)
- *
- * @set_mcast_rate: Set the specified multicast rate (only if vif is in ADHOC or
- *	MESH mode)
- *
- * @set_wiphy_params: Notify that wiphy parameters have changed;
- *	@changed bitfield (see &enum wiphy_params_flags) describes which values
- *	have changed. The actual parameter values are available in
- *	struct wiphy. If returning an error, no value should be changed.
- *
- * @set_tx_power: set the transmit power according to the parameters,
- *	the power passed is in mBm, to get dBm use MBM_TO_DBM(). The
- *	wdev may be %NULL if power was set for the wiphy, and will
- *	always be %NULL unless the driver supports per-vif TX power
- *	(as advertised by the nl80211 feature flag.)
- * @get_tx_power: store the current TX power into the dbm variable;
- *	return 0 if successful
- *
- * @set_wds_peer: set the WDS peer for a WDS interface
- *
- * @rfkill_poll: polls the hw rfkill line, use cfg80211 reporting
- *	functions to adjust rfkill hw state
- *
- * @dump_survey: get site survey information.
- *
- * @remain_on_channel: Request the driver to remain awake on the specified
- *	channel for the specified duration to complete an off-channel
- *	operation (e.g., public action frame exchange). When the driver is
- *	ready on the requested channel, it must indicate this with an event
- *	notification by calling cfg80211_ready_on_channel().
- * @cancel_remain_on_channel: Cancel an on-going remain-on-channel operation.
- *	This allows the operation to be terminated prior to timeout based on
- *	the duration value.
- * @mgmt_tx: Transmit a management frame.
- * @mgmt_tx_cancel_wait: Cancel the wait time from transmitting a management
- *	frame on another channel
- *
- * @testmode_cmd: run a test mode command; @wdev may be %NULL
- * @testmode_dump: Implement a test mode dump. The cb->args[2] and up may be
- *	used by the function, but 0 and 1 must not be touched. Additionally,
- *	return error codes other than -ENOBUFS and -ENOENT will terminate the
- *	dump and return to userspace with an error, so be careful. If any data
- *	was passed in from userspace then the data/len arguments will be present
- *	and point to the data contained in %NL80211_ATTR_TESTDATA.
- *
- * @set_bitrate_mask: set the bitrate mask configuration
- *
- * @set_pmksa: Cache a PMKID for a BSSID. This is mostly useful for fullmac
- *	devices running firmwares capable of generating the (re) association
- *	RSN IE. It allows for faster roaming between WPA2 BSSIDs.
- * @del_pmksa: Delete a cached PMKID.
- * @flush_pmksa: Flush all cached PMKIDs.
- * @set_power_mgmt: Configure WLAN power management. A timeout value of -1
- *	allows the driver to adjust the dynamic ps timeout value.
- * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
- * @set_cqm_txe_config: Configure connection quality monitor TX error
- *	thresholds.
- * @sched_scan_start: Tell the driver to start a scheduled scan.
- * @sched_scan_stop: Tell the driver to stop an ongoing scheduled scan. This
- *	call must stop the scheduled scan and be ready for starting a new one
- *	before it returns, i.e. @sched_scan_start may be called immediately
- *	after that again and should not fail in that case. The driver should
- *	not call cfg80211_sched_scan_stopped() for a requested stop (when this
- *	method returns 0.)
- *
- * @mgmt_frame_register: Notify driver that a management frame type was
- *	registered. Note that this callback may not sleep, and cannot run
- *	concurrently with itself.
- *
- * @set_antenna: Set antenna configuration (tx_ant, rx_ant) on the device.
- *	Parameters are bitmaps of allowed antennas to use for TX/RX. Drivers may
- *	reject TX/RX mask combinations they cannot support by returning -EINVAL
- *	(also see nl80211.h @NL80211_ATTR_WIPHY_ANTENNA_TX).
- *
- * @get_antenna: Get current antenna configuration from device (tx_ant, rx_ant).
- *
- * @tdls_mgmt: Transmit a TDLS management frame.
- * @tdls_oper: Perform a high-level TDLS operation (e.g. TDLS link setup).
- *
- * @probe_client: probe an associated client, must return a cookie that it
- *	later passes to cfg80211_probe_status().
- *
- * @set_noack_map: Set the NoAck Map for the TIDs.
- *
- * @get_channel: Get the current operating channel for the virtual interface.
- *	For monitor interfaces, it should return %NULL unless there's a single
- *	current monitoring channel.
- *
- * @start_p2p_device: Start the given P2P device.
- * @stop_p2p_device: Stop the given P2P device.
- *
- * @set_mac_acl: Sets MAC address control list in AP and P2P GO mode.
- *	Parameters include ACL policy, an array of MAC address of stations
- *	and the number of MAC addresses. If there is already a list in driver
- *	this new list replaces the existing one. Driver has to clear its ACL
- *	when number of MAC addresses entries is passed as 0. Drivers which
- *	advertise the support for MAC based ACL have to implement this callback.
- *
- * @start_radar_detection: Start radar detection in the driver.
- *
- * @update_ft_ies: Provide updated Fast BSS Transition information to the
- *	driver. If the SME is in the driver/firmware, this information can be
- *	used in building Authentication and Reassociation Request frames.
- *
- * @crit_proto_start: Indicates a critical protocol needs more link reliability
- *	for a given duration (milliseconds). The protocol is provided so the
- *	driver can take the most appropriate actions.
- * @crit_proto_stop: Indicates critical protocol no longer needs increased link
- *	reliability. This operation can not fail.
- * @set_coalesce: Set coalesce parameters.
- *
- * @channel_switch: initiate channel-switch procedure (with CSA). Driver is
- *	responsible for veryfing if the switch is possible. Since this is
- *	inherently tricky driver may decide to disconnect an interface later
- *	with cfg80211_stop_iface(). This doesn't mean driver can accept
- *	everything. It should do it's best to verify requests and reject them
- *	as soon as possible.
- *
- * @set_qos_map: Set QoS mapping information to the driver
- *
- * @set_ap_chanwidth: Set the AP (including P2P GO) mode channel width for the
- *	given interface This is used e.g. for dynamic HT 20/40 MHz channel width
- *	changes during the lifetime of the BSS.
- *
- * @add_tx_ts: validate (if admitted_time is 0) or add a TX TS to the device
- *	with the given parameters; action frame exchange has been handled by
- *	userspace so this just has to modify the TX path to take the TS into
- *	account.
- *	If the admitted time is 0 just validate the parameters to make sure
- *	the session can be created at all; it is valid to just always return
- *	success for that but that may result in inefficient behaviour (handshake
- *	with the peer followed by immediate teardown when the addition is later
- *	rejected)
- * @del_tx_ts: remove an existing TX TS
- */
+
 struct cfg80211_ops {
 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
 	int	(*resume)(struct wiphy *wiphy);
@@ -4243,29 +3931,7 @@ struct sk_buff *__cfg80211_alloc_event_skb(struct wiphy *wiphy,
 
 void __cfg80211_send_event_skb(struct sk_buff *skb, gfp_t gfp);
 
-/**
- * cfg80211_vendor_cmd_alloc_reply_skb - allocate vendor command reply
- * @wiphy: the wiphy
- * @approxlen: an upper bound of the length of the data that will
- *	be put into the skb
- *
- * This function allocates and pre-fills an skb for a reply to
- * a vendor command. Since it is intended for a reply, calling
- * it outside of a vendor command's doit() operation is invalid.
- *
- * The returned skb is pre-filled with some identifying data in
- * a way that any data that is put into the skb (with skb_put(),
- * nla_put() or similar) will end up being within the
- * %NL80211_ATTR_VENDOR_DATA attribute, so all that needs to be done
- * with the skb is adding data for the corresponding userspace tool
- * which can then read that data out of the vendor data attribute.
- * You must not modify the skb in any other way.
- *
- * When done, call cfg80211_vendor_cmd_reply() with the skb and return
- * its error code as the result of the doit() operation.
- *
- * Return: An allocated and pre-filled skb. %NULL if any errors happen.
- */
+
 static inline struct sk_buff *
 cfg80211_vendor_cmd_alloc_reply_skb(struct wiphy *wiphy, int approxlen)
 {
@@ -4342,29 +4008,7 @@ static inline void cfg80211_vendor_event(struct sk_buff *skb, gfp_t gfp)
  * information see the nl80211 book's chapter on it.
  */
 
-/**
- * cfg80211_testmode_alloc_reply_skb - allocate testmode reply
- * @wiphy: the wiphy
- * @approxlen: an upper bound of the length of the data that will
- *	be put into the skb
- *
- * This function allocates and pre-fills an skb for a reply to
- * the testmode command. Since it is intended for a reply, calling
- * it outside of the @testmode_cmd operation is invalid.
- *
- * The returned skb is pre-filled with the wiphy index and set up in
- * a way that any data that is put into the skb (with skb_put(),
- * nla_put() or similar) will end up being within the
- * %NL80211_ATTR_TESTDATA attribute, so all that needs to be done
- * with the skb is adding data for the corresponding userspace tool
- * which can then read that data out of the testdata attribute. You
- * must not modify the skb in any other way.
- *
- * When done, call cfg80211_testmode_reply() with the skb and return
- * its error code as the result of the @testmode_cmd operation.
- *
- * Return: An allocated and pre-filled skb. %NULL if any errors happen.
- */
+
 static inline struct sk_buff *
 cfg80211_testmode_alloc_reply_skb(struct wiphy *wiphy, int approxlen)
 {
@@ -4389,27 +4033,7 @@ static inline int cfg80211_testmode_reply(struct sk_buff *skb)
 	return cfg80211_vendor_cmd_reply(skb);
 }
 
-/**
- * cfg80211_testmode_alloc_event_skb - allocate testmode event
- * @wiphy: the wiphy
- * @approxlen: an upper bound of the length of the data that will
- *	be put into the skb
- * @gfp: allocation flags
- *
- * This function allocates and pre-fills an skb for an event on the
- * testmode multicast group.
- *
- * The returned skb is set up in the same way as with
- * cfg80211_testmode_alloc_reply_skb() but prepared for an event. As
- * there, you should simply add data to it that will then end up in the
- * %NL80211_ATTR_TESTDATA attribute. Again, you must not modify the skb
- * in any other way.
- *
- * When done filling the skb, call cfg80211_testmode_event() with the
- * skb to send the event.
- *
- * Return: An allocated and pre-filled skb. %NULL if any errors happen.
- */
+
 static inline struct sk_buff *
 cfg80211_testmode_alloc_event_skb(struct wiphy *wiphy, int approxlen, gfp_t gfp)
 {

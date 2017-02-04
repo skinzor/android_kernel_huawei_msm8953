@@ -47,13 +47,7 @@ static int ima_write_template_field_data(const void *data, const u32 datalen,
 
 	memcpy(buf, data, datalen);
 
-	/*
-	 * Replace all space characters with underscore for event names and
-	 * strings. This avoid that, during the parsing of a measurements list,
-	 * filenames with spaces or that end with the suffix ' (deleted)' are
-	 * split into multiple template fields (the space is the delimitator
-	 * character for measurements lists in ASCII format).
-	 */
+	
 	if (datafmt == DATA_FMT_STRING) {
 		for (buf_ptr = buf; buf_ptr - buf < datalen; buf_ptr++)
 			if (*buf_ptr == ' ')

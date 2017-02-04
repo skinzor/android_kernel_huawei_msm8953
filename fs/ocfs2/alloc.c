@@ -1,27 +1,4 @@
-/* -*- mode: c; c-basic-offset: 8; -*-
- * vim: noexpandtab sw=8 ts=8 sts=0:
- *
- * alloc.c
- *
- * Extent allocs and frees
- *
- * Copyright (C) 2002, 2004 Oracle.  All rights reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 021110-1307, USA.
- */
+
 
 #include <linux/fs.h>
 #include <linux/types.h>
@@ -1143,17 +1120,7 @@ out:
 	return status;
 }
 
-/*
- * Add an entire tree branch to our inode. eb_bh is the extent block
- * to start at, if we don't want to start the branch at the root
- * structure.
- *
- * last_eb_bh is required as we have to update it's next_leaf pointer
- * for the new last extent block.
- *
- * the new branch will be 'empty' in the sense that every block will
- * contain a single record with cluster count == 0.
- */
+
 static int ocfs2_add_branch(handle_t *handle,
 			    struct ocfs2_extent_tree *et,
 			    struct buffer_head *eb_bh,
@@ -1186,13 +1153,7 @@ static int ocfs2_add_branch(handle_t *handle,
 	new_cpos = ocfs2_sum_rightmost_rec(&eb->h_list);
 	root_end = ocfs2_sum_rightmost_rec(et->et_root_el);
 
-	/*
-	 * If there is a gap before the root end and the real end
-	 * of the righmost leaf block, we need to remove the gap
-	 * between new_cpos and root_end first so that the tree
-	 * is consistent after we add a new branch(it will start
-	 * from new_cpos).
-	 */
+	
 	if (root_end > new_cpos) {
 		trace_ocfs2_adjust_rightmost_branch(
 			(unsigned long long)

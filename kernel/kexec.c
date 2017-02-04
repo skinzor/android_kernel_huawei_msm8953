@@ -2310,13 +2310,7 @@ static int __kexec_load_purgatory(struct kimage *image, unsigned long min,
 	 */
 	sechdrs_c = (void *)pi->ehdr + pi->ehdr->e_shoff;
 
-	/*
-	 * We can not modify sechdrs_c[] and its fields. It is read only.
-	 * Copy it over to a local copy where one can store some temporary
-	 * data and free it at the end. We need to modify ->sh_addr and
-	 * ->sh_offset fields to keep track of permanent and temporary
-	 * locations of sections.
-	 */
+	
 	sechdrs = vzalloc(pi->ehdr->e_shnum * sizeof(Elf_Shdr));
 	if (!sechdrs)
 		return -ENOMEM;

@@ -73,7 +73,6 @@ typedef struct tagSKeyTable {
 	SKeyItem    GroupKey[MAX_GROUP_KEY]; //64*5 = 320, 320+8=328
 	unsigned long dwGTKeyIndex;            // GroupTransmitKey Index
 	bool bInUse;
-	//2006-1116-01,<Modify> by NomadZhao
 	bool bSoftWEP;
 	unsigned short wKeyCtl;      // for address of wKeyCtl at align 4
 

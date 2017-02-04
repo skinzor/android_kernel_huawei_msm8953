@@ -57,13 +57,7 @@ FILE *srcfile_relative_open(const char *fname, char **fullnamep);
 void srcfile_push(const char *fname);
 int srcfile_pop(void);
 
-/**
- * Add a new directory to the search path for input files
- *
- * The new path is added at the end of the list.
- *
- * @param dirname	Directory to add
- */
+
 void srcfile_add_search_path(const char *dirname);
 
 struct srcpos {

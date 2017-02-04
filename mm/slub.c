@@ -3022,11 +3022,7 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 		s->flags &= ~__OBJECT_POISON;
 
 
-	/*
-	 * If we are Redzoning then check if there is some space between the
-	 * end of the object and the free pointer. If not then add an
-	 * additional word to have some bytes to store Redzone information.
-	 */
+	
 	if ((flags & SLAB_RED_ZONE) && size == s->object_size)
 		size += sizeof(void *);
 #endif
@@ -3060,13 +3056,7 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 		size += 2 * sizeof(struct track);
 
 	if (flags & SLAB_RED_ZONE)
-		/*
-		 * Add some empty padding so that we can catch
-		 * overwrites from earlier objects rather than let
-		 * tracking information or the free pointer be
-		 * corrupted if a user writes before the start
-		 * of the object.
-		 */
+		
 		size += sizeof(void *);
 #endif
 
@@ -3992,10 +3982,7 @@ static int add_location(struct loc_track *t, struct kmem_cache *s,
 	for ( ; ; ) {
 		pos = start + (end - start + 1) / 2;
 
-		/*
-		 * There is nothing at "end". If we end up there
-		 * we need to add something to before end.
-		 */
+		
 		if (pos == end)
 			break;
 

@@ -248,7 +248,6 @@ enum drm_stat_type {
 	_DRM_STAT_DMA,		/**< DMA */
 	_DRM_STAT_SPECIAL,	/**< Special DMA (e.g., priority or polled) */
 	_DRM_STAT_MISSED	/**< Missed DMA opportunity */
-	    /* Add to the *END* of the list */
 };
 
 /**

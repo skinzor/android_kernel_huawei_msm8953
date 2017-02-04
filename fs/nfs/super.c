@@ -894,10 +894,7 @@ int nfs_show_stats(struct seq_file *m, struct dentry *root)
 }
 EXPORT_SYMBOL_GPL(nfs_show_stats);
 
-/*
- * Begin unmount by attempting to remove all automounted mountpoints we added
- * in response to xdev traversals and referrals
- */
+
 void nfs_umount_begin(struct super_block *sb)
 {
 	struct nfs_server *server;

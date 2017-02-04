@@ -1483,12 +1483,7 @@ mptsas_add_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
 	return 0;
 }
 
-/**
- *	mptsas_del_end_device - report a deleted end device to sas transport layer
- *	@ioc: Pointer to MPT_ADAPTER structure
- *	@phy_info: describes attached device
- *
- **/
+
 static void
 mptsas_del_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
 {

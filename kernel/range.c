@@ -44,7 +44,6 @@ int add_range_with_merge(struct range *range, int az, int nr_range,
 		if (common_start > common_end)
 			continue;
 
-		/* new start/end, will add it back at last */
 		start = min(range[i].start, start);
 		end = max(range[i].end, end);
 

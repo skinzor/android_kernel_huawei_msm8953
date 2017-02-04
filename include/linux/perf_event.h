@@ -233,14 +233,7 @@ struct pmu {
 	 */
 	void (*read)			(struct perf_event *event);
 
-	/*
-	 * Group events scheduling is treated as a transaction, add
-	 * group events as a whole and perform one schedulability test.
-	 * If the test fails, roll back the whole group
-	 *
-	 * Start the transaction, after this ->add() doesn't need to
-	 * do schedulability tests.
-	 */
+	
 	void (*start_txn)		(struct pmu *pmu); /* optional */
 	/*
 	 * If ->start_txn() disabled the ->add() schedulability test

@@ -438,11 +438,7 @@ wd33c93_queuecommand_lck(struct scsi_cmnd *cmd,
 
 	cmd->SCp.Status = ILLEGAL_STATUS_BYTE;
 
-	/*
-	 * Add the cmd to the end of 'input_Q'. Note that REQUEST SENSE
-	 * commands are added to the head of the queue so that the desired
-	 * sense data is not lost before REQUEST_SENSE executes.
-	 */
+	
 
 	spin_lock_irq(&hostdata->lock);
 
@@ -1770,14 +1766,7 @@ wd33c93_setup(char *str)
 	int i;
 	char *p1, *p2;
 
-	/* The kernel does some processing of the command-line before calling
-	 * this function: If it begins with any decimal or hex number arguments,
-	 * ints[0] = how many numbers found and ints[1] through [n] are the values
-	 * themselves. str points to where the non-numeric arguments (if any)
-	 * start: We do our own parsing of those. We construct synthetic 'nosync'
-	 * keywords out of numeric args (to maintain compatibility with older
-	 * versions) and then add the rest of the arguments.
-	 */
+	
 
 	p1 = setup_buffer;
 	*p1 = '\0';

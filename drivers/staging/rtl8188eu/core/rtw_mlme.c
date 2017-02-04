@@ -1722,15 +1722,7 @@ int rtw_restruct_wmm_ie(struct adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_
 	return ielength;
 }
 
-/*
- * Ported from 8185: IsInPreAuthKeyList().
- * (Renamed from SecIsInPreAuthKeyList(), 2006-10-13.)
- * Added by Annie, 2006-05-07.
- * Search by BSSID,
- * Return Value:
- *		-1	:if there is no pre-auth key in the table
- *		>= 0	:if there is pre-auth key, and return the entry id
- */
+
 static int SecIsInPMKIDList(struct adapter *Adapter, u8 *bssid)
 {
 	struct security_priv *psecuritypriv = &Adapter->securitypriv;

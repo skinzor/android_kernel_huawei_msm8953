@@ -1,20 +1,4 @@
-/*
- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
- * All Rights Reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it would be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write the Free Software Foundation,
- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
+
 #include "xfs.h"
 #include "xfs_fs.h"
 #include "xfs_shared.h"
@@ -3400,19 +3384,7 @@ xlog_recover_add_to_cont_trans(
 	return 0;
 }
 
-/*
- * The next region to add is the start of a new region.  It could be
- * a whole region or it could be the first part of a new region.  Because
- * of this, the assumption here is that the type and size fields of all
- * format structures fit into the first 32 bits of the structure.
- *
- * This works because all regions must be 32 bit aligned.  Therefore, we
- * either have both fields or we have neither field.  In the case we have
- * neither field, the data part of the region is zero length.  We only have
- * a log_op_header and can throw away the header since a new one will appear
- * later.  If we have at least 4 bytes, then we can determine how many regions
- * will appear in the current log item.
- */
+
 STATIC int
 xlog_recover_add_to_trans(
 	struct xlog		*log,
@@ -3654,15 +3626,7 @@ xlog_recover_process_ophdr(
 					   ohead->oh_flags, pass);
 }
 
-/*
- * There are two valid states of the r_state field.  0 indicates that the
- * transaction structure is in a normal state.  We have either seen the
- * start of the transaction or the last operation we added was not a partial
- * operation.  If the last operation we added to the transaction was a
- * partial operation, we need to mark r_state with XLOG_WAS_CONT_TRANS.
- *
- * NOTE: skip LRs with 0 data length.
- */
+
 STATIC int
 xlog_recover_process_data(
 	struct xlog		*log,
@@ -3766,24 +3730,7 @@ abort_error:
 	return error;
 }
 
-/*
- * When this is called, all of the EFIs which did not have
- * corresponding EFDs should be in the AIL.  What we do now
- * is free the extents associated with each one.
- *
- * Since we process the EFIs in normal transactions, they
- * will be removed at some point after the commit.  This prevents
- * us from just walking down the list processing each one.
- * We'll use a flag in the EFI to skip those that we've already
- * processed and use the AIL iteration mechanism's generation
- * count to try to speed this up at least a bit.
- *
- * When we start, we know that the EFIs are the only things in
- * the AIL.  As we process them, however, other items are added
- * to the AIL.  Since everything added to the AIL must come after
- * everything already in the AIL, we stop processing as soon as
- * we see something other than an EFI in the AIL.
- */
+
 STATIC int
 xlog_recover_process_efis(
 	struct xlog	*log)

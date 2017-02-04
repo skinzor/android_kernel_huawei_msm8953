@@ -406,11 +406,7 @@ static int in2000_queuecommand_lck(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
  * queue and calling in2000_execute().
  */
 
-	/*
-	 * Add the cmd to the end of 'input_Q'. Note that REQUEST_SENSE
-	 * commands are added to the head of the queue so that the desired
-	 * sense data is not lost before REQUEST_SENSE executes.
-	 */
+	
 
 	if (!(hostdata->input_Q) || (cmd->cmnd[0] == REQUEST_SENSE)) {
 		cmd->host_scribble = (uchar *) hostdata->input_Q;

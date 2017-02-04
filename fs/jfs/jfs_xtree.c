@@ -1,20 +1,4 @@
-/*
- *   Copyright (C) International Business Machines Corp., 2000-2005
- *
- *   This program is free software;  you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- *   the GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program;  if not, write to the Free Software
- *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
+
 /*
  *	jfs_xtree.c: extent allocation descriptor B+-tree manager
  */
@@ -3529,15 +3513,7 @@ s64 xtTruncate(tid_t tid, struct inode *ip, s64 newsize, int flag)
 	 */
 	nfreed += lengthXAD(&p->xad[index]);
 
-	/*
-	 * During working map update, child page's tlock must be handled
-	 * before parent's.  This is because the parent's tlock will cause
-	 * the child's disk space to be marked available in the wmap, so
-	 * it's important that the child page be released by that time.
-	 *
-	 * ToDo:  tlocks should be on doubly-linked list, so we can
-	 * quickly remove it and add it to the end.
-	 */
+	
 
 	/*
 	 * Move parent page's tlock to the end of the tid's tlock list

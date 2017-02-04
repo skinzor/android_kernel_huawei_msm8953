@@ -200,7 +200,6 @@ InterruptRecognized8723AU(struct rtw_adapter *Adapter, void *pContent,
 	       4);
 	pHalData->IntArray[0] &= pHalData->IntrMask[0];
 
-	/* For HISR extension. Added by tynli. 2009.10.07. */
 	memcpy(&pHalData->IntArray[1],
 	       &buffer[USB_INTR_CONTENT_HISRE_OFFSET], 4);
 	pHalData->IntArray[1] &= pHalData->IntrMask[1];
@@ -407,7 +406,6 @@ static int recvbuf2recvframe(struct rtw_adapter *padapter, struct sk_buff *pskb)
 			goto _exit_recvbuf2recvframe;
 		}
 
-		/*	Modified by Albert 20101213 */
 		/*	For 8 bytes IP header alignment. */
 		/*	Qos data, wireless lan header length is 26 */
 		if (pattrib->qos)
@@ -417,10 +415,7 @@ static int recvbuf2recvframe(struct rtw_adapter *padapter, struct sk_buff *pskb)
 
 		skb_len = pattrib->pkt_len;
 
-		/* for first fragment packet, driver need allocate
-		 * 1536+drvinfo_sz+RXDESC_SIZE to defrag packet.
-		 * modify alloc_sz for recvive crc error packet
-		 * by thomas 2011-06-02 */
+		
 		if (pattrib->mfrag == 1 && pattrib->frag_num == 0) {
 			/* alloc_sz = 1664;	1664 is 128 alignment. */
 			if (skb_len <= 1650)

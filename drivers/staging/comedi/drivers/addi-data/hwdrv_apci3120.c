@@ -1,22 +1,4 @@
-/**
-@verbatim
 
-Copyright (C) 2004,2005  ADDI-DATA GmbH for the source code of this module.
-
-	ADDI-DATA GmbH
-	Dieselstrasse 3
-	D-77833 Ottersweier
-	Tel: +19(0)7223/9493-0
-	Fax: +49(0)7223/9493-92
-	http://www.addi-data.com
-	info@addi-data.com
-
-This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-@endverbatim
-*/
 /*
   +-----------------------------------------------------------------------+
   | (C) ADDI-DATA GmbH          Dieselstrasse 3      D-77833 Ottersweier  |
@@ -835,7 +817,6 @@ static int apci3120_cyclic_ai(int mode,
 
 	us_TmpValue = (unsigned short) inw(dev->iobase + APCI3120_RD_STATUS);
 
-	/* EL241003 Begin: add this section to replace floats calculation by integer calculations */
 	/* EL250804: Testing if board APCI3120 have the new Quartz or if it is an APCI3001 */
 	if ((us_TmpValue & 0x00B0) == 0x00B0
 		|| !strcmp(this_board->pc_DriverName, "apci3001")) {

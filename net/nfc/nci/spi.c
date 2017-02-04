@@ -72,7 +72,6 @@ int nci_spi_send(struct nci_spi *nspi,
 	int ret;
 	long completion_rc;
 
-	/* add the NCI SPI header to the start of the buffer */
 	hdr = skb_push(skb, NCI_SPI_HDR_LEN);
 	hdr[0] = NCI_SPI_DIRECT_WRITE;
 	hdr[1] = nspi->acknowledge_mode;
@@ -160,7 +159,6 @@ static int send_acknowledge(struct nci_spi *nspi, u8 acknowledge)
 
 	skb = nci_skb_alloc(nspi->ndev, 0, GFP_KERNEL);
 
-	/* add the NCI SPI header to the start of the buffer */
 	hdr = skb_push(skb, NCI_SPI_HDR_LEN);
 	hdr[0] = NCI_SPI_DIRECT_WRITE;
 	hdr[1] = NCI_SPI_CRC_ENABLED;

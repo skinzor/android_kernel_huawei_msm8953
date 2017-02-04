@@ -1,14 +1,4 @@
-/* Copyright (c) 2008-2016, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+
 
 #include <linux/slab.h>
 #include <linux/init.h>
@@ -116,12 +106,7 @@ static unsigned int itemsize_mdm_usb = sizeof(struct diag_request);
 static unsigned int poolsize_mdm_usb = 18;
 module_param(poolsize_mdm_usb, uint, 0);
 
-/*
- * Used for writing read DCI data to remote peripherals. Don't
- * expose poolsize for DCI data. There is only one read
- * buffer. Add 6 bytes for DCI header information: Start (1),
- * Version (1), Length (2), Tag (2)
- */
+
 static unsigned int itemsize_mdm_dci_write = DIAG_MDM_DCI_BUF_SIZE;
 static unsigned int poolsize_mdm_dci_write = 1;
 module_param(itemsize_mdm_dci_write, uint, 0);
@@ -681,6 +666,13 @@ struct diag_cmd_reg_entry_t *diag_cmd_search(
 			    temp_entry->cmd_code_hi >= entry->cmd_code_hi &&
 			    temp_entry->cmd_code_lo <= entry->cmd_code_lo &&
 			    (proc == item->proc || proc == ALL_PROC)) {
+				return &item->entry;
+			}
+		} else if(temp_entry->cmd_code == DIAG_CMD_NO_SUBSYS &&
+			   temp_entry->subsys_id == 0xF6 && entry->cmd_code == 0xF6){
+			if(temp_entry->cmd_code_hi >= entry->subsys_id &&
+			   temp_entry->cmd_code_lo <= entry->subsys_id &&
+			   (proc == item->proc || proc == ALL_PROC)){
 				return &item->entry;
 			}
 		} else if (temp_entry->cmd_code == DIAG_CMD_NO_SUBSYS &&
@@ -2344,11 +2336,7 @@ static int diag_process_apps_data_non_hdlc(unsigned char *buf, int len,
 	int ret = PKT_DROP;
 	struct diag_pkt_frame_t header;
 	struct diag_apps_data_t *data = &non_hdlc_data;
-	/*
-	 * The maximum packet size, when the data is non hdlc encoded is equal
-	 * to the size of the packet frame header and the length. Add 1 for the
-	 * delimiter 0x7E at the end.
-	 */
+	
 	const uint32_t max_pkt_size = sizeof(header) + len + 1;
 
 	if (!buf || len <= 0) {

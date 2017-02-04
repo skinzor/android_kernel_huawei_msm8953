@@ -1937,7 +1937,6 @@ int rtw_restruct_wmm_ie23a(struct rtw_adapter *adapter, u8 *in_ie,
 /*  */
 /*  Ported from 8185: IsInPreAuthKeyList().
     (Renamed from SecIsInPreAuthKeyList(), 2006-10-13.) */
-/*  Added by Annie, 2006-05-07. */
 /*  */
 /*  Search by BSSID, */
 /*  Return Value: */

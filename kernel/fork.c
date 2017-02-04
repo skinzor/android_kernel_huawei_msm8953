@@ -75,7 +75,7 @@
 #include <linux/uprobes.h>
 #include <linux/aio.h>
 #include <linux/compiler.h>
-
+#include <linux/cgroup_pids.h>
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
 #include <asm/uaccess.h>
@@ -1280,9 +1280,13 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	}
 	current->flags &= ~PF_NPROC_EXCEEDED;
 
-	retval = copy_creds(p, clone_flags);
+	retval = cgroup_pids_can_fork();
 	if (retval < 0)
 		goto bad_fork_free;
+
+	retval = copy_creds(p, clone_flags);
+	if (retval < 0)
+		goto bad_fork_cleanup_cgroup_pids;
 
 	/*
 	 * If multiple threads are within copy_process(), then this check
@@ -1609,6 +1613,8 @@ bad_fork_cleanup_threadgroup_lock:
 bad_fork_cleanup_count:
 	atomic_dec(&p->cred->user->processes);
 	exit_creds(p);
+bad_fork_cleanup_cgroup_pids:
+	cgroup_pids_cancel_fork();
 bad_fork_free:
 	free_task(p);
 fork_out:
@@ -1694,6 +1700,10 @@ long do_fork(unsigned long clone_flags,
 			init_completion(&vfork);
 			get_task_struct(p);
 		}
+
+#ifdef CONFIG_HUAWEI_UID_IO_STATS
+		profile_task_end_fork(p);
+#endif
 
 		wake_up_new_task(p);
 

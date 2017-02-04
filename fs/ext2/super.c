@@ -1054,12 +1054,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
 	/* per fileystem reservation list head & lock */
 	spin_lock_init(&sbi->s_rsv_window_lock);
 	sbi->s_rsv_window_root = RB_ROOT;
-	/*
-	 * Add a single, static dummy reservation to the start of the
-	 * reservation window list --- it gives us a placeholder for
-	 * append-at-start-of-list which makes the allocation logic
-	 * _much_ simpler.
-	 */
+	
 	sbi->s_rsv_window_head.rsv_start = EXT2_RESERVE_WINDOW_NOT_ALLOCATED;
 	sbi->s_rsv_window_head.rsv_end = EXT2_RESERVE_WINDOW_NOT_ALLOCATED;
 	sbi->s_rsv_window_head.rsv_alloc_hit = 0;

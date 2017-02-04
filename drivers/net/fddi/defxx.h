@@ -495,7 +495,6 @@ typedef struct						  /* Refer to ANSI FDDI SMT Rev. 7.3 */
 	PI_UINT32		port_ler_flag[PI_PHY_K_MAX];
 	PI_UINT32		port_hardware_present[PI_PHY_K_MAX];
 
-	/* GROUP for things that were added later, so must be at the end. */
 
 	PI_CNTR	   		path_ring_latency;
 

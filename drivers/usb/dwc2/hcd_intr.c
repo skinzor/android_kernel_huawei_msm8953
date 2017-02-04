@@ -619,13 +619,7 @@ static enum dwc2_halt_status dwc2_update_isoc_urb_state(
 	return halt_status;
 }
 
-/*
- * Frees the first QTD in the QH's list if free_qtd is 1. For non-periodic
- * QHs, removes the QH from the active non-periodic schedule. If any QTDs are
- * still linked to the QH, the QH is added to the end of the inactive
- * non-periodic schedule. For periodic QHs, removes the QH from the periodic
- * schedule if no more QTDs are linked to the QH.
- */
+
 static void dwc2_deactivate_qh(struct dwc2_hsotg *hsotg, struct dwc2_qh *qh,
 			       int free_qtd)
 {

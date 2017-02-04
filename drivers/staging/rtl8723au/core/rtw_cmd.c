@@ -517,7 +517,6 @@ int rtw_joinbss_cmd23a(struct rtw_adapter *padapter,
 	       get_wlan_bssid_ex_sz(&pnetwork->network));
 
 	psecnetwork->IELength = 0;
-	/*  Added by Albert 2009/02/18 */
 	/*  If the the driver wants to use the bssid to create the
 	 *  connection. If not,  we have to copy the connecting AP's
 	 *  MAC address to it so that the driver just has the bssid
@@ -556,7 +555,6 @@ int rtw_joinbss_cmd23a(struct rtw_adapter *padapter,
 	phtpriv->ht_option = false;
 	if (pregistrypriv->ht_enable) {
 		u32 algo = padapter->securitypriv.dot11PrivacyAlgrthm;
-		/*	Added by Albert 2010/06/23 */
 		/*	For the WEP mode, we will use the bg mode to do
 			the connection to avoid some IOT issue. */
 		/*	Especially for Realtek 8192u SoftAP. */

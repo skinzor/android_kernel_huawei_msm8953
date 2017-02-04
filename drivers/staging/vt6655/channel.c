@@ -450,7 +450,6 @@ void init_channel_table(void *pDeviceHandler)
 			}
 		} else {
 			for (ii = 0; ii < CHANNEL_MAX_24G; ii++) {
-				//2008-8-4 <add> by chester
 				if (ChannelRuleTab[pDevice->byZoneType].bChannelIdxList[ii] != 0) {
 					sChannelTbl[ii + 1].bValid = true;
 					pDevice->abyRegPwr[ii + 1] = pDevice->abyCCKDefaultPwr[ii + 1];

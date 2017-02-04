@@ -13,15 +13,7 @@
 
 */
 
-/* Changes:
 
-        1.01    GRG 1998.05.06 init_proto, release_proto
-			       fix chip detect
-			       added EPP-16 and EPP-32
-	1.02    GRG 1998.09.23 added hard reset to initialisation process
-	1.03    GRG 1998.12.14 made hard reset conditional
-
-*/
 
 #define	FRPW_VERSION	"1.03" 
 

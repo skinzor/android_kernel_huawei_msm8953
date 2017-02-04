@@ -1,25 +1,4 @@
-/* drivers/input/touchscreen/goodix_tool.c
- *
- * 2010 - 2012 Goodix Technology.
- * Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be a reference
- * to you, when you are integrating the GOODiX's CTP IC into your system,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * Version:1.6
- *        V1.0:2012/05/01,create file.
- *        V1.2:2012/06/08,modify some warning.
- *        V1.4:2012/08/28,modified to support GT9XX
- *        V1.6:new proc name
- */
+
 
 #include "gt9xx.h"
 #include <linux/mutex.h>

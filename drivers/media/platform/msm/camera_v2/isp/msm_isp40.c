@@ -574,15 +574,9 @@ static void msm_vfe40_read_irq_status(struct vfe_device *vfe_dev,
 	/*
 	 * Ignore composite 2/3 irq which is used for dual VFE only
 	 */
-	if (*irq_status0 & 0x6000000)
-		*irq_status0 &= ~(0x18000000);
 	msm_camera_io_w(*irq_status0, vfe_dev->vfe_base + 0x30);
 	msm_camera_io_w(*irq_status1, vfe_dev->vfe_base + 0x34);
 	msm_camera_io_w_mb(1, vfe_dev->vfe_base + 0x24);
-	if (*irq_status0 & 0x18000000) {
-		pr_err_ratelimited("%s: Protection triggered\n", __func__);
-		*irq_status0 &= ~(0x18000000);
-	}
 
 	*irq_status0 &= vfe_dev->irq0_mask;
 	*irq_status1 &= vfe_dev->irq1_mask;

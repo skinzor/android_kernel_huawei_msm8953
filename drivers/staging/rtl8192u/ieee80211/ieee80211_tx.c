@@ -806,7 +806,6 @@ int ieee80211_xmit(struct sk_buff *skb, struct net_device *dev)
 			//if(ieee->current_network.QoS_Enable)
 			if(qos_actived)
 			{
-				// add 1 only indicate to corresponding seq number control 2006/7/12
 				frag_hdr->seq_ctl = cpu_to_le16(ieee->seq_ctrl[UP2AC(skb->priority)+1]<<4 | i);
 			} else {
 				frag_hdr->seq_ctl = cpu_to_le16(ieee->seq_ctrl[0]<<4 | i);

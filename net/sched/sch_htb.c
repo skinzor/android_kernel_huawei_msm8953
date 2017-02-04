@@ -840,7 +840,7 @@ next:
 
 			next = htb_lookup_leaf(hprio, prio);
 
-			if (cl == start)	/* fix start if we just deleted it */
+			if (cl == start)
 				start = next;
 			cl = next;
 			goto next;

@@ -1,28 +1,4 @@
-/* -*- mode: c; c-basic-offset: 8; -*-
- * vim: noexpandtab sw=8 ts=8 sts=0:
- *
- * dlmmod.c
- *
- * standalone DLM module
- *
- * Copyright (C) 2004 Oracle.  All rights reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 021110-1307, USA.
- *
- */
+
 
 
 #include <linux/module.h>
@@ -3017,13 +2993,7 @@ static int dlm_do_migrate_request(struct dlm_ctxt *dlm,
 }
 
 
-/* if there is an existing mle for this lockres, we now know who the master is.
- * (the one who sent us *this* message) we can clear it up right away.
- * since the process that put the mle on the list still has a reference to it,
- * we can unhash it now, set the master and wake the process.  as a result,
- * we will have no mle in the list to start with.  now we can add an mle for
- * the migration and this should be the only one found for those scanning the
- * list.  */
+
 int dlm_migrate_request_handler(struct o2net_msg *msg, u32 len, void *data,
 				void **ret_data)
 {

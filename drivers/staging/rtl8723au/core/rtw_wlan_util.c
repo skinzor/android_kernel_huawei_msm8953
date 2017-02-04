@@ -717,7 +717,6 @@ void HT_caps_handler23a(struct rtw_adapter *padapter, const u8 *p)
 		if (i != 2) {
 			dstcap[i] &= p[i + 2];
 		} else {
-			/* modify from  fw by Thomas 2010/11/17 */
 			if ((cap->ampdu_params_info &
 			     IEEE80211_HT_AMPDU_PARM_FACTOR) >
 			    (p[i + 2] & IEEE80211_HT_AMPDU_PARM_FACTOR))

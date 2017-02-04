@@ -762,7 +762,6 @@ static void bch_bset_fix_lookup_table(struct btree_keys *b,
 	if (t->size == b->set->tree + btree_keys_cachelines(b) - t->tree)
 		return;
 
-	/* Possibly add a new entry to the end of the lookup table */
 
 	for (k = table_to_bkey(t, t->size - 1);
 	     k != bset_bkey_last(t->data);

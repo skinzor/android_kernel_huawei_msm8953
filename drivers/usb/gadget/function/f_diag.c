@@ -28,6 +28,10 @@
 #include <linux/debugfs.h>
 #include <linux/kmemleak.h>
 
+#ifdef CONFIG_HUAWEI_USB
+#include <linux/usb/huawei_usb.h>
+#endif
+
 static DEFINE_SPINLOCK(ch_lock);
 static LIST_HEAD(usb_diag_ch_list);
 
@@ -35,9 +39,15 @@ static struct usb_interface_descriptor intf_desc = {
 	.bLength            =	sizeof intf_desc,
 	.bDescriptorType    =	USB_DT_INTERFACE,
 	.bNumEndpoints      =	2,
+#ifndef CONFIG_HUAWEI_USB
 	.bInterfaceClass    =	0xFF,
 	.bInterfaceSubClass =	0xFF,
 	.bInterfaceProtocol =	0xFF,
+#else
+	.bInterfaceClass    =	USB_IF_CLASS_HW_PNP21,
+	.bInterfaceSubClass =	USB_IF_SUBCLASS_HW_PNP21,
+	.bInterfaceProtocol =	USB_IF_PROTOCOL_HW_DIAG,
+#endif
 };
 
 static struct usb_endpoint_descriptor hs_bulk_in_desc = {

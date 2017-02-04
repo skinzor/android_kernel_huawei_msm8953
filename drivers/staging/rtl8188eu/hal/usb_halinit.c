@@ -115,14 +115,12 @@ static u32 rtl8188eu_InitPowerOn(struct adapter *adapt)
 	}
 
 	/*  Enable MAC DMA/WMAC/SCHEDULE/SEC block */
-	/*  Set CR bit10 to enable 32k calibration. Suggested by SD1 Gimmy. Added by tynli. 2011.08.31. */
 	usb_write16(adapt, REG_CR, 0x00);  /* suggseted by zhouzhou, by page, 20111230 */
 
 		/*  Enable MAC DMA/WMAC/SCHEDULE/SEC block */
 	value16 = usb_read16(adapt, REG_CR);
 	value16 |= (HCI_TXDMA_EN | HCI_RXDMA_EN | TXDMA_EN | RXDMA_EN
 				| PROTOCOL_EN | SCHEDULE_EN | ENSEC | CALTMR_EN);
-	/*  for SDIO - Set CR bit10 to enable 32k calibration. Suggested by SD1 Gimmy. Added by tynli. 2011.08.31. */
 
 	usb_write16(adapt, REG_CR, value16);
 	haldata->bMacPwrCtrlOn = true;
@@ -840,7 +838,6 @@ HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_MISC11);
 
 	/*  */
 	/*  Disable BAR, suggested by Scott */
-	/*  2010.04.09 add by hpfan */
 	/*  */
 	usb_write32(Adapter, REG_BAR_MODE_CTRL, 0x0201ffff);
 
@@ -863,13 +860,11 @@ HAL_INIT_PROFILE_TAG(HAL_INIT_STAGES_INIT_HAL_DM);
 	/*  Fix the bug that Hw/Sw radio off before S3/S4, the RF off action will not be executed */
 	/*  in MgntActSet_RF_State() after wake up, because the value of haldata->eRFPowerState */
 	/*  is the same as eRfOff, we should change it to eRfOn after we config RF parameters. */
-	/*  Added by tynli. 2010.03.30. */
 	pwrctrlpriv->rf_pwrstate = rf_on;
 
 	/*  enable Tx report. */
 	usb_write8(Adapter,  REG_FWHW_TXQ_CTRL+1, 0x0F);
 
-	/*  Suggested by SD1 pisa. Added by tynli. 2011.10.21. */
 	usb_write8(Adapter, REG_EARLY_MODE_CONTROL+3, 0x01);/* Pretx_en, for WEP/TKIP SEC */
 
 	/* tynli_test_tx_report. */
@@ -944,7 +939,6 @@ static void CardDisableRTL8188EU(struct adapter *Adapter)
 	/*  reset MCU ready status */
 	usb_write8(Adapter, REG_MCUFWDL, 0);
 
-	/* YJ,add,111212 */
 	/* Disable 32k */
 	val8 = usb_read8(Adapter, REG_32K_CTRL);
 	usb_write8(Adapter, REG_32K_CTRL, val8&(~BIT0));
@@ -960,7 +954,6 @@ static void CardDisableRTL8188EU(struct adapter *Adapter)
 	val8 = usb_read8(Adapter, REG_RSV_CTRL+1);
 	usb_write8(Adapter, REG_RSV_CTRL+1, val8|BIT3);
 
-	/* YJ,test add, 111207. For Power Consumption. */
 	val8 = usb_read8(Adapter, GPIO_IN);
 	usb_write8(Adapter, GPIO_OUT, val8);
 	usb_write8(Adapter, GPIO_IO_SEL, 0xFF);/* Reg0x46 */
@@ -1196,7 +1189,6 @@ static void StopTxBeacon(struct adapter *adapt)
 	haldata->RegReg542 &= ~(BIT0);
 	usb_write8(adapt, REG_TBTT_PROHIBIT+2, haldata->RegReg542);
 
-	 /* todo: CheckFwRsvdPageContent(Adapter);  2010.06.23. Added by tynli. */
 }
 
 static void hw_var_set_opmode(struct adapter *Adapter, u8 variable, u8 *val)
@@ -1336,7 +1328,6 @@ static void SetHwReg8188EU(struct adapter *Adapter, u8 variable, u8 *val)
 			HalSetBrateCfg(Adapter, val, &BrateCfg);
 			DBG_88E("HW_VAR_BASIC_RATE: BrateCfg(%#x)\n", BrateCfg);
 
-			/* 2011.03.30 add by Luke Lee */
 			/* CCK 2M ACK should be disabled for some BCM and Atheros AP IOT */
 			/* because CCK 2M has poor TXEVM */
 			/* CCK 5.5M & 11M ACK should be enabled for better performance */
@@ -1704,7 +1695,6 @@ static void SetHwReg8188EU(struct adapter *Adapter, u8 variable, u8 *val)
 			u8 psmode = (*(u8 *)val);
 
 			/*  Forece leave RF low power mode for 1T1R to prevent conficting setting in Fw power */
-			/*  saving sequence. 2010.06.07. Added by tynli. Suggested by SD3 yschang. */
 			if ((psmode != PS_MODE_ACTIVE) && (!IS_92C_SERIAL(haldata->VersionID)))
 				ODM_RF_Saving(podmpriv, true);
 			rtl8188e_set_FwPwrMode_cmd(Adapter, psmode);
@@ -1751,7 +1741,7 @@ static void SetHwReg8188EU(struct adapter *Adapter, u8 variable, u8 *val)
 			}
 		}
 		break;
-	case HW_VAR_EFUSE_BYTES: /*  To set EFUE total used bytes, added by Roger, 2008.12.22. */
+	case HW_VAR_EFUSE_BYTES:
 		haldata->EfuseUsedBytes = *((u16 *)val);
 		break;
 	case HW_VAR_FIFO_CLEARN_UP:
@@ -1849,7 +1839,7 @@ static void GetHwReg8188EU(struct adapter *Adapter, u8 variable, u8 *val)
 	case HW_VAR_CURRENT_ANTENNA:
 		val[0] = haldata->CurAntenna;
 		break;
-	case HW_VAR_EFUSE_BYTES: /*  To get EFUE total used bytes, added by Roger, 2008.12.22. */
+	case HW_VAR_EFUSE_BYTES:
 		*((u16 *)(val)) = haldata->EfuseUsedBytes;
 		break;
 	case HW_VAR_APFM_ON_MAC:

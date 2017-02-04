@@ -1,38 +1,4 @@
-/*
- *  ISA Plug & Play support
- *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
- *
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- *  Changelog:
- *  2000-01-01	Added quirks handling for buggy hardware
- *		Peter Denison <peterd@pnd-pc.demon.co.uk>
- *  2000-06-14	Added isapnp_probe_devs() and isapnp_activate_dev()
- *		Christoph Hellwig <hch@infradead.org>
- *  2001-06-03  Added release_region calls to correspond with
- *		request_region calls when a failure occurs.  Also
- *		added KERN_* constants to printk() calls.
- *  2001-11-07  Added isapnp_{,un}register_driver calls along the lines
- *              of the pci driver interface
- *              Kai Germaschewski <kai.germaschewski@gmx.de>
- *  2002-06-06  Made the use of dma channel 0 configurable
- *              Gerald Teschl <gerald.teschl@univie.ac.at>
- *  2002-10-06  Ported to PnP Layer - Adam Belay <ambx1@neo.rr.com>
- *  2003-08-11	Resource Management Updates - Adam Belay <ambx1@neo.rr.com>
- */
+
 
 #include <linux/module.h>
 #include <linux/kernel.h>

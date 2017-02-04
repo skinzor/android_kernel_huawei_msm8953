@@ -1,28 +1,4 @@
-/******************************************************************************
- * Copyright(c) 2008 - 2010 Realtek Corporation. All rights reserved.
- * Linux device driver for RTL8192U
- *
- * Based on the r8187 driver, which is:
- * Copyright 2004-2005 Andrea Merello <andrea.merello@gmail.com>, et al.
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
- *
- * The full GNU General Public License is included in this distribution in the
- * file called LICENSE.
- *
- * Contact Information:
- * Jerry chuang <wlanfae@realtek.com>
- */
+
 
 #ifndef CONFIG_FORCE_HARD_FLOAT
 double __floatsidf(int i)
@@ -1774,7 +1750,6 @@ static void rtl8192_link_change(struct net_device *dev)
 	if (ieee->state == IEEE80211_LINKED) {
 		rtl8192_net_update(dev);
 		rtl8192_update_ratr_table(dev);
-		//add this as in pure N mode, wep encryption will use software way, but there is no chance to set this as wep will not set group key in wext. WB.2008.07.08
 		if ((KEY_TYPE_WEP40 == ieee->pairwise_key_type) || (KEY_TYPE_WEP104 == ieee->pairwise_key_type))
 			EnableHWSecurityConfig8192(dev);
 	}
@@ -2146,7 +2121,7 @@ static void rtl8192_init_priv_variable(struct net_device *dev)
 	priv->ieee80211->softmac_features  = IEEE_SOFTMAC_SCAN |
 		IEEE_SOFTMAC_ASSOCIATE | IEEE_SOFTMAC_PROBERQ |
 		IEEE_SOFTMAC_PROBERS | IEEE_SOFTMAC_TX_QUEUE |
-		IEEE_SOFTMAC_BEACONS;//added by amy 080604
+		IEEE_SOFTMAC_BEACONS;
 
 	priv->ieee80211->active_scan = 1;
 	priv->ieee80211->modulation = IEEE80211_CCK_MODULATION | IEEE80211_OFDM_MODULATION;
@@ -2455,7 +2430,6 @@ static void rtl8192_read_eeprom_info(struct net_device *dev)
 		priv->ThermalMeter[0] = priv->EEPROMThermalMeter;
 	}//end if VersionID == VERSION_819xU_A
 
-	//added by vivi, for dlink led, 20080416
 	switch (priv->eeprom_CustomerID) {
 	case EEPROM_CID_RUNTOP:
 		priv->CustomerID = RT_CID_819x_RUNTOP;
@@ -2879,10 +2853,7 @@ static bool HalTxCheckStuck819xUsb(struct net_device *dev)
 	return bStuck;
 }
 
-/*
-*	<Assumption: RT_TX_SPINLOCK is acquired.>
-*	First added: 2006.11.19 by emily
-*/
+
 static RESET_TYPE TxCheckStuck(struct net_device *dev)
 {
 	struct r8192_priv *priv = ieee80211_priv(dev);
@@ -2970,18 +2941,7 @@ static RESET_TYPE RxCheckStuck(struct net_device *dev)
 }
 
 
-/**
-*	This function is called by Checkforhang to check whether we should ask OS to reset driver
-*
-*	\param pAdapter	The adapter context for this miniport
-*
-*	Note:NIC with USB interface sholud not call this function because we cannot scan descriptor
-*	to judge whether there is tx stuck.
-*	Note: This function may be required to be rewrite for Vista OS.
-*	<<<Assumption: Tx spinlock has been acquired >>>
-*
-*	8185 and 8185b does not implement this function. This is added by Emily at 2006.11.24
-*/
+
 static RESET_TYPE rtl819x_ifcheck_resetornot(struct net_device *dev)
 {
 	struct r8192_priv *priv = ieee80211_priv(dev);
@@ -3717,7 +3677,6 @@ static void rtl8192_process_phyinfo(struct r8192_priv *priv, u8 *buffer,
 	sc = le16_to_cpu(hdr->seq_ctl);
 	frag = WLAN_GET_SEQ_FRAG(sc);
 	seq = WLAN_GET_SEQ_SEQ(sc);
-	//cosa add 04292008 to record the sequence number
 	pcurrent_stats->Seq_Num = seq;
 	//
 	// Check whether we should take the previous packet into accounting
@@ -4470,7 +4429,6 @@ static void query_rxdesc_status(struct sk_buff *skb,
 
 	/* for debug 2008.5.29 */
 
-	//added by vivi, for MP, 20080108
 	stats->RxIs40MHzPacket = driver_info->BW;
 	if (stats->RxDrvInfoSize != 0)
 		TranslateRxSignalStuff819xUsb(skb, stats, driver_info);
@@ -4558,7 +4516,6 @@ static void rtl819xusb_process_received_packet(struct net_device *dev,
 #ifdef TODO
 	RmMonitorSignalStrength(Adapter, pRfd);
 #endif
-	/* 2007/01/16 MH Add RX command packet handle here. */
 	/* 2007/03/01 MH We have to release RFD and return if rx pkt is cmd pkt. */
 	if (rtl819xusb_rx_command_packet(dev, pstats))
 		return;

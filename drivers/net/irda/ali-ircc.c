@@ -1,25 +1,4 @@
-/*********************************************************************
- *                
- * Filename:      ali-ircc.h
- * Version:       0.5
- * Description:   Driver for the ALI M1535D and M1543C FIR Controller
- * Status:        Experimental.
- * Author:        Benjamin Kong <benjamin_kong@ali.com.tw>
- * Created at:    2000/10/16 03:46PM
- * Modified at:   2001/1/3 02:55PM
- * Modified by:   Benjamin Kong <benjamin_kong@ali.com.tw>
- * Modified at:   2003/11/6 and support for ALi south-bridge chipsets M1563
- * Modified by:   Clear Zhang <clear_zhang@ali.com.tw>
- * 
- *     Copyright (c) 2000 Benjamin Kong <benjamin_kong@ali.com.tw>
- *     All Rights Reserved
- *      
- *     This program is free software; you can redistribute it and/or 
- *     modify it under the terms of the GNU General Public License as 
- *     published by the Free Software Foundation; either version 2 of 
- *     the License, or (at your option) any later version.
- *  
- ********************************************************************/
+
 
 #include <linux/module.h>
 #include <linux/gfp.h>

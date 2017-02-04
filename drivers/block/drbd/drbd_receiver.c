@@ -1,26 +1,4 @@
-/*
-   drbd_receiver.c
 
-   This file is part of DRBD by Philipp Reisner and Lars Ellenberg.
-
-   Copyright (C) 2001-2008, LINBIT Information Technologies GmbH.
-   Copyright (C) 1999-2008, Philipp Reisner <philipp.reisner@linbit.com>.
-   Copyright (C) 2002-2008, Lars Ellenberg <lars.ellenberg@linbit.com>.
-
-   drbd is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
-   drbd is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with drbd; see the file COPYING.  If not, write to
-   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 
 
 #include <linux/module.h>
@@ -105,7 +83,6 @@ static struct page *page_chain_del(struct page **head, int n)
 		page = tmp;
 	}
 
-	/* add end of list marker for the returned list */
 	set_page_private(page, 0);
 	/* actual return value, and adjustment of head */
 	page = *head;
@@ -3479,17 +3456,7 @@ static int ignore_remaining_packet(struct drbd_connection *connection, struct pa
 	return 0;
 }
 
-/*
- * config_unknown_volume  -  device configuration command for unknown volume
- *
- * When a device is added to an existing connection, the node on which the
- * device is added first will send configuration commands to its peer but the
- * peer will not know about the device yet.  It will warn and ignore these
- * commands.  Once the device is added on the second node, the second node will
- * send the same device configuration commands, but in the other direction.
- *
- * (We can also end up here if drbd is misconfigured.)
- */
+
 static int config_unknown_volume(struct drbd_connection *connection, struct packet_info *pi)
 {
 	drbd_warn(connection, "%s packet received for volume %u, which is not configured locally\n",
