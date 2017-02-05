@@ -33,6 +33,7 @@
 
 #include <dsm/dsm_pub.h>
 
+#ifdef CONFIG_HUAWEI_DSM
 static struct dsm_client *dsm_chargemonitor_dclient = NULL;
 static struct dsm_dev dsm_charge_monitor =
 {
@@ -40,6 +41,7 @@ static struct dsm_dev dsm_charge_monitor =
 	.fops = NULL,
 	.buff_size = 4096,
 };
+#endif
 
 struct class *power_class = NULL;
 struct device *charge_dev = NULL;
@@ -923,7 +925,9 @@ static int charge_probe(struct platform_device *pdev)
 	}
 
 	charge_event_poll_register(charge_dev);
+#ifdef CONFIG_HUAWEI_DSM
 	dsm_register_client(&dsm_charge_monitor);
+#endif
 	g_charger_device_para = di;
 	pr_info("huawei charger probe ok!\n");
 	return 0;
@@ -948,7 +952,9 @@ static int charge_remove(struct platform_device *pdev)
 
 	cancel_delayed_work_sync(&di->smb_charger_work);
 	charge_event_poll_unregister(charge_dev);
+#ifdef CONFIG_HUAWEI_DSM
 	dsm_unregister_client(dsm_chargemonitor_dclient, &dsm_charge_monitor);
+#endif
 	charge_sysfs_remove_group(di);
 	kfree(di);
 	di = NULL;

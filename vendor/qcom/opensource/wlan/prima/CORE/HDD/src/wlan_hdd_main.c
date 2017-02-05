@@ -12771,18 +12771,19 @@ static ssize_t mac_addr_hw_write(struct file *filp, const char __user *buf, size
     VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
                  "%s: Command is mac address . Command len is %d",
                  __func__, (int)strlen(cmd));
+    memcpy(mac_param,cmd,(MAC_PARAM_MAX_LEN-1));
 #else
     VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
                   "%s: Command is %s . Command len is %d",
                   __func__, cmd, (int)strlen(cmd));
 #endif
-    memcpy(mac_param,cmd,(MAC_PARAM_MAX_LEN-1));
 
     mutex_unlock(&wifi_enable_write_mutex);
 
     return count;
 }
 
+#ifdef CONFIG_HUAWEI_WIFI
 static ssize_t debug_level_hw_write(struct file *filp, const char __user *buf, size_t count, loff_t *off)
 {
 
@@ -12823,7 +12824,7 @@ static ssize_t debug_level_hw_write(struct file *filp, const char __user *buf, s
 
     return count;
 }
-
+#endif
 
 static const struct file_operations wifi_proc_start_file_oper = {
     .owner = THIS_MODULE,
@@ -12835,10 +12836,12 @@ static const struct file_operations mac_addr_hw_file_oper = {
     .write = mac_addr_hw_write,
 };
 
+#ifdef CONFIG_HUAWEI_WIFI
 static const struct file_operations debug_level_hw_file_oper = {
     .owner = THIS_MODULE,
     .write = debug_level_hw_write,
 };
+#endif
 
 
 #endif    //#ifdef CONFIG_HUAWEI_WIFI_BUILTIN
@@ -12868,7 +12871,9 @@ static int __init hdd_module_init ( void)
     struct proc_dir_entry *wifi_start_dir = NULL;
     struct proc_dir_entry *wifi_start_file = NULL;
     struct proc_dir_entry *mac_addr_hw_file = NULL;
+#ifdef CONFIG_HUAWEI_WIFI
     struct proc_dir_entry *debug_level_hw_file = NULL;
+#endif
 
     /* Driver initialization is delayed to change wifi_start_file */
     pr_info("wlan: loading driver build-in\n");
@@ -12893,11 +12898,13 @@ static int __init hdd_module_init ( void)
         pr_info("wlan: loading driver build-in proc_create mac_addr_hw_file error = %d\n", ret);
     }
 
+#ifdef CONFIG_HUAWEI_WIFI
     debug_level_hw_file = proc_create(WIFI_DEBUG_LEVEL_HW_PROC_FILE,S_IWUSR|S_IWGRP, wifi_start_dir,&debug_level_hw_file_oper);
     if (!debug_level_hw_file) {
         ret = -ENOMEM;
         pr_info("wlan: loading driver build-in proc_create debug_level_hw_file error = %d\n", ret);
     }
+#endif
 
     mutex_init(&wifi_enable_write_mutex);
 #endif
