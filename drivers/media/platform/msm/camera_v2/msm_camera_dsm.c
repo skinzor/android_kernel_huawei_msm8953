@@ -33,6 +33,7 @@ struct dsm_dev camera_dsm_dev = {
 	.buff_size = CAMERA_RADAR_BUF_MAX,		// buffer size
 };
 
+#ifdef CONFIG_HUAWEI_DSM
 void camera_dsm_release_client(void)
 {
 	if (camera_dsm_client)
@@ -57,6 +58,7 @@ struct dsm_client* camera_dsm_get_client(void)
 	
 	return camera_dsm_client;
 }
+#endif
 
 static char copy_buf[MSM_CAMERA_DSM_BUFFER_SIZE];
 ssize_t camera_dsm_record_basic_info(struct dsm_client *pcamera_client , int type, int err_num , const char* str)

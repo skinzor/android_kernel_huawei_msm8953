@@ -5028,6 +5028,11 @@ static void increment_aicl_count(struct smbchg_chip *chip)
 		if (bad_charger) {
 			pr_smb(PR_MISC,
 				"setting usb psy health UNSPEC_FAILURE\n");
+
+#ifdef CONFIG_HUAWEI_PMU_DSM
+			dsm_post_chg_bms_info(DSM_CHG_BAD_CHARGER,
+				"very weak charger\n");
+#endif
 			rc = power_supply_set_health_state(chip->usb_psy,
 					POWER_SUPPLY_HEALTH_UNSPEC_FAILURE);
 			if (rc)
@@ -6239,6 +6244,13 @@ static irqreturn_t chg_error_handler(int irq, void *_chip)
 			set_property_on_fg(chip,
 					POWER_SUPPLY_PROP_SAFETY_TIMER_EXPIRED,
 					1);
+
+#ifdef CONFIG_HUAWEI_PMU_DSM
+			dsm_post_chg_bms_info(DSM_CHG_TIMEOUT,
+						"Charging timeout\n");
+#endif
+		}
+
 	}
 
 	smbchg_parallel_usb_check_ok(chip);
