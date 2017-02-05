@@ -6427,8 +6427,10 @@ wait:
 	}
 	if (strcmp("itech_3000mah", batt_type_str) == 0) {
 		pr_info("no batt profile matched, use itech_3000mah\n");
+#ifdef CONFIG_HUAWEI_PMU_DSM
 		dsm_post_chg_bms_info(DSM_BMS_NOT_STANDARD_BATTERY,
 					"batt id not matched\n");
+#endif
 	}
 
 	if (!chip->batt_profile)

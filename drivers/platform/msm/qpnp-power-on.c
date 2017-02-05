@@ -1184,6 +1184,7 @@ err_return:
 	return;
 }
 
+#ifdef CONFIG_HUAWEI_PMU_DSM
 static int lp_save_kernel_log_to_file(char *file_name, char *log_buf, unsigned int size){
 	int err = 0;
 	int fd = -1;
@@ -1420,6 +1421,7 @@ static void long_press_bark_work_func(struct work_struct *work) {
 	pr_info("Boot_monitor detect error:KERNEL_PRESS10S\n");
 	return;
 }
+#endif
 
 static irqreturn_t qpnp_resin_bark_irq(int irq, void *_pon)
 {
@@ -2991,7 +2993,9 @@ static int qpnp_pon_probe(struct spmi_device *spmi)
 
 	INIT_DELAYED_WORK(&pon->bark_work, bark_work_func);
 
+#ifdef CONFIG_HUAWEI_PMU_DSM
 	INIT_DELAYED_WORK(&pon->long_press_bark_work, long_press_bark_work_func);
+#endif
 
 #ifdef CONFIG_HUAWEI_DSM
 	init_timer(&lcd_pwr_status.lcd_dsm_t);
