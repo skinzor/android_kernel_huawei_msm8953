@@ -230,3 +230,9 @@ Copyright 2010-2014 by HUAWEI Technologies, Inc.  All Rights Reserved.
 	/delete-property/ qcom,mdss-dsi-pan-enable-dynamic-fps;
 	/delete-property/ qcom,mdss-dsi-pan-fps-update;
 };
+
+&soc {
+	qcom,wcnss-wlan@0a000000 {
+		/delete-property/ qcom,has-autodetect-xo;
+	};
+};
