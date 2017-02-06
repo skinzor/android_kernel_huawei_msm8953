@@ -223,23 +223,6 @@ static int wlan_fw_ver_proc_open(struct inode *inode, struct file *file)
 	.release	= single_release,
 };
 
-const int get_hw_wifi_no_autodetect_xo(void)
-{
-    struct device_node *dp = NULL;
-	int ret = -1;
-
-    dp = of_find_node_by_path("/huawei_wifi_info");
-    if(!dp) {
-         pr_err("device is not available!\n");
-         return ret;
-    }else {
-         pr_debug("%s:dp->name:%s,dp->full_name:%s;\n",__func__,dp->name,dp->full_name);
-    }
-
-    return  of_property_read_bool(dp,"wifi,no-autodetect-xo");
-}
-EXPORT_SYMBOL(get_hw_wifi_no_autodetect_xo);
-
 const void *get_fem_check_flag(void)
 {
     int get_fem_check_len;
