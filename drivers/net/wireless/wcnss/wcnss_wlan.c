@@ -3068,14 +3068,6 @@ wcnss_trigger_config(struct platform_device *pdev)
 							"qcom,has-autodetect-xo");
 	}
 
-#ifdef CONFIG_HUAWEI_WIFI
-	/*reset has_autodetect_xo, if set wifi,no-autodetect-xo*/
-	if (NO_AUTODETECT_XO == get_hw_wifi_no_autodetect_xo())	{
-	    has_autodetect_xo = 0;
-	    pr_err("%s: Set has_autodetect_xo = %d\n", __func__, has_autodetect_xo);
-	}
-#endif
-
 	penv->thermal_mitigation = 0;
 	strlcpy(penv->wcnss_version, "INVALID", WCNSS_VERSION_LEN);
 
