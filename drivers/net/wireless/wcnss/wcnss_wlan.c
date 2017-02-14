@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -3381,7 +3381,6 @@ wcnss_trigger_config(struct platform_device *pdev)
 			ret = PTR_ERR(penv->pil);
 			wcnss_disable_pc_add_req();
 			wcnss_pronto_dump_regs();
-
 #ifdef CONFIG_HUAWEI_DSM
 			/*inorder to avoid the abnormity raise frequently,we just raise the abnormity at the
 			first time when it occurs*/
