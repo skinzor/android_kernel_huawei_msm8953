@@ -155,8 +155,6 @@ SYSCALL_DEFINE1(syncfs, int, fd)
 	struct fd f = fdget(fd);
 	struct super_block *sb;
 	int ret;
-
-	int fput_needed;
 	
 	if (!fsync_enabled)
 		return 0;
@@ -189,7 +187,7 @@ int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
 	if (!fsync_enabled)
 		return 0;
 		
-	if (!file->f_op || !file->f_op->fsync)
+	if (!file->f_op->fsync)
 		return -EINVAL;
 	return file->f_op->fsync(file, start, end, datasync);
 }
