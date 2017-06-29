@@ -499,6 +499,7 @@ struct mdp_input_layer32 {
 	uint32_t		transp_mask;
 	uint32_t		bg_color;
 	enum mdss_mdp_blend_op		blend_op;
+    enum mdp_color_space    color_space;
 	struct mdp_rect		src_rect;
 	struct mdp_rect		dst_rect;
 	compat_caddr_t		scale;
@@ -512,8 +513,12 @@ struct mdp_output_layer32 {
 	uint32_t			flags;
 	uint32_t			writeback_ndx;
 	struct mdp_layer_buffer		buffer;
-	uint32_t			reserved[6];
+
+    enum mdp_color_space            color_space;
+    uint32_t                        reserved[5];
+
 };
+
 struct mdp_layer_commit_v1_32 {
 	uint32_t		flags;
 	int			release_fence;
@@ -523,7 +528,10 @@ struct mdp_layer_commit_v1_32 {
 	uint32_t		input_layer_cnt;
 	compat_caddr_t		output_layer;
 	int			retire_fence;
-	uint32_t		reserved[6];
+    compat_caddr_t dest_scaler;
+    uint32_t dest_scaler_cnt;
+    uint32_t                reserved[3];
+    uint32_t dummy;
 };
 
 struct mdp_layer_commit32 {
