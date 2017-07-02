@@ -761,13 +761,19 @@ is 1 second.
 
 swappiness
 
-This control is used to define how aggressive the kernel will swap
-memory pages.  Higher values will increase agressiveness, lower values
-decrease the amount of swap.  A value of 0 instructs the kernel not to
-initiate swap until the amount of free and file-backed pages is less
-than the high water mark in a zone.
+This control is used to define the relative IO cost of cache misses
+between the swap device and the filesystem as a value between 0 and
+200. At 100, the VM assumes equal IO cost and will thus apply memory
+pressure to the page cache and swap-backed pages equally. At 0, the
+kernel will not initiate swap until the amount of free and file-backed
+pages is less than the high watermark in a zone.
 
 The default value is 60.
+
+On non-rotational swap devices, a value of 100 (or higher, depending
+on what's backing the filesystem) is recommended.
+
+For in-memory swap, like zswap, values closer to 200 are recommended.
 
 ==============================================================
 
