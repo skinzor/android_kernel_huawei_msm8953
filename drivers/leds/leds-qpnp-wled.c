@@ -848,7 +848,6 @@ static void qpnp_wled_work(struct work_struct *work)
 		level = 0;
 	}
 #endif
-	mutex_lock(&wled->lock);
 
 	if (level) {
 		rc = qpnp_wled_set_level(wled, level);
