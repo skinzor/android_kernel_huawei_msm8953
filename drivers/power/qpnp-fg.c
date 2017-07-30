@@ -3281,152 +3281,6 @@ static void battery_age_work(struct work_struct *work)
 	estimate_battery_age(chip, &chip->actual_cap_uah);
 }
 
-static enum power_supply_property fg_power_props[] = {
-	POWER_SUPPLY_PROP_CAPACITY,
-	POWER_SUPPLY_PROP_CAPACITY_RAW,
-	POWER_SUPPLY_PROP_CURRENT_NOW,
-	POWER_SUPPLY_PROP_VOLTAGE_NOW,
-	POWER_SUPPLY_PROP_VOLTAGE_OCV,
-	POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN,
-	POWER_SUPPLY_PROP_CHARGE_NOW,
-	POWER_SUPPLY_PROP_CHARGE_NOW_RAW,
-	POWER_SUPPLY_PROP_CHARGE_NOW_ERROR,
-	POWER_SUPPLY_PROP_CHARGE_FULL,
-	POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
-	POWER_SUPPLY_PROP_TEMP,
-	POWER_SUPPLY_PROP_COOL_TEMP,
-	POWER_SUPPLY_PROP_WARM_TEMP,
-	POWER_SUPPLY_PROP_RESISTANCE,
-	POWER_SUPPLY_PROP_RESISTANCE_ID,
-	POWER_SUPPLY_PROP_BATTERY_TYPE,
-	POWER_SUPPLY_PROP_UPDATE_NOW,
-	POWER_SUPPLY_PROP_ESR_COUNT,
-	POWER_SUPPLY_PROP_VOLTAGE_MIN,
-	POWER_SUPPLY_PROP_CYCLE_COUNT,
-	POWER_SUPPLY_PROP_CYCLE_COUNT_ID,
-	POWER_SUPPLY_PROP_HI_POWER,
-	POWER_SUPPLY_PROP_PROFILE_STATUS,
-	POWER_SUPPLY_PROP_IGNORE_FALSE_NEGATIVE_ISENSE,
-	POWER_SUPPLY_PROP_ENABLE_JEITA_DETECTION,
-	POWER_SUPPLY_PROP_SOC_REPORTING_READY,
-};
-
-static int fg_power_get_property(struct power_supply *psy,
-				       enum power_supply_property psp,
-				       union power_supply_propval *val)
-{
-	struct fg_chip *chip = container_of(psy, struct fg_chip, bms_psy);
-	bool vbatt_low_sts;
-
-	switch (psp) {
-	case POWER_SUPPLY_PROP_BATTERY_TYPE:
-		if (chip->battery_missing)
-			val->strval = missing_batt_type;
-		else if (chip->fg_restarting)
-			val->strval = loading_batt_type;
-		else
-			val->strval = chip->batt_type;
-		break;
-	case POWER_SUPPLY_PROP_CAPACITY:
-		val->intval = get_prop_capacity(chip);
-		/*
-		 * if input presents, avoid shutdown by 0 capacity in
-		 * factory mode
-		 */
-		if (!val->intval && factory_mode && is_input_present(chip)) {
-			val->intval = 1;
-		}
-		break;
-	case POWER_SUPPLY_PROP_CAPACITY_RAW:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_SOC);
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_NOW_ERROR:
-		val->intval = get_sram_prop_now(chip, FG_DATA_VINT_ERR);
-		break;
-	case POWER_SUPPLY_PROP_CURRENT_NOW:
-		val->intval = get_sram_prop_now(chip, FG_DATA_CURRENT);
-		break;
-	case POWER_SUPPLY_PROP_IGNORE_FALSE_NEGATIVE_ISENSE:
-		val->intval = !chip->allow_false_negative_isense;
-		break;
-	case POWER_SUPPLY_PROP_ENABLE_JEITA_DETECTION:
-		val->intval = chip->use_soft_jeita_irq;
-		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-		val->intval = get_sram_prop_now(chip, FG_DATA_VOLTAGE);
-		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_OCV:
-		val->intval = get_sram_prop_now(chip, FG_DATA_OCV);
-		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN:
-		val->intval = chip->batt_max_voltage_uv;
-		break;
-	case POWER_SUPPLY_PROP_TEMP:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_TEMP);
-		break;
-	case POWER_SUPPLY_PROP_COOL_TEMP:
-		val->intval = get_prop_jeita_temp(chip, FG_MEM_SOFT_COLD);
-		break;
-	case POWER_SUPPLY_PROP_WARM_TEMP:
-		val->intval = get_prop_jeita_temp(chip, FG_MEM_SOFT_HOT);
-		break;
-	case POWER_SUPPLY_PROP_RESISTANCE:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ESR);
-		break;
-	case POWER_SUPPLY_PROP_ESR_COUNT:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ESR_COUNT);
-		break;
-	case POWER_SUPPLY_PROP_CYCLE_COUNT:
-		val->intval = fg_get_cycle_count(chip);
-		break;
-	case POWER_SUPPLY_PROP_CYCLE_COUNT_ID:
-		val->intval = chip->cyc_ctr.id;
-		break;
-	case POWER_SUPPLY_PROP_RESISTANCE_ID:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ID);
-		break;
-	case POWER_SUPPLY_PROP_UPDATE_NOW:
-		val->intval = 0;
-		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_MIN:
-		if (!fg_get_vbatt_status(chip, &vbatt_low_sts))
-			val->intval = (int)vbatt_low_sts;
-		else
-			val->intval = 1;
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
-		val->intval = chip->nom_cap_uah;
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_FULL:
-		val->intval = chip->learning_data.learned_cc_uah;
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_NOW:
-		val->intval = chip->learning_data.cc_uah;
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_NOW_RAW:
-		val->intval = get_sram_prop_now(chip, FG_DATA_CC_CHARGE);
-		break;
-	case POWER_SUPPLY_PROP_HI_POWER:
-		val->intval = !!chip->bcl_lpm_disabled;
-		break;
-	case POWER_SUPPLY_PROP_PROFILE_STATUS:
-		val->intval = chip->profile_loaded;
-		break;
-	case POWER_SUPPLY_PROP_REGISTER_HEAD:
-		qpnp_get_fuelguage_register_head((char *)val->strval);
-		break;
-	case POWER_SUPPLY_PROP_DUMP_REGISTER:
-		qpnp_fuelguage_dump_register((char *)val->strval);
-		break;
-	case POWER_SUPPLY_PROP_SOC_REPORTING_READY:
-		val->intval = !!chip->profile_loaded;
-		break;
-	default:
-		return -EINVAL;
-	}
-
-	return 0;
-}
 
 static int correction_times[] = {
 	1470,
@@ -4626,6 +4480,7 @@ static enum power_supply_property fg_power_props[] = {
 	POWER_SUPPLY_PROP_CYCLE_COUNT,
 	POWER_SUPPLY_PROP_CYCLE_COUNT_ID,
 	POWER_SUPPLY_PROP_HI_POWER,
+	POWER_SUPPLY_PROP_PROFILE_STATUS,
 	POWER_SUPPLY_PROP_SOC_REPORTING_READY,
 	POWER_SUPPLY_PROP_IGNORE_FALSE_NEGATIVE_ISENSE,
 	POWER_SUPPLY_PROP_ENABLE_JEITA_DETECTION,
@@ -4651,6 +4506,13 @@ static int fg_power_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CAPACITY:
 		val->intval = get_prop_capacity(chip);
+	        /*	
+	        * if input presents, avoid shutdown by 0 capacity in			
+	        * factory mode			
+	        */			
+	        if (!val->intval && factory_mode && is_input_present(chip)) {			
+	                val->intval = 1;			
+	        }
 		break;
 	case POWER_SUPPLY_PROP_CAPACITY_RAW:
 		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_SOC);
@@ -4660,7 +4522,7 @@ static int fg_power_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CURRENT_NOW:
 		val->intval = get_sram_prop_now(chip, FG_DATA_CURRENT);
-		break;
+	        break;	
 	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
 		val->intval = get_sram_prop_now(chip, FG_DATA_VOLTAGE);
 		break;
@@ -4718,6 +4580,9 @@ static int fg_power_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_HI_POWER:
 		val->intval = !!chip->bcl_lpm_disabled;
 		break;
+        case POWER_SUPPLY_PROP_PROFILE_STATUS:
+	        val->intval = chip->profile_loaded;
+	        break;
 	case POWER_SUPPLY_PROP_SOC_REPORTING_READY:
 		val->intval = !!chip->soc_reporting_ready;
 		break;
@@ -4726,6 +4591,12 @@ static int fg_power_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_ENABLE_JEITA_DETECTION:
 		val->intval = chip->use_soft_jeita_irq;
+		break;
+	case POWER_SUPPLY_PROP_REGISTER_HEAD:
+		qpnp_get_fuelguage_register_head((char *)val->strval);
+		break;
+	case POWER_SUPPLY_PROP_DUMP_REGISTER:
+		qpnp_fuelguage_dump_register((char *)val->strval);
 		break;
 	case POWER_SUPPLY_PROP_BATTERY_INFO:
 		if (chip->batt_info_id < 0 ||
