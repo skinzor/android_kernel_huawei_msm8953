@@ -5157,9 +5157,10 @@ static void handle_usb_insertion(struct smbchg_chip *chip)
 		rc = enable_irq_wake(chip->aicl_done_irq);
 		chip->enable_aicl_wake = true;
 	}
-}
 
-schedule_delayed_work(&chip->monitor_charging_work, 0);
+	schedule_delayed_work(&chip->monitor_charging_work, 0);
+
+}
 
 void update_usb_status(struct smbchg_chip *chip, bool usb_present, bool force)
 {
@@ -6357,9 +6358,6 @@ static int smbchg_battery_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_RESISTANCE_ID:
 		val->intval = get_prop_batt_resistance_id(chip);
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_FULL:
-		val->intval = get_prop_batt_full_charge(chip);
 		break;
 	case POWER_SUPPLY_PROP_TEMP:
 		val->intval = get_prop_batt_temp(chip);
