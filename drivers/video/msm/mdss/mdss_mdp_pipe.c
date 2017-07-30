@@ -1510,10 +1510,6 @@ static bool mdss_mdp_check_pipe_in_use(struct mdss_mdp_pipe *pipe)
 			pr_err("IN USE: pipe=%d mixer=%d\n",
 					pipe->num, mixer->num);
 
-#ifdef CONFIG_HUAWEI_DSM
-			/* report pipe dsm error */
-			lcd_report_dsm_err(DSM_LCD_MDSS_PIPE_ERROR_NO,mixercfg,0);
-#endif
 			MDSS_XLOG_TOUT_HANDLER("mdp", "vbif", "vbif_nrt",
 				"dbg_bus", "vbif_dbg_bus", "panic");
 		}
@@ -1524,10 +1520,6 @@ static bool mdss_mdp_check_pipe_in_use(struct mdss_mdp_pipe *pipe)
 			pr_err("IN USE: pipe=%d mixer=%d\n",
 					pipe->num, mixer->num);
 
-#ifdef CONFIG_HUAWEI_DSM
-			/* report pipe dsm error */
-			lcd_report_dsm_err(DSM_LCD_MDSS_PIPE_ERROR_NO,mixercfg,0);
-#endif
 			MDSS_XLOG_TOUT_HANDLER("mdp", "vbif", "vbif_nrt",
 				"dbg_bus", "vbif_dbg_bus", "panic");
 		}
