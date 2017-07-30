@@ -87,7 +87,8 @@ static const int download_mode;
 #define SDUPDATE_FLAG_MAGIC_NUM  0x77665528
 #define USBUPDATE_FLAG_MAGIC_NUM  0x77665523
 #define SD_UPDATE_RESET_FLAG   "sdupdate"
-#define USB_UPDATE_RESET_FLAG   "usbupdate"static int in_panic;
+#define USB_UPDATE_RESET_FLAG   "usbupdate"
+static int in_panic;
 static void *dload_mode_addr;
 static bool dload_mode_enabled;
 static void *emergency_dload_mode_addr;
@@ -175,58 +176,6 @@ static bool get_dload_mode(void)
 	return dload_mode_enabled;
 }
 
-static void enable_emergency_dload_mode(void)
-{
-	int ret;
-
-	if (emergency_dload_mode_addr) {
-		__raw_writel(EMERGENCY_DLOAD_MAGIC1,
-				emergency_dload_mode_addr);
-		__raw_writel(EMERGENCY_DLOAD_MAGIC2,
-				emergency_dload_mode_addr +
-				sizeof(unsigned int));
-		__raw_writel(EMERGENCY_DLOAD_MAGIC3,
-				emergency_dload_mode_addr +
-				(2 * sizeof(unsigned int)));
-
-		/* Need disable the pmic wdt, then the emergency dload mode
-		 * will not auto reset. */
-		qpnp_pon_wd_config(0);
-		mb();
-	}
-
-	ret = scm_set_dload_mode(SCM_EDLOAD_MODE, 0);
-	if (ret)
-		pr_err("Failed to set secure EDLOAD mode: %d\n", ret);
-}
-#endif
-
-static int dload_set(const char *val, struct kernel_param *kp)
-{
-	int ret;
-	int old_val = download_mode;
-
-	ret = param_set_int(val, kp);
-
-	if (ret)
-		return ret;
-
-	/* If download_mode is not zero or one, ignore. */
-	if (download_mode >> 1) {
-		download_mode = old_val;
-		return -EINVAL;
-	}
-
-	set_dload_mode(download_mode);
-
-	return 0;
-}
-#else
-static void set_dload_mode(int on)
-{
-	return;
-}
-
 /*This function write usb_update sign to the misc partion,
    if write successfull, then hard restart the device*/
 void huawei_restart(void)
@@ -281,6 +230,58 @@ int usb_update_thread(void *__unused)
     return 0;
 }
 #ifdef CONFIG_HUAWEI_KERNEL_DEBUG
+static void enable_emergency_dload_mode(void)
+{
+	int ret;
+
+	if (emergency_dload_mode_addr) {
+		__raw_writel(EMERGENCY_DLOAD_MAGIC1,
+				emergency_dload_mode_addr);
+		__raw_writel(EMERGENCY_DLOAD_MAGIC2,
+				emergency_dload_mode_addr +
+				sizeof(unsigned int));
+		__raw_writel(EMERGENCY_DLOAD_MAGIC3,
+				emergency_dload_mode_addr +
+				(2 * sizeof(unsigned int)));
+
+		/* Need disable the pmic wdt, then the emergency dload mode
+		 * will not auto reset. */
+		qpnp_pon_wd_config(0);
+		mb();
+	}
+
+	ret = scm_set_dload_mode(SCM_EDLOAD_MODE, 0);
+	if (ret)
+		pr_err("Failed to set secure EDLOAD mode: %d\n", ret);
+}
+#endif
+
+static int dload_set(const char *val, struct kernel_param *kp)
+{
+	int ret;
+	int old_val = download_mode;
+
+	ret = param_set_int(val, kp);
+
+	if (ret)
+		return ret;
+
+	/* If download_mode is not zero or one, ignore. */
+	if (download_mode >> 1) {
+		download_mode = old_val;
+		return -EINVAL;
+	}
+
+	set_dload_mode(download_mode);
+
+	return 0;
+}
+#else
+static void set_dload_mode(int on)
+{
+	return;
+}
+
 static void enable_emergency_dload_mode(void)
 {
 	pr_err("dload mode is not enabled on target\n");
