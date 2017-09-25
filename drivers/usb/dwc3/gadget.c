@@ -2176,7 +2176,6 @@ static int __dwc3_gadget_start(struct dwc3 *dwc)
 		dwc3_writel(dwc->regs, DWC3_GSBUSCFG1, reg);
 	}
 
-	dwc->start_config_issued = false;
 
 	/* Start with SuperSpeed Default */
 	dwc3_gadget_ep0_desc.wMaxPacketSize = cpu_to_le16(512);
@@ -2544,7 +2543,7 @@ static int dwc3_cleanup_done_reqs(struct dwc3 *dwc, struct dwc3_ep *dep,
 
 		i = 0;
 		do {
-			slot = req->start_slot + i;
+			slot = req->stastruct dwc3rt_slot + i;
 			if ((slot == DWC3_TRB_NUM - 1) &&
 				usb_endpoint_xfer_isoc(dep->endpoint.desc))
 				slot++;
