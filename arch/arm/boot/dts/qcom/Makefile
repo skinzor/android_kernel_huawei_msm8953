@@ -196,6 +196,34 @@ dtb-$(CONFIG_ARCH_MSM8920) += msm8920-pmi8937-cdp.dtb \
 	msm8920-pmi8950-rcm.dtb \
 	msm8920-pmi8940-qrd-sku7.dtb
 
+dtb-$(CONFIG_ARCH_MSM8953) += msm8953-mtp.dtb \
+	huawei-mla-al00-va.dtb \
+	huawei-mla-al00-vb.dtb \
+	huawei-mla-al00-vc.dtb \
+	huawei-mla-al00-vd.dtb \
+	huawei-mla-al00-ve.dtb \
+	huawei-mla-tl00-va.dtb \
+	huawei-mla-l01-va.dtb \
+	huawei-mla-l01-vb.dtb \
+	huawei-mla-l02-va.dtb \
+	huawei-mla-l03-va.dtb \
+	huawei-can-al00-va.dtb \
+	huawei-can-al00-vb.dtb \
+	huawei-can-al00-vc.dtb \
+	huawei-can-al00-vd.dtb \
+	huawei-can-cl00-va.dtb \
+	huawei-can-tl00-va.dtb \
+	huawei-can-l01-va.dtb \
+	huawei-can-l01-vb.dtb \
+	huawei-can-l01-vc.dtb \
+	huawei-can-l01-vd.dtb \
+	huawei-can-l02-va.dtb \
+	huawei-can-l02-vb.dtb \
+	huawei-can-l02-vc.dtb \
+	huawei-can-l03-va.dtb \
+	huawei-can-l03-vb.dtb \
+	huawei-can-l03-vc.dtb
+
 dtb-$(CONFIG_ARCH_MSM8940) += msm8940-pmi8937-cdp.dtb \
 	msm8940-pmi8937-mtp.dtb \
 	msm8940-pmi8950-cdp.dtb \
