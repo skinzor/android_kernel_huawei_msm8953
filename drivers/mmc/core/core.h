@@ -72,6 +72,11 @@ void mmc_remove_card_debugfs(struct mmc_card *card);
 
 void mmc_init_context_info(struct mmc_host *host);
 
+#ifdef CONFIG_MMC_PASSWORDS
+int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
+       struct mmc_card *oldcard);
+#endif
+
 extern bool mmc_can_scale_clk(struct mmc_host *host);
 extern int mmc_init_clk_scaling(struct mmc_host *host);
 extern int mmc_suspend_clk_scaling(struct mmc_host *host);
@@ -79,4 +84,3 @@ extern int mmc_resume_clk_scaling(struct mmc_host *host);
 extern int mmc_exit_clk_scaling(struct mmc_host *host);
 extern unsigned long mmc_get_max_frequency(struct mmc_host *host);
 #endif
-

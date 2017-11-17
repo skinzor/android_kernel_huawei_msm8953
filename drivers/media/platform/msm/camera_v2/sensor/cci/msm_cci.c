@@ -23,7 +23,9 @@
 #include "msm_camera_io_util.h"
 #include "msm_camera_dt_util.h"
 #include "cam_hw_ops.h"
-
+#ifdef CONFIG_HUAWEI_DSM
+#include "msm_camera_dsm.h"
+#endif
 #define V4L2_IDENT_CCI 50005
 #define CCI_I2C_QUEUE_0_SIZE 64
 #define CCI_I2C_Q0_SIZE_128W 128
@@ -41,6 +43,7 @@
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
 #undef CCI_DBG
+#define MSM_CCI_DEBUG
 #ifdef MSM_CCI_DEBUG
 #define CCI_DBG(fmt, args...) pr_err(fmt, ##args)
 #else
@@ -115,16 +118,15 @@ static int32_t msm_cci_set_clk_param(struct cci_device *cci_dev,
 	enum cci_i2c_master_t master = c_ctrl->cci_info->cci_i2c_master;
 	enum i2c_freq_mode_t i2c_freq_mode = c_ctrl->cci_info->i2c_freq_mode;
 
+	clk_params = &cci_dev->cci_clk_params[i2c_freq_mode];
+
 	if ((i2c_freq_mode >= I2C_MAX_MODES) || (i2c_freq_mode < 0)) {
 		pr_err("%s:%d invalid i2c_freq_mode = %d",
 			__func__, __LINE__, i2c_freq_mode);
 		return -EINVAL;
 	}
-
 	if (cci_dev->i2c_freq_mode[master] == i2c_freq_mode)
 		return 0;
-
-	clk_params = &cci_dev->cci_clk_params[i2c_freq_mode];
 	if (MASTER_0 == master) {
 		msm_camera_io_w_mb(clk_params->hw_thigh << 16 |
 			clk_params->hw_tlow,
@@ -782,18 +784,10 @@ static int32_t msm_cci_i2c_read(struct v4l2_subdev *sd,
 	enum cci_i2c_queue_t queue = QUEUE_1;
 	struct cci_device *cci_dev = NULL;
 	struct msm_camera_cci_i2c_read_cfg *read_cfg = NULL;
-
 	CDBG("%s line %d\n", __func__, __LINE__);
 	cci_dev = v4l2_get_subdevdata(sd);
 	master = c_ctrl->cci_info->cci_i2c_master;
 	read_cfg = &c_ctrl->cfg.cci_i2c_read_cfg;
-
-	if (master >= MASTER_MAX || master < 0) {
-		pr_err("%s:%d Invalid I2C master %d\n",
-			__func__, __LINE__, master);
-		return -EINVAL;
-	}
-
 	mutex_lock(&cci_dev->cci_master_info[master].mutex_q[queue]);
 
 	/* Set the I2C Frequency */
@@ -1018,6 +1012,11 @@ static int32_t msm_cci_i2c_write(struct v4l2_subdev *sd,
 	enum cci_i2c_master_t master;
 
 	cci_dev = v4l2_get_subdevdata(sd);
+	if (c_ctrl->cci_info->cci_i2c_master >= MASTER_MAX
+			|| c_ctrl->cci_info->cci_i2c_master < 0) {
+		pr_err("%s:%d Invalid I2C master addr\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 	if (cci_dev->cci_state != CCI_STATE_ENABLED) {
 		pr_err("%s invalid cci state %d\n",
 			__func__, cci_dev->cci_state);
@@ -1205,13 +1204,6 @@ static uint32_t *msm_cci_get_clk_rates(struct cci_device *cci_dev,
 	struct msm_cci_clk_params_t *clk_params = NULL;
 	enum i2c_freq_mode_t i2c_freq_mode = c_ctrl->cci_info->i2c_freq_mode;
 	struct device_node *of_node = cci_dev->pdev->dev.of_node;
-
-	if ((i2c_freq_mode >= I2C_MAX_MODES) || (i2c_freq_mode < 0)) {
-		pr_err("%s:%d invalid i2c_freq_mode %d\n",
-			__func__, __LINE__, i2c_freq_mode);
-		return NULL;
-	}
-
 	clk_params = &cci_dev->cci_clk_params[i2c_freq_mode];
 	cci_clk_src = clk_params->cci_clk_src;
 
@@ -1555,11 +1547,6 @@ static int32_t msm_cci_write(struct v4l2_subdev *sd,
 		return rc;
 	}
 
-	if (c_ctrl->cci_info->cci_i2c_master >= MASTER_MAX
-			|| c_ctrl->cci_info->cci_i2c_master < 0) {
-		pr_err("%s:%d Invalid I2C master addr\n", __func__, __LINE__);
-		return -EINVAL;
-	}
 	master = c_ctrl->cci_info->cci_i2c_master;
 	cci_master_info = &cci_dev->cci_master_info[master];
 
@@ -1598,11 +1585,42 @@ static int32_t msm_cci_write(struct v4l2_subdev *sd,
 	}
 	return rc;
 }
+#ifdef CONFIG_HUAWEI_DSM
+
+static char camera_cci_dsm_log_buff[MSM_CAMERA_DSM_BUFFER_SIZE] = {0};
+static int print_cci_info(struct v4l2_subdev *sd, struct msm_camera_cci_ctrl *cci_ctrl)
+{
+	int len = 0;
+	struct cci_device *cci_dev;
+	enum cci_i2c_master_t master;
+
+	master = cci_ctrl->cci_info->cci_i2c_master;
+	cci_dev = v4l2_get_subdevdata(sd);
+
+	memset(camera_cci_dsm_log_buff, 0, MSM_CAMERA_DSM_BUFFER_SIZE);
+	len += snprintf(camera_cci_dsm_log_buff, MSM_CAMERA_DSM_BUFFER_SIZE,
+					" cci status: %d cmd: %d sid: %d\n",
+					cci_ctrl->status, cci_ctrl->cmd, cci_ctrl->cci_info->sid);
+	len += snprintf(camera_cci_dsm_log_buff+len, MSM_CAMERA_DSM_BUFFER_SIZE-len,
+					" ref_count: %d state: %d reset_pending: %d\n",
+					cci_dev->ref_count, cci_dev->cci_state, cci_dev->cci_master_info[master].reset_pending);
+	len += snprintf(camera_cci_dsm_log_buff+len, MSM_CAMERA_DSM_BUFFER_SIZE-len,
+			" CCI_IRQ_CLEAR_0_ADDR:\t\t%x\t%x\n CCI_IRQ_STATUS_0_ADDR:\t\t%x\t%x\n CCI_IRQ_GLOBAL_CLEAR_CMD_ADDR:\t\t%x\t%x\n",
+					CCI_IRQ_CLEAR_0_ADDR, msm_camera_io_r_mb(cci_dev->base + CCI_IRQ_CLEAR_0_ADDR),
+					CCI_IRQ_STATUS_0_ADDR, msm_camera_io_r_mb(cci_dev->base + CCI_IRQ_STATUS_0_ADDR),
+					CCI_IRQ_GLOBAL_CLEAR_CMD_ADDR, msm_camera_io_r_mb(cci_dev->base + CCI_IRQ_GLOBAL_CLEAR_CMD_ADDR));
+
+	return len;
+}
+#endif
 
 static int32_t msm_cci_config(struct v4l2_subdev *sd,
 	struct msm_camera_cci_ctrl *cci_ctrl)
 {
 	int32_t rc = 0;
+#ifdef CONFIG_HUAWEI_DSM
+	int dsm_rc = 0;
+#endif
 	CDBG("%s line %d cmd %d\n", __func__, __LINE__,
 		cci_ctrl->cmd);
 	switch (cci_ctrl->cmd) {
@@ -1632,6 +1650,18 @@ static int32_t msm_cci_config(struct v4l2_subdev *sd,
 		rc = -ENOIOCTLCMD;
 	}
 	CDBG("%s line %d rc %d\n", __func__, __LINE__, rc);
+#ifdef CONFIG_HUAWEI_DSM
+	if ((rc < 0) && ((MSM_CCI_I2C_READ == cci_ctrl->cmd) || (MSM_CCI_I2C_WRITE == cci_ctrl->cmd)) && (camera_is_closing != 1)&& (camera_is_in_probe != 1))
+	{
+		dsm_rc = print_cci_info(sd, cci_ctrl);
+		if (dsm_rc < 0)
+			pr_err("%s. cci dsm print error\n",__func__);
+
+		dsm_rc = camera_report_dsm_err(DSM_CAMERA_I2C_ERR, rc, camera_cci_dsm_log_buff);
+		if (dsm_rc < 0)
+			pr_err("%s. cci dsm report error\n",__func__);
+	}
+#endif
 	cci_ctrl->status = rc;
 	return rc;
 }

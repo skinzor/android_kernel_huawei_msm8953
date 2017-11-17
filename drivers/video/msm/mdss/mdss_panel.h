@@ -55,9 +55,6 @@ struct panel_id {
 
 #define DSC_PPS_LEN		128
 
-/* HDR propeties count */
-#define DISPLAY_PRIMARIES_COUNT	8	/* WRGB x and y values*/
-
 static inline const char *mdss_panel2str(u32 panel)
 {
 	static const char const *names[] = {
@@ -107,6 +104,12 @@ enum {
 	MDSS_PANEL_POWER_ON,
 	MDSS_PANEL_POWER_LP1,
 	MDSS_PANEL_POWER_LP2,
+};
+
+enum {
+	MDSS_PANEL_BLANK_BLANK = 0,
+	MDSS_PANEL_BLANK_UNBLANK,
+	MDSS_PANEL_BLANK_LOW_POWER,
 };
 
 enum {
@@ -161,7 +164,7 @@ enum {
 };
 
 struct mdss_intf_recovery {
-	int (*fxn)(void *ctx, int event);
+	void (*fxn)(void *ctx, int event);
 	void *data;
 };
 
@@ -279,6 +282,16 @@ struct lcd_panel_info {
 	/* Pad height */
 	u32 yres_pad;
 	u32 frame_rate;
+#ifndef CONFIG_LCDKIT_DRIVER
+#ifdef CONFIG_HUAWEI_KERNEL_LCD
+	/*set the max backlight level for automatic algorithm in framework*/
+	u32 bl_level_max;
+	/*set the min backlight level for automatic algorithm in framework*/
+	u32 bl_level_min;
+	/*set the lcd type for app*/
+	char lcdtype[20];
+#endif
+#endif
 };
 
 
@@ -585,19 +598,6 @@ struct mdss_panel_roi_alignment {
 	u32 min_height;
 };
 
-struct mdss_panel_hdr_properties {
-	bool hdr_enabled;
-
-	/* WRGB X and y values arrayed in format */
-	/* [WX, WY, RX, RY, GX, GY, BX, BY] */
-	u32 display_primaries[DISPLAY_PRIMARIES_COUNT];
-
-	/* peak brightness supported by panel */
-	u32 peak_brightness;
-	/* Blackness level supported by panel */
-	u32 blackness_level;
-};
-
 struct mdss_panel_info {
 	u32 xres;
 	u32 yres;
@@ -660,7 +660,13 @@ struct mdss_panel_info {
 	struct ion_handle *splash_ihdl;
 	int panel_power_state;
 	int compression_mode;
-
+#ifndef CONFIG_LCDKIT_DRIVER
+#ifdef CONFIG_HUAWEI_KERNEL_LCD
+	u32 inversion_mode;
+	bool panel_down_reset;
+	bool bta_timeout_check;
+#endif
+#endif
 	uint32_t panel_dead;
 	u32 panel_force_dead;
 	u32 panel_orientation;
@@ -731,9 +737,6 @@ struct mdss_panel_info {
 
 	/* debugfs structure for the panel */
 	struct mdss_panel_debugfs_info *debugfs_info;
-
-	/* HDR properties of display panel*/
-	struct mdss_panel_hdr_properties hdr_properties;
 };
 
 struct mdss_panel_timing {
@@ -797,6 +800,14 @@ struct mdss_panel_data {
 	/* To store dsc cfg name passed by bootloader */
 	char dsc_cfg_np_name[MDSS_MAX_PANEL_LEN];
 	struct mdss_panel_data *next;
+#ifndef CONFIG_LCDKIT_DRIVER
+#ifdef CONFIG_HUAWEI_KERNEL_LCD
+	int (*set_inversion_mode)(struct mdss_panel_data *pdata,u32 imode);
+	int (*check_panel_status)(struct mdss_panel_data *pdata);
+	int (*panel_frame_checksum)(struct mdss_panel_data *pdata);
+	struct mutex LCD_checksum_lock;
+#endif
+#endif
 };
 
 struct mdss_panel_debugfs_info {

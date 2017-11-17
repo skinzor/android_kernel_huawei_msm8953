@@ -22,7 +22,9 @@
 #include "vidc_hfi_api.h"
 #include "msm_vidc_debug.h"
 #include "msm_vidc_dcvs.h"
-
+#ifdef CONFIG_HUAWEI_DSM
+#include "msm_camera_vid_dsm.h"
+#endif
 #define IS_ALREADY_IN_STATE(__p, __d) ({\
 	int __rc = (__p >= __d);\
 	__rc; \
@@ -1194,14 +1196,12 @@ static void handle_event_change(enum hal_command_response cmd, void *data)
 	 * ptr[2] = flag to indicate bit depth or/and pic struct changed
 	 * ptr[3] = bit depth
 	 * ptr[4] = pic struct (progressive or interlaced)
-	 * ptr[5] = colour space
 	 */
 
 	ptr = (u32 *)seq_changed_event.u.data;
 	ptr[2] = 0x0;
 	ptr[3] = inst->bit_depth;
 	ptr[4] = inst->pic_struct;
-	ptr[5] = inst->colour_space;
 
 	if (inst->bit_depth != event_notify->bit_depth) {
 		inst->bit_depth = event_notify->bit_depth;
@@ -1209,7 +1209,7 @@ static void handle_event_change(enum hal_command_response cmd, void *data)
 		ptr[3] = inst->bit_depth;
 		event = V4L2_EVENT_SEQ_CHANGED_INSUFFICIENT;
 		dprintk(VIDC_DBG,
-				"V4L2_EVENT_SEQ_CHANGED_INSUFFICIENT due to bit-depth change\n");
+			"V4L2_EVENT_SEQ_CHANGED_INSUFFICIENT due to bit-depth change\n");
 	}
 
 	if (inst->fmts[CAPTURE_PORT]->fourcc == V4L2_PIX_FMT_NV12 &&
@@ -1219,18 +1219,7 @@ static void handle_event_change(enum hal_command_response cmd, void *data)
 		ptr[2] |= V4L2_EVENT_PICSTRUCT_FLAG;
 		ptr[4] = inst->pic_struct;
 		dprintk(VIDC_DBG,
-				"V4L2_EVENT_SEQ_CHANGED_INSUFFICIENT due to pic-struct change\n");
-	}
-
-	if (inst->bit_depth == MSM_VIDC_BIT_DEPTH_10
-		&& inst->colour_space !=
-		event_notify->colour_space) {
-		inst->colour_space = event_notify->colour_space;
-		event = V4L2_EVENT_SEQ_CHANGED_INSUFFICIENT;
-		ptr[2] |= V4L2_EVENT_COLOUR_SPACE_FLAG;
-		ptr[5] = inst->colour_space;
-		dprintk(VIDC_DBG,
-				"V4L2_EVENT_SEQ_CHANGED_INSUFFICIENT due to colour space change\n");
+			"V4L2_EVENT_SEQ_CHANGED_INSUFFICIENT due to pic-struct change\n");
 	}
 
 	if (event == V4L2_EVENT_SEQ_CHANGED_INSUFFICIENT) {
@@ -4754,6 +4743,9 @@ static int msm_vidc_load_supported(struct msm_vidc_inst *inst)
 				"H/W is overloaded. needed: %d max: %d\n",
 				num_mbs_per_sec,
 				max_load_adj);
+#ifdef CONFIG_HUAWEI_DSM
+			camera_vid_report_dsm_err_vidc(DSM_CAMERA_VIDC_OVERLOADED, inst->core->resources.max_load, NULL);
+#endif
 			msm_vidc_print_running_insts(inst->core);
 			return -EBUSY;
 		}
@@ -4913,6 +4905,9 @@ static void msm_comm_generate_session_error(struct msm_vidc_inst *inst)
 	struct msm_vidc_cb_cmd_done response = {0};
 
 	dprintk(VIDC_WARN, "msm_comm_generate_session_error\n");
+#ifdef CONFIG_HUAWEI_DSM
+	camera_vid_report_dsm_err_vidc(DSM_CAMERA_VIDC_SESSION_ERROR, cmd, NULL);
+#endif
 	if (!inst || !inst->core) {
 		dprintk(VIDC_ERR, "%s: invalid input parameters\n", __func__);
 		return;
@@ -4958,8 +4953,7 @@ int msm_comm_kill_session(struct msm_vidc_inst *inst)
 	if ((inst->state >= MSM_VIDC_OPEN_DONE &&
 			inst->state < MSM_VIDC_CLOSE_DONE) ||
 			inst->state == MSM_VIDC_CORE_INVALID) {
-		rc = msm_comm_session_abort(inst);
-		if (rc == -EBUSY) {
+		if (msm_comm_session_abort(inst)) {
 			msm_comm_generate_sys_error(inst);
 			return 0;
 		} else if (rc) {
@@ -5182,3 +5176,49 @@ int msm_vidc_comm_s_parm(struct msm_vidc_inst *inst, struct v4l2_streamparm *a)
 exit:
 	return rc;
 }
+
+#ifdef CONFIG_HUAWEI_DSM
+void camera_vid_report_dsm_err_vidc(int type, int err_num , const char* str)
+{
+	ssize_t len = 0;
+	int rc = 0;
+
+	memset(camera_vid_dsm_log_buff, 0, MSM_CAMERA_VID_DSM_BUFFER_SIZE);
+
+	/* camera record error info according to err type */
+	switch(type)
+	{
+		case DSM_CAMERA_VIDC_OVERLOADED:
+			/* vidc overloaded */
+			len += snprintf(camera_vid_dsm_log_buff+len, MSM_CAMERA_VID_DSM_BUFFER_SIZE-len, "[msm_camera]vidc overloaded. \n");
+			break;
+
+		case DSM_CAMERA_VIDC_SESSION_ERROR:
+			/* vidc session is error */
+			len += snprintf(camera_vid_dsm_log_buff+len, MSM_CAMERA_VID_DSM_BUFFER_SIZE-len, "[msm_camera]vidc session is error.\n");
+			break;
+
+		case DSM_CAMERA_VIDC_LOAD_FW_FAIL:
+			/* venus download firmware failed */
+			len += snprintf(camera_vid_dsm_log_buff+len, MSM_CAMERA_VID_DSM_BUFFER_SIZE-len, "[msm_camera]venus download firmware failed.\n");
+			break;
+
+		default:
+			break;
+	}
+
+	if ( (0 > len) ||((MSM_CAMERA_VID_DSM_BUFFER_SIZE -1) <= len) )
+	{
+		dprintk(VIDC_DBG, "write camera_vid_dsm_log_buff overflow.\n");
+		return;
+	}
+
+	rc = camera_vid_report_dsm_err( type, err_num, camera_vid_dsm_log_buff);
+	if (!rc)
+	{
+	     pr_err("%s. report dsm err fail.\n", __func__);
+	     return ;
+	}
+}
+#endif
+

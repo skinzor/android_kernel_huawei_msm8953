@@ -57,7 +57,11 @@
 #include "mdss_smmu.h"
 
 #include "mdss_mdp_trace.h"
-
+#ifdef CONFIG_LCDKIT_DRIVER
+#include <linux/lcdkit_dsm.h>
+#else
+#include <linux/hw_lcd_common.h>
+#endif
 #define AXI_HALT_TIMEOUT_US	0x4000
 #define AUTOSUSPEND_TIMEOUT_MS	200
 #define DEFAULT_MDP_PIPE_WIDTH	2048
@@ -1488,6 +1492,14 @@ void mdss_mdp_clk_ctrl(int enable)
 				changed++;
 		} else {
 			pr_err("Can not be turned off\n");
+#ifdef CONFIG_HUAWEI_DSM
+			/* report mdp clk dsm error */
+			#ifdef CONFIG_LCDKIT_DRIVER
+			lcdkit_report_dsm_err(DSM_LCD_MDSS_MDP_CLK_ERROR_NO,0,0,0);
+			#else
+			lcd_report_dsm_err(DSM_LCD_MDSS_MDP_CLK_ERROR_NO,0,0);
+			#endif
+#endif
 		}
 	}
 
@@ -1594,7 +1606,17 @@ static int mdss_mdp_gdsc_notifier_call(struct notifier_block *self,
 
 	mdata = container_of(self, struct mdss_data_type, gdsc_cb);
 
+#ifdef CONFIG_LCDKIT_DRIVER
+	if (!mdss_mdp_req_init_restore_cfg(mdata) &&
+		(event & REGULATOR_EVENT_ENABLE)) {
+#else
+#ifdef CONFIG_HUAWEI_KERNEL_LCD
+	if (!mdss_mdp_req_init_restore_cfg(mdata) &&
+		(event & REGULATOR_EVENT_ENABLE)) {
+#else
 	if (event & REGULATOR_EVENT_ENABLE) {
+#endif
+#endif
 		__mdss_restore_sec_cfg(mdata);
 	} else if (event & REGULATOR_EVENT_PRE_DISABLE) {
 		pr_debug("mdss gdsc is getting disabled\n");
@@ -1779,15 +1801,20 @@ static void mdss_mdp_hw_rev_caps_init(struct mdss_data_type *mdata)
 		mdata->per_pipe_ib_factor.denom = 5;
 		mdata->apply_post_scale_bytes = false;
 		mdata->hflip_buffer_reused = false;
-		mdata->min_prefill_lines = 21;
+		mdata->min_prefill_lines = 25;
 		mdata->has_ubwc = true;
 		mdata->pixel_ram_size = 50 * 1024;
+		mdata->rects_per_sspp[MDSS_MDP_PIPE_TYPE_DMA] = 2;
+
 		set_bit(MDSS_QOS_PER_PIPE_IB, mdata->mdss_qos_map);
+		set_bit(MDSS_QOS_TS_PREFILL, mdata->mdss_qos_map);
 		set_bit(MDSS_QOS_OVERHEAD_FACTOR, mdata->mdss_qos_map);
 		set_bit(MDSS_QOS_CDP, mdata->mdss_qos_map);
 		set_bit(MDSS_QOS_OTLIM, mdata->mdss_qos_map);
 		set_bit(MDSS_QOS_PER_PIPE_LUT, mdata->mdss_qos_map);
 		set_bit(MDSS_QOS_SIMPLIFIED_PREFILL, mdata->mdss_qos_map);
+		set_bit(MDSS_QOS_TS_PREFILL, mdata->mdss_qos_map);
+		set_bit(MDSS_QOS_IB_NOCR, mdata->mdss_qos_map);
 		set_bit(MDSS_CAPS_YUV_CONFIG, mdata->mdss_caps_map);
 		set_bit(MDSS_CAPS_SCM_RESTORE_NOT_REQUIRED,
 			mdata->mdss_caps_map);
@@ -1796,7 +1823,6 @@ static void mdss_mdp_hw_rev_caps_init(struct mdss_data_type *mdata)
 		mdss_mdp_init_default_prefill_factors(mdata);
 		mdss_set_quirk(mdata, MDSS_QUIRK_DSC_RIGHT_ONLY_PU);
 		mdss_set_quirk(mdata, MDSS_QUIRK_DSC_2SLICE_PU_THRPUT);
-		mdss_set_quirk(mdata, MDSS_QUIRK_HDR_SUPPORT_ENABLED);
 		break;
 	case MDSS_MDP_HW_REV_105:
 	case MDSS_MDP_HW_REV_109:
@@ -2402,8 +2428,6 @@ ssize_t mdss_mdp_show_capabilities(struct device *dev,
 		SPRINT(" dest_scaler");
 	if (mdata->has_separate_rotator)
 		SPRINT(" separate_rotator");
-	if (mdss_has_quirk(mdata, MDSS_QUIRK_HDR_SUPPORT_ENABLED))
-		SPRINT(" hdr");
 	SPRINT("\n");
 #undef SPRINT
 
@@ -4791,8 +4815,7 @@ static void mdss_mdp_footswitch_ctrl(struct mdss_data_type *mdata, int on)
 	}
 }
 
-int mdss_mdp_secure_display_ctrl(struct mdss_data_type *mdata,
-	unsigned int enable)
+int mdss_mdp_secure_display_ctrl(unsigned int enable)
 {
 	struct sd_ctrl_req {
 		unsigned int enable;
@@ -4800,12 +4823,6 @@ int mdss_mdp_secure_display_ctrl(struct mdss_data_type *mdata,
 	unsigned int resp = -1;
 	int ret = 0;
 	struct scm_desc desc;
-
-	if ((enable && (mdss_get_sd_client_cnt() > 0)) ||
-		(!enable && (mdss_get_sd_client_cnt() > 1))) {
-		mdss_update_sd_client(mdata, enable);
-		return ret;
-	}
 
 	desc.args[0] = request.enable = enable;
 	desc.arginfo = SCM_ARGS(1);
@@ -4824,7 +4841,6 @@ int mdss_mdp_secure_display_ctrl(struct mdss_data_type *mdata,
 	if (ret)
 		return ret;
 
-	mdss_update_sd_client(mdata, enable);
 	return resp;
 }
 
