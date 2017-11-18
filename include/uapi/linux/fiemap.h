@@ -36,6 +36,9 @@ struct fiemap {
 	struct fiemap_extent fm_extents[0]; /* array of mapped extents (out) */
 };
 
+/* So that the fiemap access checks can't overflow on 32 bit machines. */
+#define FIEMAP_MAX_EXTENTS	(UINT_MAX / sizeof(struct fiemap_extent))
+
 #define FIEMAP_MAX_OFFSET	(~0ULL)
 
 #define FIEMAP_FLAG_SYNC	0x00000001 /* sync file data before map */
